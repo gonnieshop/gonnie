@@ -77,6 +77,22 @@
           await supabaseClient.auth.signOut();
         }
 
+        // ─── EMAIL DE CONFIRMACIÓN VÍA SUPABASE EDGE FUNCTION ──────────────────
+        async function sendConfirmationEmail({ barberia, barbero, servicio, fecha, hora, precio, cliente, email_cliente }) {
+          try {
+            await fetch(`${SUPABASE_URL}/functions/v1/enviar-confirmacion`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${SUPABASE_KEY}`,
+              },
+              body: JSON.stringify({ barberia, barbero, servicio, fecha, hora, precio, cliente, email_cliente }),
+            });
+          } catch (e) {
+            console.warn("Email no enviado:", e.message);
+          }
+        }
+
         // ─── PALETA DE COLORES GONNIE ──────────────────────────────────────────
         const G = {
           brand: "#00C896", brandD: "#009E78", brandL: "#33DFB0",
@@ -443,8 +459,19 @@
                 price: booking.svc.price,
                 service_name: booking.svc.name
               };
-              await dbInsert("citas", payload);
+              await dbInsert("appointments", payload);
               setConfirmedAppt(payload);
+              // Enviar emails de confirmación
+              await sendConfirmationEmail({
+                barberia: booking.barberia?.name || "GonnieBarbershop",
+                barbero: booking.bar?.name || "Barbero",
+                servicio: booking.svc?.name || "Servicio",
+                fecha: date,
+                hora: slot,
+                precio: booking.svc?.price || 0,
+                cliente: user?.user_metadata?.full_name || user?.email || "Cliente",
+                email_cliente: user?.email || "",
+              });
               nav("confirmed");
             } catch (e) {
               // Si falla la tabla simulada, igual avanza para experiencia fluida
@@ -736,3 +763,4 @@
     </script>
 </body>
 </html>
+
