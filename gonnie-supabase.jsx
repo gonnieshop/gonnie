@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+const { useState, useEffect, useCallback } = React;
+const { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } = Recharts;
 
 // ─── SUPABASE CONFIG ──────────────────────────────────────────────────────────
 const SUPABASE_URL = "https://fnjqzcnufkhrfzxfallj.supabase.co";
