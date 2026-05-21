@@ -14,6 +14,7 @@
     <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
 
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
     <style>
         body { 
@@ -60,6 +61,20 @@
           });
           if (!res.ok) throw new Error(await res.text());
           return res.json();
+        }
+
+        // ─── SUPABASE AUTH CLIENT ───────────────────────────────────────────────
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function signInWithGoogle() {
+          await supabaseClient.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo: "https://gonnie.vercel.app" }
+          });
+        }
+
+        async function signOut() {
+          await supabaseClient.auth.signOut();
         }
 
         // ─── PALETA DE COLORES GONNIE ──────────────────────────────────────────
@@ -122,6 +137,51 @@
           </div>
         );
 
+        // ─── VISTA LOGIN: ACCESO CON GOOGLE ───────────────────────────────────
+        function LoginScreen() {
+          const [loading, setLoading] = useState(false);
+          return (
+            <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", background: G.bg }}>
+              <div style={{ textAlign: "center", marginBottom: 40 }}>
+                <div style={{ width: 88, height: 88, borderRadius: 28, background: G.brand, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42, marginBottom: 20, marginLeft: "auto", marginRight: "auto" }}>✂</div>
+                <h1 style={{ fontSize: 42, fontWeight: 900, color: G.text, letterSpacing: "-0.04em", marginBottom: 6 }}>gonnie</h1>
+                <p style={{ fontSize: 14, color: G.muted }}>Tu barbería, en tu bolsillo</p>
+              </div>
+
+              <div style={{ width: "100%", marginBottom: 32 }}>
+                {[
+                  { icon: "⚡", label: "Reserva en menos de 30 segundos" },
+                  { icon: "🏆", label: "Acumula puntos con cada visita" },
+                  { icon: "🤖", label: "Tu barbero ideal sugerido por IA" },
+                ].map((f, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderBottom: i < 2 ? `0.5px solid ${G.bdr}` : "none" }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 11, background: `${G.brand}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{f.icon}</div>
+                    <p style={{ fontSize: 13, color: G.text, fontWeight: 500 }}>{f.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ width: "100%" }}>
+                <button
+                  onClick={async () => { setLoading(true); await signInWithGoogle(); }}
+                  disabled={loading}
+                  style={{ width: "100%", background: "white", color: "#1a1a1a", border: "none", borderRadius: 14, padding: "14px 20px", fontSize: 15, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 14, opacity: loading ? 0.7 : 1 }}>
+                  <svg width="20" height="20" viewBox="0 0 48 48">
+                    <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.7 33.6 29.3 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l5.7-5.7C34.3 5.1 29.4 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.8 20-21 0-1.3-.2-2.7-.4-4z"/>
+                    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.1 8.1 2.9l5.7-5.7C34.3 5.1 29.4 3 24 3 16.3 3 9.7 7.9 6.3 14.7z"/>
+                    <path fill="#4CAF50" d="M24 45c5.2 0 10-1.9 13.7-5.1l-6.3-5.3C29.4 36.3 26.8 37 24 37c-5.2 0-9.7-3.5-11.3-8.3l-6.6 5.1C9.6 41 16.3 45 24 45z"/>
+                    <path fill="#1976D2" d="M43.6 20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.6l6.3 5.3C41.4 35.4 44 30.1 44 24c0-1.3-.2-2.7-.4-4z"/>
+                  </svg>
+                  {loading ? "Redirigiendo..." : "Continuar con Google"}
+                </button>
+                <p style={{ fontSize: 11, color: G.muted, textAlign: "center" }}>
+                  Al continuar aceptas los términos de uso · Gratis para clientes
+                </p>
+              </div>
+            </div>
+          );
+        }
+
         // ─── VISTA 0: SPLASH SCREEN ───────────────────────────────────────────
         function SplashScreen({ onDone }) {
           return (
@@ -156,7 +216,7 @@
           return (
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
               <div style={{ padding: "16px 18px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div><GonnieLogo /><p style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>Buenas 👋 Mario</p></div>
+                <div><GonnieLogo /><p style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>Buenas 👋 Javier</p></div>
                 <div style={{ position: "relative" }}>
                   <div style={{ width: 38, height: 38, borderRadius: "50%", background: G.card, border: `0.5px solid ${G.bdr}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🔔</div>
                   <div style={{ position: "absolute", top: 2, right: 2, width: 9, height: 9, borderRadius: "50%", background: G.brand, border: `2px solid ${G.bg}` }} />
@@ -172,7 +232,7 @@
                         <p style={{ fontSize: 10, color: `${G.brand}90`, letterSpacing: "0.08em", textTransform: "uppercase" }}>Gonnie Points</p>
                         <NewPill />
                       </div>
-                      <p style={{ fontSize: 38, fontWeight: 900, color: G.brand, lineHeight: 1 }}>0</p>
+                      <p style={{ fontSize: 38, fontWeight: 900, color: G.brand, lineHeight: 1 }}>1.240</p>
                       <p style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>Nivel Oro · 260 pts para Platino</p>
                     </div>
                     <div style={{ background: `${G.brand}15`, border: `0.5px solid ${G.brand}30`, borderRadius: 14, padding: "10px 12px", textAlign: "center" }}>
@@ -195,7 +255,7 @@
                     <Av txt="CM" size={42} bg="#1A2535" color={G.blue} />
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 15, fontWeight: 700, color: G.text }}>Corte + Barba</p>
-                      <p style={{ fontSize: 12, color: G.muted }}>Mario Lozano. · BarberKing</p>
+                      <p style={{ fontSize: 12, color: G.muted }}>Carlos M. · BarberKing</p>
                     </div>
                     <button onClick={() => nav("confirmed")} style={{ background: `${G.brand}15`, border: `0.5px solid ${G.brand}40`, borderRadius: 10, padding: "8px 12px", fontSize: 11, color: G.brand, fontWeight: 700 }}>📱 QR</button>
                   </div>
@@ -227,7 +287,7 @@
                         <p style={{ fontSize: 13, fontWeight: 700, color: G.text }}>Sugerencia IA</p>
                         <NewPill />
                       </div>
-                      <p style={{ fontSize: 12, color: G.muted, lineHeight: 1.65 }}>Basándome en tu historial, Mario Lozano. es tu mejor match esta semana. Mañana a las 10:00 hay tarifa valle — <span style={{ color: G.brand, fontWeight: 600 }}>ahorras 5€</span>.</p>
+                      <p style={{ fontSize: 12, color: G.muted, lineHeight: 1.65 }}>Basándome en tu historial, Carlos M. es tu mejor match esta semana. Mañana a las 10:00 hay tarifa valle — <span style={{ color: G.brand, fontWeight: 600 }}>ahorras 5€</span>.</p>
                       <button onClick={() => nav("explore")} style={{ marginTop: 10, background: "transparent", border: "none", color: G.brand, fontSize: 12, fontWeight: 700, padding: 0, cursor: "pointer" }}>Reservar ahora →</button>
                     </div>
                   </div>
@@ -340,7 +400,7 @@
 
                 {loading && <Skeleton h={80} />}
 
-                {tab === "barberos" && !loading && barberberos.map((br, idx) => (
+                {tab === "barberos" && !loading && barberos.map((br, idx) => (
                   <div key={br.id} onClick={() => setSelB(br)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: selB?.id === br.id ? `${G.brand}10` : G.card, border: `0.5px solid ${selB?.id === br.id ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
                     <Av txt={br.initials || "B"} bg={BARBER_COLORS[idx % 4].bg} color={BARBER_COLORS[idx % 4].color} />
                     <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{br.name}</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{br.role}</p></div>
@@ -546,12 +606,20 @@
         }
 
         // ─── VISTA 10: PERFIL DE USUARIO ──────────────────────────────────────
-        function ProfileScreen({ setMode, mode }) {
+        function ProfileScreen({ setMode, mode, user }) {
+          const nombre = user?.user_metadata?.full_name || user?.email || "Usuario";
+          const avatar = user?.user_metadata?.avatar_url;
+          const email = user?.email || "";
+          const iniciales = nombre.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase();
+
           return (
             <div style={{ flex: 1, padding: 18, textAlign: "center", paddingTop: 30 }}>
-              <Av txt="JP" size={64} />
-              <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 10, marginBottom: 2 }}>Mario Lozano</h3>
-              <p style={{ fontSize: 12, color: G.muted, marginTop: 0, marginBottom: 24 }}>javier.perez@example.com</p>
+              {avatar
+                ? <img src={avatar} style={{ width: 64, height: 64, borderRadius: "50%", marginBottom: 10 }} />
+                : <Av txt={iniciales} size={64} />
+              }
+              <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 10, marginBottom: 2 }}>{nombre}</h3>
+              <p style={{ fontSize: 12, color: G.muted, marginTop: 0, marginBottom: 24 }}>{email}</p>
 
               <div style={{ textAlign: "left", background: G.card, borderRadius: 14, padding: 12, border: `1px solid ${G.bdr}`, marginBottom: 18 }}>
                 <div style={{ padding: "10px 4px", cursor: "pointer", borderBottom: `1px solid ${G.bdr}` }} onClick={() => alert("Editar perfil en desarrollo")}>⚙️ Ajustes de Cuenta</div>
@@ -561,26 +629,71 @@
               <GhostBtn onClick={() => setMode(mode === "customer" ? "business" : "customer")}>
                 {mode === "customer" ? "🔄 Cambiar a Modo Negocio" : "🔄 Cambiar a Modo Cliente"}
               </GhostBtn>
+
+              <button onClick={signOut} style={{ marginTop: 12, width: "100%", background: "transparent", border: `0.5px solid ${G.red}40`, borderRadius: 14, padding: "12px", fontSize: 13, color: G.red, cursor: "pointer", fontWeight: 600 }}>
+                Cerrar sesión
+              </button>
             </div>
           );
         }
 
         // ─── ENRUTADOR PRINCIPAL (APP CONTAINER) ────────────────────────────────
         function GonnieApp() {
+          const [user, setUser] = useState(null);
+          const [authLoading, setAuthLoading] = useState(true);
           const [splash, setSplash] = useState(true);
           const [view, setView] = useState("home");
-          const [mode, setMode] = useState("customer"); // customer | business
+          const [mode, setMode] = useState("customer");
           const [barberia, setBarberia] = useState(null);
           const [booking, setBooking] = useState(null);
           const [confirmedAppt, setConfirmedAppt] = useState(null);
 
-          if (splash) return <div className="flex justify-center bg-black min-h-screen"><div style={{ width: "100%", maxWidth: 420, background: G.bg }}><SplashScreen onDone={() => setSplash(false)} /></div></div>;
+          useEffect(() => {
+            // Comprobar sesión existente (cuando Google redirige de vuelta)
+            supabaseClient.auth.getSession().then(({ data: { session } }) => {
+              setUser(session?.user || null);
+              setAuthLoading(false);
+              if (session?.user) setSplash(false);
+            });
+            // Escuchar cambios de sesión en tiempo real
+            const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+              setUser(session?.user || null);
+              if (session?.user) setSplash(false);
+            });
+            return () => subscription.unsubscribe();
+          }, []);
+
+          // Pantalla de carga mientras comprueba sesión
+          if (authLoading) return (
+            <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: G.bg }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ width: 60, height: 60, borderRadius: 18, background: G.brand, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, marginBottom: 16, marginLeft: "auto", marginRight: "auto" }}>✂</div>
+                <p style={{ color: G.muted, fontSize: 13 }}>Cargando Gonnie...</p>
+              </div>
+            </div>
+          );
+
+          // Sin sesión → pantalla de login
+          if (!user) return (
+            <div className="flex justify-center bg-black min-h-screen">
+              <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
+                <LoginScreen />
+              </div>
+            </div>
+          );
+
+          // Con sesión → splash o app
+          if (splash) return (
+            <div className="flex justify-center bg-black min-h-screen">
+              <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
+                <SplashScreen onDone={() => setSplash(false)} />
+              </div>
+            </div>
+          );
 
           return (
             <div className="flex justify-center bg-black min-h-screen">
               <div style={{ width: "100%", maxWidth: 420, background: G.bg, minHeight: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
-                
-                {/* Router de Vistas */}
                 <div style={{ flex: 1, overflowY: "auto" }}>
                   {mode === "business" ? (
                     <BusinessScreen />
@@ -594,12 +707,10 @@
                       {view === "appointments" && <AppointmentsScreen />}
                       {view === "loyalty" && <LoyaltyScreen />}
                       {view === "plans" && <PlansScreen />}
-                      {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} />}
+                      {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} />}
                     </>
                   )}
                 </div>
-
-                {/* Navbar Inferior Persistente */}
                 {view !== "confirmed" && (
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 68, background: G.card, borderTop: `0.5px solid ${G.bdr}`, display: "flex", alignItems: "center", zIndex: 50 }}>
                     {[
@@ -615,7 +726,6 @@
                     ))}
                   </div>
                 )}
-
               </div>
             </div>
           );
