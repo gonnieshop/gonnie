@@ -9,13 +9,9 @@
 
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
     
     <script src="https://unpkg.com/react-is@18/umd/react-is.development.js"></script>
     <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
-
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/lucide-react@latest"></script>
 
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
@@ -24,30 +20,24 @@
             background-color: #080B0F; 
             color: #EEF2F7;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
         }
-        /* Ajuste global para scrollbars oscuros y limpios */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        /* Desplazamiento suave y limpio */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #0F1419; }
-        ::-webkit-scrollbar-thumb { background: #161D25; border-radius: 3px; }
-        svg { display: inline-block; vertical-align: middle; }
+        ::-webkit-scrollbar-thumb { background: #161D25; border-radius: 2px; }
+        input, select { color-scheme: dark; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // Extraemos Hooks de React
         const { useState, useEffect, useCallback } = React;
         const { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } = Recharts;
-        
-        // Extraemos todos los iconos de Lucide que usa tu aplicación de barbería
-        const { 
-            Scissors, Calendar, User, Shield, MapPin, Star, Clock, 
-            ChevronLeft, ChevronRight, CheckCircle, Smartphone, Award, 
-            TrendingUp, Users, DollarSign, BarChart2, Plus, Trash2, Settings
-        } = LucideReact;
 
-        // ─── CONFIGURACIÓN DE SUPABASE ─────────────────────────────────────────
+        // ─── CONFIGURACIÓN DE SUPABASE ACTUAL ──────────────────────────────────
         const SUPABASE_URL = "https://fnjqzcnufkhrfzxfallj.supabase.co";
         const SUPABASE_KEY = "sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-";
 
@@ -72,24 +62,16 @@
           return res.json();
         }
 
-        // ─── BRAND / COLORES ───────────────────────────────────────────────────
+        // ─── ESTILOS DE MARCA GONNIE ───────────────────────────────────────────
         const G = {
-          brand:  "#00C896",   
-          brandD: "#009E78",   
-          brandL: "#33DFB0",   
-          bg:     "#080B0F",
-          card:   "#0F1419",
-          card2:  "#161D25",
-          text:   "#EEF2F7",
-          muted:  "#6B7A8D",
+          brand:  "#00C896", brandD: "#009E78", brandL: "#33DFB0",
+          bg:     "#080B0F", card:   "#0F1419", card2:  "#161D25",
+          text:   "#EEF2F7", muted:  "#6B7A8D",
           bdr:    "rgba(255,255,255,0.06)",
-          green:  "#34D399",
-          red:    "#F87171",
-          blue:   "#60A5FA",
-          gold:   "#F59E0B",
+          green:  "#34D399", red:    "#F87171", blue:   "#60A5FA", gold:   "#F59E0B",
         };
 
-        // ─── COMPONENTES AUXILIARES ───────────────────────────────────────────
+        // ─── COMPONENTES ATÓMICOS ─────────────────────────────────────────────
         const Av = ({ txt, size = 38, bg = "#1A2535", color = G.brand }) => (
           <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.34, fontWeight: 700, color, flexShrink: 0 }}>
             {txt}
@@ -124,13 +106,13 @@
           </button>
         );
 
-        // ─── SCREENS (Vistas de la App Cliente) ────────────────────────────────
+        // ─── VISTAS DE LA APP (CLIENTE) ───────────────────────────────────────
         function HomeScreen({ nav }) {
           const [barberias, setBarberias] = useState([]);
           const [loading, setLoading] = useState(true);
 
           useEffect(() => {
-            dbGet("barberias", "?limit=5").then(data => {
+            dbGet("barberias", "?limit=3").then(data => {
               setBarberias(data);
               setLoading(false);
             }).catch(() => setLoading(false));
@@ -138,30 +120,30 @@
 
           return (
             <div style={{ padding: 20, paddingBottom: 80 }}>
-              <div style={{ display: "flex", justifyContent: "between", alignItems: "center", marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
                 <div>
-                  <p style={{ color: G.muted, fontSize: 12, margin: 0 }}>Bienvenido a</p>
+                  <p style={{ color: G.muted, fontSize: 12, margin: 0 }}>Encuentra tu estilo</p>
                   <h1 style={{ fontSize: 24, fontWeight: 800, color: G.text, margin: 0 }}>Gonnie Barber</h1>
                 </div>
                 <Av txt="GP" />
               </div>
 
-              <div style={{ background: `linear-gradient(135deg, ${G.brandD} 0%, #064e3b 100%)`, padding: 20, borderRadius: 16, marginBottom: 24 }}>
-                <h3 style={{ color: "#fff", fontSize: 16, fontWeight: 700, marginBottom: 4 }}>¿Necesitas un corte?</h3>
-                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, marginBottom: 14 }}>Encuentra las mejores barberías de tu zona y reserva en segundos.</p>
-                <button onClick={() => nav("explore")} style={{ background: "#fff", color: "#000", border: "none", padding: "6px 14px", borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Explorar ahora</button>
+              <div style={{ background: `linear-gradient(135deg, ${G.brandD} 0%, #052e16 100%)`, padding: 20, borderRadius: 16, marginBottom: 24 }}>
+                <h3 style={{ color: "#fff", fontSize: 16, fontWeight: 700, marginBottom: 4 }}>¿Hora de un corte?</h3>
+                <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, marginBottom: 14 }}>Reserva citas en las barberías más top de tu ciudad de forma inmediata.</p>
+                <button onClick={() => nav("explore")} style={{ background: "#fff", color: "#000", border: "none", padding: "7px 16px", borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Explorar Barberías</button>
               </div>
 
-              <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Destacadas</h2>
-              {loading ? <p style={{ color: G.muted, fontSize: 12 }}>Cargando barberías...</p> : (
+              <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Barberías Recomendadas</h2>
+              {loading ? <p style={{ color: G.muted, fontSize: 12 }}>Buscando en la base de datos...</p> : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {barberias.map(b => (
                     <div key={b.id} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 14, padding: 12, display: "flex", gap: 12 }}>
-                      <div style={{ width: 70, height: 70, background: G.card2, borderRadius: 10, display: "flex", alignItems: "center", justifyItems: "center", justifyContent:"center" }}><Scissors style={{ color: G.brand }} size={24} /></div>
+                      <div style={{ width: 60, height: 60, background: G.card2, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>💈</div>
                       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
                         <h4 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{b.name}</h4>
-                        <p style={{ fontSize: 11, color: G.muted, margin: "2px 0 6px" }}>{b.city}</p>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}><Star size={12} style={{ color: G.gold }} /> <span style={{ fontSize: 11, fontWeight: 600 }}>{b.rating}</span></div>
+                        <p style={{ fontSize: 11, color: G.muted, margin: "2px 0 4px" }}>{b.city}</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ color: G.gold }}>★</span> <span style={{ fontSize: 11, fontWeight: 600 }}>{b.rating}</span></div>
                       </div>
                     </div>
                   ))}
@@ -173,31 +155,31 @@
 
         function ExploreScreen({ nav, setBarberia }) {
           const [list, setList] = useState([]);
-          const [tags] = useState(["Todos", "Fade", "Barba", "Navaja", "Clásico"]);
+          const tags = ["Todos", "Fade", "Barba", "Navaja", "Clásico"];
           const [filter, setFilter] = useState("Todos");
 
           useEffect(() => {
-            dbGet("barberias").then(setList);
+            dbGet("barberias").then(setList).catch(console.error);
           }, []);
 
           return (
             <div style={{ padding: 20, paddingBottom: 80 }}>
-              <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>Explorar</h1>
+              <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>Explorar locales</h1>
               
-              <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 18, paddingBottom: 4 }}>
+              <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 18, paddingBottom: 6 }}>
                 {tags.map(t => (
-                  <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, background: filter === t ? G.brand : G.card, color: filter === t ? "#080B0F" : G.muted, border: `0.5px solid ${G.bdr}`, borderRadius: 20, padding: "5px 14px", fontSize: 11, cursor: "pointer", fontWeight: filter === t ? 700 : 400 }}>{t}</button>
+                  <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, background: filter === t ? G.brand : G.card, color: filter === t ? "#080B0F" : G.muted, border: `0.5px solid ${G.bdr}`, borderRadius: 20, padding: "6px 14px", fontSize: 11, cursor: "pointer", fontWeight: filter === t ? 700 : 400 }}>{t}</button>
                 ))}
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {list.map(b => (
                   <div key={b.id} onClick={() => { setBarberia(b); nav("detail"); }} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 14, padding: 14, cursor: "pointer" }}>
-                    <div style={{ display: "flex", justifyContent: "between", alignItems: "start", marginBottom: 6 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 4 }}>
                       <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{b.name}</h3>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}><Star size={12} style={{ color: G.gold }} /> <span style={{ fontSize: 11, fontWeight: 600 }}>{b.rating}</span></div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ color: G.gold }}>★</span> <span style={{ fontSize: 11, fontWeight: 600 }}>{b.rating}</span></div>
                     </div>
-                    <p style={{ fontSize: 12, color: G.muted, margin: "0 0 10px" }}>{b.city}</p>
+                    <p style={{ fontSize: 12, color: G.muted, margin: "0 0 10px" }}>{b.city} • {b.hours}</p>
                     <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                       {b.specialties?.map(s => <Pill key={s} color={G.blue}>{s}</Pill>)}
                     </div>
@@ -214,32 +196,34 @@
           const [servicios, setServicios] = useState([]);
 
           useEffect(() => {
-            dbGet("barberos", `?barberia_id=eq.${barberia.id}`).then(setBarberos);
-            dbGet("servicios", `?barberia_id=eq.${barberia.id}`).then(setServicios);
+            if (barberia?.id) {
+              dbGet("barberos", `?barberia_id=eq.${barberia.id}`).then(setBarberos);
+              dbGet("servicios", `?barberia_id=eq.${barberia.id}`).then(setServicios);
+            }
           }, [barberia]);
 
           return (
             <div style={{ padding: 20, paddingBottom: 80 }}>
-              <button onClick={() => nav("explore")} style={{ background: "transparent", border: "none", color: G.brand, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, marginBottom: 14 }}><ChevronLeft size={16}/> Volver</button>
+              <button onClick={() => nav("explore")} style={{ background: "transparent", border: "none", color: G.brand, fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 14 }}>← Volver</button>
               
               <h1 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 4px" }}>{barberia.name}</h1>
-              <p style={{ fontSize: 12, color: G.muted, marginBottom: 18 }}>{barberia.city} • {barberia.hours || '9:00 - 20:00'}</p>
+              <p style={{ fontSize: 12, color: G.muted, marginBottom: 18 }}>{barberia.city} • {barberia.hours}</p>
 
               <div style={{ display: "flex", background: G.card2, borderRadius: 10, padding: 3, marginBottom: 16 }}>
                 {[{id:"barberos", l:"Barberos"}, {id:"servicios", l:"Servicios"}].map(t => (
-                  <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: tab === t.id ? G.brand : "transparent", color: tab === t.id ? "#080B0F" : G.muted, border: "none", borderRadius: 8, padding: "6px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{t.l}</button>
+                  <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: tab === t.id ? G.brand : "transparent", color: tab === t.id ? "#080B0F" : G.muted, border: "none", borderRadius: 8, padding: "7px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{t.l}</button>
                 ))}
               </div>
 
               {tab === "barberos" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {barberos.map(bar => (
-                    <div key={bar.id} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 12, padding: 12, display: "flex", alignItems: "center", justifyBetween: "between" }} className="justify-between">
+                    <div key={bar.id} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 12, padding: 12, display: "flex", alignItems: "center", justifyContent: "between" }} className="justify-between">
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <Av txt={bar.initials || "B"} />
                         <div>
                           <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>{bar.name}</h4>
-                          <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{bar.role || 'Barbero Experto'}</p>
+                          <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{bar.role || 'Estilista Profesional'}</p>
                         </div>
                       </div>
                       <button onClick={() => { setBooking({ barberia, bar }); nav("booking"); }} style={{ background: `${G.brand}15`, color: G.brand, border: "none", padding: "6px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Reservar</button>
@@ -251,12 +235,12 @@
               {tab === "servicios" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {servicios.map(ser => (
-                    <div key={ser.id} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 12, padding: 12, display: "flex", justifyBetween: "between" }} className="justify-between items-center">
+                    <div key={ser.id} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 12, padding: 12, display: "flex", alignItems: "center", justifyContent: "between" }} className="justify-between">
                       <div>
                         <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>{ser.icon || '✂️'} {ser.name}</h4>
-                        <p style={{ fontSize: 11, color: G.muted, margin: "2px 0 0" }}>{ser.duration_min} min</p>
+                        <p style={{ fontSize: 11, color: G.muted, margin: "2px 0 0" }}>{ser.duration_min} minutos</p>
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: G.brand }}>${ser.price}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: G.brand }}>{ser.price}€</span>
                     </div>
                   ))}
                 </div>
@@ -270,37 +254,24 @@
           const [time, setTime] = useState("");
 
           const handleConfirm = async () => {
-            if (!date || !time) return alert("Por favor elige fecha y hora");
-            try {
-              const res = await dbInsert("appointments", {
-                barberia_id: booking.barberia.id,
-                barbero_id: booking.bar.id,
-                date: date,
-                time: time,
-                user_name: "Cliente de Prueba"
-              });
-              setConfirmedAppt({ ...booking, date, time });
-              nav("confirmed");
-            } catch(e) {
-              // Si no existe la tabla appointments, lo simulamos para que no rompa la demo
-              setConfirmedAppt({ ...booking, date, time });
-              nav("confirmed");
-            }
+            if (!date || !time) return alert("Por favor selecciona fecha y hora");
+            setConfirmedAppt({ ...booking, date, time });
+            nav("confirmed");
           };
 
           return (
             <div style={{ padding: 20 }}>
-              <h1 style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Confirmar Cita</h1>
-              <p style={{ fontSize: 12, color: G.muted, marginBottom: 18 }}>Con {booking.bar.name} en {booking.barberia.name}</p>
+              <h1 style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Agendar Cita</h1>
+              <p style={{ fontSize: 12, color: G.muted, marginBottom: 20 }}>Con {booking.bar.name} en {booking.barberia.name}</p>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: G.muted, display: "block", marginBottom: 4 }}>FECHA</label>
-                  <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, padding: 10, borderRadius: 10, color: G.text }} />
+                  <label style={{ fontSize: 11, fontWeight: 700, color: G.muted, display: "block", marginBottom: 6 }}>SELECCIONA FECHA</label>
+                  <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, padding: 12, borderRadius: 10, color: G.text }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: G.muted, display: "block", marginBottom: 4 }}>HORA</label>
-                  <input type="time" value={time} onChange={e => setTime(e.target.value)} style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, padding: 10, borderRadius: 10, color: G.text }} />
+                  <label style={{ fontSize: 11, fontWeight: 700, color: G.muted, display: "block", marginBottom: 6 }}>SELECCIONA HORA</label>
+                  <input type="time" value={time} onChange={e => setTime(e.target.value)} style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, padding: 12, borderRadius: 10, color: G.text }} />
                 </div>
               </div>
 
@@ -312,26 +283,31 @@
         function ConfirmedScreen({ nav, appt }) {
           return (
             <div style={{ padding: 20, textAlign: "center", paddingTop: 60 }}>
-              <CheckCircle size={48} style={{ color: G.brand, margin: "0 auto 14px" }} />
-              <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 6 }}>¡Reserva Confirmada!</h1>
-              <p style={{ fontSize: 12, color: G.muted, maxWidth: 240, margin: "0 auto 24px" }}>Tu cita con {appt?.bar?.name} ha sido registrada para el {appt?.date} a las {appt?.time}.</p>
-              <Btn onClick={() => nav("home")}>Volver al Inicio</Btn>
+              <div style={{ fontSize: 48, marginBottom: 14 }}>✅</div>
+              <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 6 }}>¡Cita Confirmada!</h1>
+              <p style={{ fontSize: 12, color: G.muted, maxWidth: 260, margin: "0 auto 24px" }}>Tu reserva con {appt?.bar?.name} se completó con éxito para el día {appt?.date} a las {appt?.time}.</p>
+              <Btn onClick={() => nav("home")}>Regresar al Inicio</Btn>
             </div>
           );
         }
 
-        // ─── COMPONENTE RAÍZ (Controlador de Navegación) ────────────────────────
+        // ─── COMPONENTE GLOBAL (Enrutador de Navegación Móvil) ─────────────────
         function GonnieApp() {
           const [view, setView] = useState("home");
           const [barberia, setBarberia] = useState(null);
           const [booking, setBooking] = useState(null);
           const [confirmedAppt, setConfirmedAppt] = useState(null);
 
+          const NAV_ITEMS = [
+            { id: "home", label: "Inicio", icon: "🏠" },
+            { id: "explore", label: "Explorar", icon: "🔍" }
+          ];
+
           return (
             <div className="flex justify-center bg-black min-h-screen">
               <div style={{ width: "100%", maxWidth: 420, background: G.bg, minHeight: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
                 
-                {/* Router de Vistas */}
+                {/* Contenedor dinámico de pantallas */}
                 <div style={{ flex: 1, overflowY: "auto" }}>
                   {view === "home" && <HomeScreen nav={setView} />}
                   {view === "explore" && <ExploreScreen nav={setView} setBarberia={setBarberia} />}
@@ -340,15 +316,14 @@
                   {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
                 </div>
 
-                {/* Barra de Navegación Inferior (Estilo Móvil) */}
+                {/* Barra inferior de navegación fija */}
                 {view !== "confirmed" && (
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: G.card, borderTop: `0.5px solid ${G.bdr}`, display: "flex", alignItems: "center" }}>
-                    <button onClick={() => setView("home")} style={{ flex: 1, background: "transparent", border: "none", color: view === "home" ? G.brand : G.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                      <Calendar size={18} /> Inicio
-                    </button>
-                    <button onClick={() => setView("explore")} style={{ flex: 1, background: "transparent", border: "none", color: view === "explore" ? G.brand : G.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                      <Scissors size={18} /> Explorar
-                    </button>
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 64, background: G.card, borderTop: `0.5px solid ${G.bdr}`, display: "flex", alignItems: "center" }}>
+                    {NAV_ITEMS.map(n => (
+                      <button key={n.id} onClick={() => setView(n.id)} style={{ flex: 1, background: "transparent", border: "none", color: view === n.id ? G.brand : G.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                        <span style={{ fontSize: 18 }}>{n.icon}</span> {n.label}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -356,7 +331,6 @@
           );
         }
 
-        // Renderizado Final
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<GonnieApp />);
     </script>
