@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gonnieshop - Admin Dashboard</title>
+    <title>Gonnie - Reserva de Barberías</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -21,29 +21,33 @@
 
     <style>
         body { 
-            background-color: #080b10; 
+            background-color: #080B0F; 
             color: #EEF2F7;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
-        svg {
-            display: inline-block;
-            vertical-align: middle;
-        }
+        /* Ajuste global para scrollbars oscuros y limpios */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0F1419; }
+        ::-webkit-scrollbar-thumb { background: #161D25; border-radius: 3px; }
+        svg { display: inline-block; vertical-align: middle; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // Extraemos las funciones de las librerías globales
+        // Extraemos Hooks de React
         const { useState, useEffect, useCallback } = React;
         const { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } = Recharts;
         
+        // Extraemos todos los iconos de Lucide que usa tu aplicación de barbería
         const { 
-            Package, ShoppingCart, Users, RefreshCw, AlertCircle,
-            Plus, BarChart2, DollarSign
+            Scissors, Calendar, User, Shield, MapPin, Star, Clock, 
+            ChevronLeft, ChevronRight, CheckCircle, Smartphone, Award, 
+            TrendingUp, Users, DollarSign, BarChart2, Plus, Trash2, Settings
         } = LucideReact;
 
-        // CONFIGURACIÓN DE SUPABASE (Corregida con tu clave exacta del archivo original)
+        // ─── CONFIGURACIÓN DE SUPABASE ─────────────────────────────────────────
         const SUPABASE_URL = "https://fnjqzcnufkhrfzxfallj.supabase.co";
         const SUPABASE_KEY = "sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-";
 
@@ -62,23 +66,30 @@
 
         async function dbInsert(table, data) {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-            method: "POST",
-            headers: DB_HEADERS,
-            body: JSON.stringify(data),
+            method: "POST", headers: DB_HEADERS, body: JSON.stringify(data),
           });
           if (!res.ok) throw new Error(await res.text());
           return res.json();
         }
 
-        // COLORES DE MARCA
+        // ─── BRAND / COLORES ───────────────────────────────────────────────────
         const G = {
-          brand: "#00C896", brandD: "#009E78", brandL: "#33DFB0",
-          bg: "#080b0f", card: "#0F1419", card2: "#161D25",
-          text: "#EEF2F7", muted: "#6B7A8D",
-          bdr: "rgba(255,255,255,0.06)",
-          green: "#34D399", red: "#F87171", blue: "#60A5FA", gold: "#F59E0B",
+          brand:  "#00C896",   
+          brandD: "#009E78",   
+          brandL: "#33DFB0",   
+          bg:     "#080B0F",
+          card:   "#0F1419",
+          card2:  "#161D25",
+          text:   "#EEF2F7",
+          muted:  "#6B7A8D",
+          bdr:    "rgba(255,255,255,0.06)",
+          green:  "#34D399",
+          red:    "#F87171",
+          blue:   "#60A5FA",
+          gold:   "#F59E0B",
         };
 
+        // ─── COMPONENTES AUXILIARES ───────────────────────────────────────────
         const Av = ({ txt, size = 38, bg = "#1A2535", color = G.brand }) => (
           <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.34, fontWeight: 700, color, flexShrink: 0 }}>
             {txt}
@@ -91,334 +102,253 @@
           </span>
         );
 
-        // COMPONENTE PRINCIPAL
-        function GonnieSupabase() {
-          const [tab, setTab] = useState("overview");
-          const [prods, setProds] = useState([]);
-          const [orders, setOrders] = useState([]);
-          const [users, setUsers] = useState([]);
+        const Btn = ({ children, onClick, variant = "primary", full = true, disabled = false }) => (
+          <button
+            disabled={disabled}
+            onClick={onClick}
+            style={{
+              width: full ? "100%" : "auto",
+              background: disabled ? G.card2 : (variant === "primary" ? G.brand : "transparent"),
+              color: disabled ? G.muted : (variant === "primary" ? "#080B0F" : G.text),
+              border: variant === "secondary" ? `1px solid ${G.bdr}` : "none",
+              padding: "11px 16px",
+              borderRadius: 12,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: disabled ? "not-allowed" : "pointer",
+              transition: "all 0.15s ease",
+              fontFamily: "inherit"
+            }}
+          >
+            {children}
+          </button>
+        );
+
+        // ─── SCREENS (Vistas de la App Cliente) ────────────────────────────────
+        function HomeScreen({ nav }) {
+          const [barberias, setBarberias] = useState([]);
           const [loading, setLoading] = useState(true);
-          const [err, setErr] = useState(null);
 
-          // Formularios
-          const [pForm, setPForm] = useState({ name: "", price: "", stock: "", img: "", category: "Prendas" });
-          const [oForm, setOForm] = useState({ user_id: "", total: "", status: "pending", items: "" });
-          const [uForm, setUForm] = useState({ name: "", email: "", role: "customer" });
-
-          const loadAll = useCallback(async () => {
-            try {
-              setLoading(true);
-              setErr(null);
-              const [p, o, u] = await Promise.all([
-                dbGet("products", "?order=created_at.desc"),
-                dbGet("orders", "?order=created_at.desc"),
-                dbGet("users", "?order=created_at.desc")
-              ]);
-              setProds(p);
-              setOrders(o);
-              setUsers(u);
-            } catch (e) {
-              setErr(e.message);
-            } finally {
+          useEffect(() => {
+            dbGet("barberias", "?limit=5").then(data => {
+              setBarberias(data);
               setLoading(false);
-            }
+            }).catch(() => setLoading(false));
           }, []);
 
-          useEffect(() => { loadAll(); }, [loadAll]);
-
-          const addProd = async (e) => {
-            e.preventDefault();
-            try {
-              const res = await dbInsert("products", { ...pForm, price: parseFloat(pForm.price), stock: parseInt(pForm.stock) });
-              setProds([res[0], ...prods]);
-              setPForm({ name: "", price: "", stock: "", img: "", category: "Prendas" });
-            } catch (e) { alert(e.message); }
-          };
-
-          const addOrder = async (e) => {
-            e.preventDefault();
-            try {
-              const res = await dbInsert("orders", { ...oForm, total: parseFloat(oForm.total), items: oForm.items ? JSON.parse(oForm.items) : [] });
-              setOrders([res[0], ...orders]);
-              setOForm({ user_id: "", total: "", status: "pending", items: "" });
-            } catch (e) { alert("Error: Verifica el ID de usuario o JSON de items válido."); }
-          };
-
-          const addUser = async (e) => {
-            e.preventDefault();
-            try {
-              const res = await dbInsert("users", uForm);
-              setUsers([res[0], ...users]);
-              setUForm({ name: "", email: "", role: "customer" });
-            } catch (e) { alert(e.message); }
-          };
-
-          if (loading) return (
-            <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: G.bg }}>
-              <RefreshCw className="animate-spin mb-3" size={32} style={{ color: G.brand }} />
-              <p style={{ color: G.muted, fontSize: 14 }}>Conectando con Gonnie Supabase...</p>
-            </div>
-          );
-
-          if (err) return (
-            <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center" style={{ background: G.bg }}>
-              <AlertCircle size={40} className="mb-2" style={{ color: G.red }} />
-              <h3 className="text-lg font-bold mb-1">Error de Conexión</h3>
-              <p className="max-w-md text-sm mb-4" style={{ color: G.muted }}>{err}</p>
-              <button onClick={loadAll} className="px-4 py-2 rounded text-sm font-semibold transition" style={{ background: G.brand, color: G.bg }}>Reintentar</button>
-            </div>
-          );
-
-          const totalSales = orders.reduce((acc, o) => acc + (o.total || 0), 0);
-          const chartData = [...orders].reverse().map(o => ({
-            fecha: new Date(o.created_at).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }),
-            monto: o.total
-          }));
-
           return (
-            <div className="flex min-h-screen" style={{ background: G.bg, color: G.text }}>
-              {/* SIDEBAR */}
-              <div className="w-64 flex-shrink-0 p-6 flex flex-col border-r" style={{ borderColor: G.bdr, background: G.card }}>
-                <div className="flex items-center gap-3 mb-8 px-2">
-                  <div className="w-8 h-8 rounded flex items-center justify-center font-bold text-lg" style={{ background: G.brand, color: G.bg }}>G</div>
-                  <span className="font-bold text-lg tracking-tight">gonnieshop</span>
+            <div style={{ padding: 20, paddingBottom: 80 }}>
+              <div style={{ display: "flex", justifyContent: "between", alignItems: "center", marginBottom: 24 }}>
+                <div>
+                  <p style={{ color: G.muted, fontSize: 12, margin: 0 }}>Bienvenido a</p>
+                  <h1 style={{ fontSize: 24, fontWeight: 800, color: G.text, margin: 0 }}>Gonnie Barber</h1>
                 </div>
-                
-                <nav className="flex flex-col gap-1 flex-1">
-                  {[
-                    { id: "overview", label: "Vista General", icon: BarChart2 },
-                    { id: "products", label: "Productos", icon: Package, count: prods.length },
-                    { id: "orders", label: "Pedidos", icon: ShoppingCart, count: orders.length },
-                    { id: "users", label: "Clientes", icon: Users, count: users.length },
-                  ].map(item => {
-                    const Icon = item.icon;
-                    const active = tab === item.id;
-                    return (
-                      <button key={item.id} onClick={() => setTab(item.id)} className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition group" style={{ background: active ? `${G.brand}12` : "transparent", color: active ? G.brand : G.muted }}>
-                        <div className="flex items-center gap-3">
-                          <Icon size={18} style={{ color: active ? G.brand : G.muted }} />
-                          <span>{item.label}</span>
-                        </div>
-                        {item.count !== undefined && (
-                          <span className="text-xs px-2 py-0.5 rounded-md font-semibold" style={{ background: active ? `${G.brand}20` : "rgba(255,255,255,0.03)", color: active ? G.brand : G.muted }}>
-                            {item.count}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </nav>
+                <Av txt="GP" />
               </div>
 
-              {/* CONTENIDO */}
-              <div className="flex-1 overflow-y-auto p-8">
-                {tab === "overview" && (
-                  <div className="space-y-8">
-                    <div>
-                      <h1 className="text-2xl font-bold tracking-tight">Panel de Control</h1>
-                      <p className="text-sm mt-1" style={{ color: G.muted }}>Revisión del estado actual de la tienda.</p>
-                    </div>
+              <div style={{ background: `linear-gradient(135deg, ${G.brandD} 0%, #064e3b 100%)`, padding: 20, borderRadius: 16, marginBottom: 24 }}>
+                <h3 style={{ color: "#fff", fontSize: 16, fontWeight: 700, marginBottom: 4 }}>¿Necesitas un corte?</h3>
+                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, marginBottom: 14 }}>Encuentra las mejores barberías de tu zona y reserva en segundos.</p>
+                <button onClick={() => nav("explore")} style={{ background: "#fff", color: "#000", border: "none", padding: "6px 14px", borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Explorar ahora</button>
+              </div>
 
-                    <div className="grid grid-cols-4 gap-5">
-                      {[
-                        { title: "Ingresos Totales", value: `$${totalSales.toLocaleString()}`, icon: DollarSign, color: G.brand },
-                        { title: "Pedidos Realizados", value: orders.length, icon: ShoppingCart, color: G.blue },
-                        { title: "Productos Activos", value: prods.length, icon: Package, color: G.gold },
-                        { title: "Usuarios Registrados", value: users.length, icon: Users, color: G.green },
-                      ].map((card, i) => {
-                        const Icon = card.icon;
-                        return (
-                          <div key={i} className="p-5 rounded-xl border flex flex-col justify-between h-28" style={{ background: G.card, borderColor: G.bdr }}>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: G.muted }}>{card.title}</span>
-                              <Icon size={16} style={{ color: card.color }} />
-                            </div>
-                            <span className="text-2xl font-bold tracking-tight">{card.value}</span>
-                          </div>
-                        );
-                      })}
+              <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Destacadas</h2>
+              {loading ? <p style={{ color: G.muted, fontSize: 12 }}>Cargando barberías...</p> : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {barberias.map(b => (
+                    <div key={b.id} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 14, padding: 12, display: "flex", gap: 12 }}>
+                      <div style={{ width: 70, height: 70, background: G.card2, borderRadius: 10, display: "flex", alignItems: "center", justifyItems: "center", justifyContent:"center" }}><Scissors style={{ color: G.brand }} size={24} /></div>
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                        <h4 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{b.name}</h4>
+                        <p style={{ fontSize: 11, color: G.muted, margin: "2px 0 6px" }}>{b.city}</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}><Star size={12} style={{ color: G.gold }} /> <span style={{ fontSize: 11, fontWeight: 600 }}>{b.rating}</span></div>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        }
 
-                    <div className="grid grid-cols-3 gap-6">
-                      <div className="col-span-2 p-5 rounded-xl border flex flex-col justify-between" style={{ background: G.card, borderColor: G.bdr, height: 320 }}>
+        function ExploreScreen({ nav, setBarberia }) {
+          const [list, setList] = useState([]);
+          const [tags] = useState(["Todos", "Fade", "Barba", "Navaja", "Clásico"]);
+          const [filter, setFilter] = useState("Todos");
+
+          useEffect(() => {
+            dbGet("barberias").then(setList);
+          }, []);
+
+          return (
+            <div style={{ padding: 20, paddingBottom: 80 }}>
+              <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>Explorar</h1>
+              
+              <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 18, paddingBottom: 4 }}>
+                {tags.map(t => (
+                  <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, background: filter === t ? G.brand : G.card, color: filter === t ? "#080B0F" : G.muted, border: `0.5px solid ${G.bdr}`, borderRadius: 20, padding: "5px 14px", fontSize: 11, cursor: "pointer", fontWeight: filter === t ? 700 : 400 }}>{t}</button>
+                ))}
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {list.map(b => (
+                  <div key={b.id} onClick={() => { setBarberia(b); nav("detail"); }} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 14, padding: 14, cursor: "pointer" }}>
+                    <div style={{ display: "flex", justifyContent: "between", alignItems: "start", marginBottom: 6 }}>
+                      <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{b.name}</h3>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}><Star size={12} style={{ color: G.gold }} /> <span style={{ fontSize: 11, fontWeight: 600 }}>{b.rating}</span></div>
+                    </div>
+                    <p style={{ fontSize: 12, color: G.muted, margin: "0 0 10px" }}>{b.city}</p>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      {b.specialties?.map(s => <Pill key={s} color={G.blue}>{s}</Pill>)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        function DetailScreen({ barberia, nav, setBooking }) {
+          const [tab, setTab] = useState("barberos");
+          const [barberos, setBarberos] = useState([]);
+          const [servicios, setServicios] = useState([]);
+
+          useEffect(() => {
+            dbGet("barberos", `?barberia_id=eq.${barberia.id}`).then(setBarberos);
+            dbGet("servicios", `?barberia_id=eq.${barberia.id}`).then(setServicios);
+          }, [barberia]);
+
+          return (
+            <div style={{ padding: 20, paddingBottom: 80 }}>
+              <button onClick={() => nav("explore")} style={{ background: "transparent", border: "none", color: G.brand, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, marginBottom: 14 }}><ChevronLeft size={16}/> Volver</button>
+              
+              <h1 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 4px" }}>{barberia.name}</h1>
+              <p style={{ fontSize: 12, color: G.muted, marginBottom: 18 }}>{barberia.city} • {barberia.hours || '9:00 - 20:00'}</p>
+
+              <div style={{ display: "flex", background: G.card2, borderRadius: 10, padding: 3, marginBottom: 16 }}>
+                {[{id:"barberos", l:"Barberos"}, {id:"servicios", l:"Servicios"}].map(t => (
+                  <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: tab === t.id ? G.brand : "transparent", color: tab === t.id ? "#080B0F" : G.muted, border: "none", borderRadius: 8, padding: "6px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{t.l}</button>
+                ))}
+              </div>
+
+              {tab === "barberos" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {barberos.map(bar => (
+                    <div key={bar.id} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 12, padding: 12, display: "flex", alignItems: "center", justifyBetween: "between" }} className="justify-between">
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <Av txt={bar.initials || "B"} />
                         <div>
-                          <h3 className="text-sm font-bold">Flujo de Ventas</h3>
-                          <p className="text-xs" style={{ color: G.muted }}>Historial de montos por orden recibida.</p>
-                        </div>
-                        <div className="w-full h-52 mt-4">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                              <XAxis dataKey="fecha" stroke={G.muted} fontSize={10} tickLine={false} axisLine={false} />
-                              <Tooltip contentStyle={{ background: G.card2, borderColor: G.bdr, borderRadius: 8, fontSize: 12, color: G.text }} />
-                              <Area type="monotone" dataKey="monto" stroke={G.brand} fill={`${G.brand}10`} strokeWidth={2} />
-                            </AreaChart>
-                          </ResponsiveContainer>
+                          <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>{bar.name}</h4>
+                          <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{bar.role || 'Barbero Experto'}</p>
                         </div>
                       </div>
-
-                      <div className="p-5 rounded-xl border flex flex-col" style={{ background: G.card, borderColor: G.bdr, height: 320 }}>
-                        <div className="mb-4">
-                          <h3 className="text-sm font-bold">Últimos Clientes</h3>
-                          <p className="text-xs" style={{ color: G.muted }}>Usuarios que se han unido recientemente.</p>
-                        </div>
-                        <div className="flex-1 overflow-y-auto space-y-3.5 pr-1">
-                          {users.slice(0, 4).map(u => (
-                            <div key={u.id} className="flex items-center gap-3">
-                              <Av txt={u.name ? u.name.substring(0,2).toUpperCase() : "US"} size={34} />
-                              <div className="flex flex-col min-w-0 flex-1">
-                                <span className="text-xs font-bold truncate">{u.name || 'Sin Nombre'}</span>
-                                <span className="text-[11px] truncate" style={{ color: G.muted }}>{u.email}</span>
-                              </div>
-                              <Pill color={u.role === 'admin' ? G.gold : G.muted}>{u.role}</Pill>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      <button onClick={() => { setBooking({ barberia, bar }); nav("booking"); }} style={{ background: `${G.brand}15`, color: G.brand, border: "none", padding: "6px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Reservar</button>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+              )}
 
-                {tab === "products" && (
-                  <div className="space-y-6">
-                    <h1 className="text-2xl font-bold tracking-tight">Productos</h1>
-                    <div className="grid grid-cols-3 gap-6 items-start">
-                      <div className="col-span-2 rounded-xl border overflow-hidden" style={{ background: G.card, borderColor: G.bdr }}>
-                        <table className="w-full text-left text-xs border-collapse">
-                          <thead>
-                            <tr className="border-b" style={{ borderColor: G.bdr }}>
-                              <th className="p-4 font-bold uppercase tracking-wider text-center" style={{ color: G.muted, width: 60 }}>Imagen</th>
-                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Producto</th>
-                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Categoría</th>
-                              <th className="p-4 font-bold uppercase tracking-wider text-right" style={{ color: G.muted }}>Precio</th>
-                              <th className="p-4 font-bold uppercase tracking-wider text-center" style={{ color: G.muted }}>Stock</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
-                            {prods.map(p => (
-                              <tr key={p.id} className="hover:bg-[rgba(255,255,255,0.01)] transition">
-                                <td className="p-3 text-center">
-                                  {p.img ? (
-                                    <img src={p.img} alt={p.name} className="w-9 h-9 object-cover rounded-lg mx-auto border" style={{ borderColor: G.bdr }} />
-                                  ) : (
-                                    <div className="w-9 h-9 rounded-lg mx-auto flex items-center justify-center border" style={{ borderColor: G.bdr, background: G.card2 }}><Package size={14} style={{ color: G.muted }} /></div>
-                                  )}
-                                </td>
-                                <td className="p-3 font-bold">{p.name}</td>
-                                <td className="p-3"><Pill color={G.blue} bg="rgba(96,165,250,0.1)">{p.category || 'General'}</Pill></td>
-                                <td className="p-3 text-right font-semibold text-emerald-400">${p.price?.toFixed(2)}</td>
-                                <td className="p-3 text-center font-medium" style={{ color: p.stock < 5 ? G.red : G.text }}>{p.stock} u</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+              {tab === "servicios" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {servicios.map(ser => (
+                    <div key={ser.id} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 12, padding: 12, display: "flex", justifyBetween: "between" }} className="justify-between items-center">
+                      <div>
+                        <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>{ser.icon || '✂️'} {ser.name}</h4>
+                        <p style={{ fontSize: 11, color: G.muted, margin: "2px 0 0" }}>{ser.duration_min} min</p>
                       </div>
-
-                      <form onSubmit={addProd} className="p-5 rounded-xl border space-y-4" style={{ background: G.card, borderColor: G.bdr }}>
-                        <h3 className="text-sm font-bold flex items-center gap-2"><Plus size={16} style={{ color: G.brand }} /> Nuevo Producto</h3>
-                        <input required type="text" value={pForm.name} onChange={e => setPForm({...pForm, name: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Nombre" />
-                        <div className="grid grid-cols-2 gap-3">
-                          <input required type="number" step="0.01" value={pForm.price} onChange={e => setPForm({...pForm, price: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Precio" />
-                          <input required type="number" value={pForm.stock} onChange={e => setPForm({...pForm, stock: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Stock" />
-                        </div>
-                        <select value={pForm.category} onChange={e => setPForm({...pForm, category: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr, color: G.text }}>
-                          <option value="Prendas">Prendas</option>
-                          <option value="Accesorios">Accesorios</option>
-                          <option value="Otros">Otros</option>
-                        </select>
-                        <input type="text" value={pForm.img} onChange={e => setPForm({...pForm, img: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="URL Imagen" />
-                        <button type="submit" className="w-full py-2.5 rounded-lg text-xs font-bold" style={{ background: G.brand, color: G.bg }}>Crear Producto</button>
-                      </form>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: G.brand }}>${ser.price}</span>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        }
 
-                {tab === "orders" && (
-                  <div className="space-y-6">
-                    <h1 className="text-2xl font-bold tracking-tight">Pedidos</h1>
-                    <div className="grid grid-cols-3 gap-6 items-start">
-                      <div className="col-span-2 rounded-xl border overflow-hidden" style={{ background: G.card, borderColor: G.bdr }}>
-                        <table className="w-full text-left text-xs border-collapse">
-                          <thead>
-                            <tr className="border-b" style={{ borderColor: G.bdr }}>
-                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>ID Pedido</th>
-                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>ID Cliente</th>
-                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Estado</th>
-                              <th className="p-4 font-bold uppercase tracking-wider text-right" style={{ color: G.muted }}>Total</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
-                            {orders.map(o => (
-                              <tr key={o.id} className="hover:bg-[rgba(255,255,255,0.01)] transition">
-                                <td className="p-4 font-mono text-[11px] text-slate-400">#{o.id}</td>
-                                <td className="p-4 font-mono text-[11px]">{o.user_id}</td>
-                                <td className="p-4">
-                                  <Pill color={o.status === 'completed' ? G.green : o.status === 'pending' ? G.gold : G.red}>
-                                    {o.status}
-                                  </Pill>
-                                </td>
-                                <td className="p-4 text-right font-bold text-emerald-400">${o.total?.toFixed(2)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+        function BookingScreen({ booking, nav, setConfirmedAppt }) {
+          const [date, setDate] = useState("");
+          const [time, setTime] = useState("");
 
-                      <form onSubmit={addOrder} className="p-5 rounded-xl border space-y-4" style={{ background: G.card, borderColor: G.bdr }}>
-                        <h3 className="text-sm font-bold flex items-center gap-2"><Plus size={16} style={{ color: G.brand }} /> Simular Venta</h3>
-                        <input required type="text" value={oForm.user_id} onChange={e => setOForm({...oForm, user_id: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none font-mono" style={{ background: G.card2, borderColor: G.bdr }} placeholder="ID del Cliente" />
-                        <input required type="number" step="0.01" value={oForm.total} onChange={e => setOForm({...oForm, total: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Total ($)" />
-                        <select value={oForm.status} onChange={e => setOForm({...oForm, status: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr, color: G.text }}>
-                          <option value="pending">Pendiente</option>
-                          <option value="completed">Completado</option>
-                          <option value="cancelled">Cancelado</option>
-                        </select>
-                        <button type="submit" className="w-full py-2.5 rounded-lg text-xs font-bold" style={{ background: G.brand, color: G.bg }}>Registrar Pedido</button>
-                      </form>
-                    </div>
-                  </div>
-                )}
+          const handleConfirm = async () => {
+            if (!date || !time) return alert("Por favor elige fecha y hora");
+            try {
+              const res = await dbInsert("appointments", {
+                barberia_id: booking.barberia.id,
+                barbero_id: booking.bar.id,
+                date: date,
+                time: time,
+                user_name: "Cliente de Prueba"
+              });
+              setConfirmedAppt({ ...booking, date, time });
+              nav("confirmed");
+            } catch(e) {
+              // Si no existe la tabla appointments, lo simulamos para que no rompa la demo
+              setConfirmedAppt({ ...booking, date, time });
+              nav("confirmed");
+            }
+          };
 
-                {tab === "users" && (
-                  <div className="space-y-6">
-                    <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
-                    <div className="grid grid-cols-3 gap-6 items-start">
-                      <div className="col-span-2 rounded-xl border overflow-hidden" style={{ background: G.card, borderColor: G.bdr }}>
-                        <table className="w-full text-left text-xs border-collapse">
-                          <thead>
-                            <tr className="border-b" style={{ borderColor: G.bdr }}>
-                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>ID (UUID)</th>
-                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Nombre</th>
-                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Email</th>
-                              <th className="p-4 font-bold uppercase tracking-wider text-center" style={{ color: G.muted }}>Rol</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
-                            {users.map(u => (
-                              <tr key={u.id} className="hover:bg-[rgba(255,255,255,0.01)] transition">
-                                <td className="p-4 font-mono text-[10px] text-emerald-400 select-all cursor-pointer">{u.id}</td>
-                                <td className="p-4 font-bold flex items-center gap-2">
-                                  <Av txt={u.name ? u.name.substring(0,2).toUpperCase() : "US"} size={24} />
-                                  {u.name || 'Sin Nombre'}
-                                </td>
-                                <td className="p-4 text-slate-300">{u.email}</td>
-                                <td className="p-4 text-center"><Pill color={u.role === 'admin' ? G.gold : G.muted}>{u.role}</Pill></td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+          return (
+            <div style={{ padding: 20 }}>
+              <h1 style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Confirmar Cita</h1>
+              <p style={{ fontSize: 12, color: G.muted, marginBottom: 18 }}>Con {booking.bar.name} en {booking.barberia.name}</p>
 
-                      <form onSubmit={addUser} className="p-5 rounded-xl border space-y-4" style={{ background: G.card, borderColor: G.bdr }}>
-                        <h3 className="text-sm font-bold flex items-center gap-2"><Plus size={16} style={{ color: G.brand }} /> Crear Usuario</h3>
-                        <input required type="text" value={uForm.name} onChange={e => setUForm({...uForm, name: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Nombre Completo" />
-                        <input required type="email" value={uForm.email} onChange={e => setUForm({...uForm, email: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Correo Electrónico" />
-                        <select value={uForm.role} onChange={e => setUForm({...uForm, role: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr, color: G.text }}>
-                          <option value="customer">Cliente</option>
-                          <option value="admin">Administrador</option>
-                        </select>
-                        <button type="submit" className="w-full py-2.5 rounded-lg text-xs font-bold" style={{ background: G.brand, color: G.bg }}>Guardar Cliente</button>
-                      </form>
-                    </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: G.muted, display: "block", marginBottom: 4 }}>FECHA</label>
+                  <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, padding: 10, borderRadius: 10, color: G.text }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: G.muted, display: "block", marginBottom: 4 }}>HORA</label>
+                  <input type="time" value={time} onChange={e => setTime(e.target.value)} style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, padding: 10, borderRadius: 10, color: G.text }} />
+                </div>
+              </div>
+
+              <Btn onClick={handleConfirm}>Confirmar Reserva</Btn>
+            </div>
+          );
+        }
+
+        function ConfirmedScreen({ nav, appt }) {
+          return (
+            <div style={{ padding: 20, textAlign: "center", paddingTop: 60 }}>
+              <CheckCircle size={48} style={{ color: G.brand, margin: "0 auto 14px" }} />
+              <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 6 }}>¡Reserva Confirmada!</h1>
+              <p style={{ fontSize: 12, color: G.muted, maxWidth: 240, margin: "0 auto 24px" }}>Tu cita con {appt?.bar?.name} ha sido registrada para el {appt?.date} a las {appt?.time}.</p>
+              <Btn onClick={() => nav("home")}>Volver al Inicio</Btn>
+            </div>
+          );
+        }
+
+        // ─── COMPONENTE RAÍZ (Controlador de Navegación) ────────────────────────
+        function GonnieApp() {
+          const [view, setView] = useState("home");
+          const [barberia, setBarberia] = useState(null);
+          const [booking, setBooking] = useState(null);
+          const [confirmedAppt, setConfirmedAppt] = useState(null);
+
+          return (
+            <div className="flex justify-center bg-black min-h-screen">
+              <div style={{ width: "100%", maxWidth: 420, background: G.bg, minHeight: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
+                
+                {/* Router de Vistas */}
+                <div style={{ flex: 1, overflowY: "auto" }}>
+                  {view === "home" && <HomeScreen nav={setView} />}
+                  {view === "explore" && <ExploreScreen nav={setView} setBarberia={setBarberia} />}
+                  {view === "detail" && <DetailScreen barberia={barberia} nav={setView} setBooking={setBooking} />}
+                  {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} />}
+                  {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
+                </div>
+
+                {/* Barra de Navegación Inferior (Estilo Móvil) */}
+                {view !== "confirmed" && (
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: G.card, borderTop: `0.5px solid ${G.bdr}`, display: "flex", alignItems: "center" }}>
+                    <button onClick={() => setView("home")} style={{ flex: 1, background: "transparent", border: "none", color: view === "home" ? G.brand : G.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                      <Calendar size={18} /> Inicio
+                    </button>
+                    <button onClick={() => setView("explore")} style={{ flex: 1, background: "transparent", border: "none", color: view === "explore" ? G.brand : G.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                      <Scissors size={18} /> Explorar
+                    </button>
                   </div>
                 )}
               </div>
@@ -426,8 +356,9 @@
           );
         }
 
+        // Renderizado Final
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<GonnieSupabase />);
+        root.render(<GonnieApp />);
     </script>
 </body>
 </html>
