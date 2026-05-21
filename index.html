@@ -24,7 +24,6 @@
             background-color: #080b10; 
             color: #EEF2F7;
         }
-        /* Corrección para que los iconos de Lucide no salgan gigantes */
         svg {
             display: inline-block;
             vertical-align: middle;
@@ -35,22 +34,18 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // Extraemos las funciones de las librerías globales para que el navegador las entienda
+        // Extraemos las funciones de las librerías globales
         const { useState, useEffect, useCallback } = React;
         const { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } = Recharts;
         
-        // Mapeo manual de los iconos que usa tu código desde la librería Lucide
         const { 
-            Package, ShoppingCart, Users, TrendingUp, Plus, 
-            Trash2, CheckCircle, Clock, AlertCircle, RefreshCw, 
-            Layers, ChevronRight, DollarSign, BarChart2 
+            Package, ShoppingCart, Users, RefreshCw, AlertCircle,
+            Plus, BarChart2, DollarSign
         } = LucideReact;
 
-        // --- TU CÓDIGO REACT ADAPTADO ---
-
-        // CONFIGURACIÓN DE SUPABASE
+        // CONFIGURACIÓN DE SUPABASE (Corregida con tu clave exacta del archivo original)
         const SUPABASE_URL = "https://fnjqzcnufkhrfzxfallj.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_PHk3rHljidKOQ5ByIoME0Q_jPa2Ldd=";
+        const SUPABASE_KEY = "sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-";
 
         const DB_HEADERS = {
           apikey: SUPABASE_KEY,
@@ -84,7 +79,6 @@
           green: "#34D399", red: "#F87171", blue: "#60A5FA", gold: "#F59E0B",
         };
 
-        // AYUDANTES DE INTERFAZ
         const Av = ({ txt, size = 38, bg = "#1A2535", color = G.brand }) => (
           <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.34, fontWeight: 700, color, flexShrink: 0 }}>
             {txt}
@@ -92,12 +86,12 @@
         );
 
         const Pill = ({ children, color = G.brand, bg }) => (
-          <span style={{ background: bg || `${color}18`, color, fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, letterSpacing: "0.04em", whitespace: "nowrap" }}>
+          <span style={{ background: bg || `${color}18`, color, fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
             {children}
           </span>
         );
 
-        // COMPONENTE PRINCIPAL (Tu Dashboard)
+        // COMPONENTE PRINCIPAL
         function GonnieSupabase() {
           const [tab, setTab] = useState("overview");
           const [prods, setProds] = useState([]);
@@ -175,7 +169,6 @@
             </div>
           );
 
-          // Cálculos para el Overview
           const totalSales = orders.reduce((acc, o) => acc + (o.total || 0), 0);
           const chartData = [...orders].reverse().map(o => ({
             fecha: new Date(o.created_at).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }),
@@ -184,7 +177,7 @@
 
           return (
             <div className="flex min-h-screen" style={{ background: G.bg, color: G.text }}>
-              {/* BANCO LATERAL */}
+              {/* SIDEBAR */}
               <div className="w-64 flex-shrink-0 p-6 flex flex-col border-r" style={{ borderColor: G.bdr, background: G.card }}>
                 <div className="flex items-center gap-3 mb-8 px-2">
                   <div className="w-8 h-8 rounded flex items-center justify-center font-bold text-lg" style={{ background: G.brand, color: G.bg }}>G</div>
@@ -217,7 +210,7 @@
                 </nav>
               </div>
 
-              {/* CONTENIDO PRINCIPAL */}
+              {/* CONTENIDO */}
               <div className="flex-1 overflow-y-auto p-8">
                 {tab === "overview" && (
                   <div className="space-y-8">
@@ -226,7 +219,6 @@
                       <p className="text-sm mt-1" style={{ color: G.muted }}>Revisión del estado actual de la tienda.</p>
                     </div>
 
-                    {/* TARJETAS METRICAS */}
                     <div className="grid grid-cols-4 gap-5">
                       {[
                         { title: "Ingresos Totales", value: `$${totalSales.toLocaleString()}`, icon: DollarSign, color: G.brand },
@@ -247,7 +239,6 @@
                       })}
                     </div>
 
-                    {/* GRAFICA Y RECIENTES */}
                     <div className="grid grid-cols-3 gap-6">
                       <div className="col-span-2 p-5 rounded-xl border flex flex-col justify-between" style={{ background: G.card, borderColor: G.bdr, height: 320 }}>
                         <div>
@@ -289,18 +280,12 @@
 
                 {tab === "products" && (
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Productos</h1>
-                        <p className="text-sm mt-1" style={{ color: G.muted }}>Listado e ingreso de inventario.</p>
-                      </div>
-                    </div>
-
+                    <h1 className="text-2xl font-bold tracking-tight">Productos</h1>
                     <div className="grid grid-cols-3 gap-6 items-start">
                       <div className="col-span-2 rounded-xl border overflow-hidden" style={{ background: G.card, borderColor: G.bdr }}>
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="border-b" style={{ borderColor: G.bdr, background: "rgba(255,255,255,0.01)" }}>
+                            <tr className="border-b" style={{ borderColor: G.bdr }}>
                               <th className="p-4 font-bold uppercase tracking-wider text-center" style={{ color: G.muted, width: 60 }}>Imagen</th>
                               <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Producto</th>
                               <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Categoría</th>
@@ -319,7 +304,7 @@
                                   )}
                                 </td>
                                 <td className="p-3 font-bold">{p.name}</td>
-                                <td className="p-3 text-slate-400"><Pill color={G.blue} bg="rgba(96,165,250,0.1)">{p.category || 'General'}</Pill></td>
+                                <td className="p-3"><Pill color={G.blue} bg="rgba(96,165,250,0.1)">{p.category || 'General'}</Pill></td>
                                 <td className="p-3 text-right font-semibold text-emerald-400">${p.price?.toFixed(2)}</td>
                                 <td className="p-3 text-center font-medium" style={{ color: p.stock < 5 ? G.red : G.text }}>{p.stock} u</td>
                               </tr>
@@ -328,35 +313,20 @@
                         </table>
                       </div>
 
-                      <form onSubmit={addProd} className="p-5 rounded-xl border space-y-4 sticky top-8" style={{ background: G.card, borderColor: G.bdr }}>
+                      <form onSubmit={addProd} className="p-5 rounded-xl border space-y-4" style={{ background: G.card, borderColor: G.bdr }}>
                         <h3 className="text-sm font-bold flex items-center gap-2"><Plus size={16} style={{ color: G.brand }} /> Nuevo Producto</h3>
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>Nombre</label>
-                          <input required type="text" value={pForm.name} onChange={e => setPForm({...pForm, name: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none transition focus:border-emerald-500" style={{ background: G.card2, borderColor: G.bdr, color: G.text }} placeholder="Ej: Polera Gonnie" />
-                        </div>
+                        <input required type="text" value={pForm.name} onChange={e => setPForm({...pForm, name: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Nombre" />
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>Precio ($)</label>
-                            <input required type="number" step="0.01" value={pForm.price} onChange={e => setPForm({...pForm, price: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="19.99" />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>Stock</label>
-                            <input required type="number" value={pForm.stock} onChange={e => setPForm({...pForm, stock: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="50" />
-                          </div>
+                          <input required type="number" step="0.01" value={pForm.price} onChange={e => setPForm({...pForm, price: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Precio" />
+                          <input required type="number" value={pForm.stock} onChange={e => setPForm({...pForm, stock: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Stock" />
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>Categoría</label>
-                          <select value={pForm.category} onChange={e => setPForm({...pForm, category: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr, color: G.text }}>
-                            <option value="Prendas">Prendas</option>
-                            <option value="Accesorios">Accesorios</option>
-                            <option value="Otros">Otros</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>URL Imagen</label>
-                          <input type="text" value={pForm.img} onChange={e => setPForm({...pForm, img: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="https://..." />
-                        </div>
-                        <button type="submit" className="w-full py-2.5 rounded-lg text-xs font-bold transition mt-2" style={{ background: G.brand, color: G.bg }}>Crear Producto</button>
+                        <select value={pForm.category} onChange={e => setPForm({...pForm, category: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr, color: G.text }}>
+                          <option value="Prendas">Prendas</option>
+                          <option value="Accesorios">Accesorios</option>
+                          <option value="Otros">Otros</option>
+                        </select>
+                        <input type="text" value={pForm.img} onChange={e => setPForm({...pForm, img: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="URL Imagen" />
+                        <button type="submit" className="w-full py-2.5 rounded-lg text-xs font-bold" style={{ background: G.brand, color: G.bg }}>Crear Producto</button>
                       </form>
                     </div>
                   </div>
@@ -364,16 +334,12 @@
 
                 {tab === "orders" && (
                   <div className="space-y-6">
-                    <div>
-                      <h1 className="text-2xl font-bold tracking-tight">Pedidos</h1>
-                      <p className="text-sm mt-1" style={{ color: G.muted }}>Gestión y control de ventas.</p>
-                    </div>
-
+                    <h1 className="text-2xl font-bold tracking-tight">Pedidos</h1>
                     <div className="grid grid-cols-3 gap-6 items-start">
                       <div className="col-span-2 rounded-xl border overflow-hidden" style={{ background: G.card, borderColor: G.bdr }}>
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="border-b" style={{ borderColor: G.bdr, background: "rgba(255,255,255,0.01)" }}>
+                            <tr className="border-b" style={{ borderColor: G.bdr }}>
                               <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>ID Pedido</th>
                               <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>ID Cliente</th>
                               <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Estado</th>
@@ -386,10 +352,7 @@
                                 <td className="p-4 font-mono text-[11px] text-slate-400">#{o.id}</td>
                                 <td className="p-4 font-mono text-[11px]">{o.user_id}</td>
                                 <td className="p-4">
-                                  <Pill 
-                                    color={o.status === 'completed' ? G.green : o.status === 'pending' ? G.gold : G.red}
-                                    bg={o.status === 'completed' ? '#34D39915' : o.status === 'pending' ? '#F59E0B15' : '#F8717115'}
-                                  >
+                                  <Pill color={o.status === 'completed' ? G.green : o.status === 'pending' ? G.gold : G.red}>
                                     {o.status}
                                   </Pill>
                                 </td>
@@ -400,12 +363,71 @@
                         </table>
                       </div>
 
-                      <form onSubmit={addOrder} className="p-5 rounded-xl border space-y-4 sticky top-8" style={{ background: G.card, borderColor: G.bdr }}>
+                      <form onSubmit={addOrder} className="p-5 rounded-xl border space-y-4" style={{ background: G.card, borderColor: G.bdr }}>
                         <h3 className="text-sm font-bold flex items-center gap-2"><Plus size={16} style={{ color: G.brand }} /> Simular Venta</h3>
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>UUID del Usuario (Cliente)</label>
-                          <input required type="text" value={oForm.user_id} onChange={e => setOForm({...oForm, user_id: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none font-mono" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Pegar ID de la pestaña Clientes" />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>Total de la Compra ($)</label>
-                          <input required type="number" step="0.01" value={oForm.total} onChange={e => setOForm({...oForm, total: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }}
+                        <input required type="text" value={oForm.user_id} onChange={e => setOForm({...oForm, user_id: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none font-mono" style={{ background: G.card2, borderColor: G.bdr }} placeholder="ID del Cliente" />
+                        <input required type="number" step="0.01" value={oForm.total} onChange={e => setOForm({...oForm, total: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Total ($)" />
+                        <select value={oForm.status} onChange={e => setOForm({...oForm, status: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr, color: G.text }}>
+                          <option value="pending">Pendiente</option>
+                          <option value="completed">Completado</option>
+                          <option value="cancelled">Cancelado</option>
+                        </select>
+                        <button type="submit" className="w-full py-2.5 rounded-lg text-xs font-bold" style={{ background: G.brand, color: G.bg }}>Registrar Pedido</button>
+                      </form>
+                    </div>
+                  </div>
+                )}
+
+                {tab === "users" && (
+                  <div className="space-y-6">
+                    <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
+                    <div className="grid grid-cols-3 gap-6 items-start">
+                      <div className="col-span-2 rounded-xl border overflow-hidden" style={{ background: G.card, borderColor: G.bdr }}>
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="border-b" style={{ borderColor: G.bdr }}>
+                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>ID (UUID)</th>
+                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Nombre</th>
+                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Email</th>
+                              <th className="p-4 font-bold uppercase tracking-wider text-center" style={{ color: G.muted }}>Rol</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
+                            {users.map(u => (
+                              <tr key={u.id} className="hover:bg-[rgba(255,255,255,0.01)] transition">
+                                <td className="p-4 font-mono text-[10px] text-emerald-400 select-all cursor-pointer">{u.id}</td>
+                                <td className="p-4 font-bold flex items-center gap-2">
+                                  <Av txt={u.name ? u.name.substring(0,2).toUpperCase() : "US"} size={24} />
+                                  {u.name || 'Sin Nombre'}
+                                </td>
+                                <td className="p-4 text-slate-300">{u.email}</td>
+                                <td className="p-4 text-center"><Pill color={u.role === 'admin' ? G.gold : G.muted}>{u.role}</Pill></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <form onSubmit={addUser} className="p-5 rounded-xl border space-y-4" style={{ background: G.card, borderColor: G.bdr }}>
+                        <h3 className="text-sm font-bold flex items-center gap-2"><Plus size={16} style={{ color: G.brand }} /> Crear Usuario</h3>
+                        <input required type="text" value={uForm.name} onChange={e => setUForm({...uForm, name: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Nombre Completo" />
+                        <input required type="email" value={uForm.email} onChange={e => setUForm({...uForm, email: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Correo Electrónico" />
+                        <select value={uForm.role} onChange={e => setUForm({...uForm, role: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr, color: G.text }}>
+                          <option value="customer">Cliente</option>
+                          <option value="admin">Administrador</option>
+                        </select>
+                        <button type="submit" className="w-full py-2.5 rounded-lg text-xs font-bold" style={{ background: G.brand, color: G.bg }}>Guardar Cliente</button>
+                      </form>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<GonnieSupabase />);
+    </script>
+</body>
+</html>
