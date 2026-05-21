@@ -3,23 +3,409 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Tienda Supabase</title>
+    <title>Gonnieshop - Admin Dashboard</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
     <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+    
+    <script src="https://unpkg.com/react-is@18/umd/react-is.development.js"></script>
     <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
 
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide-react@latest"></script>
+
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <style>
-        body { margin: 0; font-family: sans-serif; background-color: #0d0f14; color: #fff; }
+        body { 
+            background-color: #080b10; 
+            color: #EEF2F7;
+        }
+        /* Corrección para que los iconos de Lucide no salgan gigantes */
+        svg {
+            display: inline-block;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <script type="text/babel" src="gonnie-supabase.jsx"></script>
-</body>
-</html>
+    <script type="text/babel">
+        // Extraemos las funciones de las librerías globales para que el navegador las entienda
+        const { useState, useEffect, useCallback } = React;
+        const { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } = Recharts;
+        
+        // Mapeo manual de los iconos que usa tu código desde la librería Lucide
+        const { 
+            Package, ShoppingCart, Users, TrendingUp, Plus, 
+            Trash2, CheckCircle, Clock, AlertCircle, RefreshCw, 
+            Layers, ChevronRight, DollarSign, BarChart2 
+        } = LucideReact;
+
+        // --- TU CÓDIGO REACT ADAPTADO ---
+
+        // CONFIGURACIÓN DE SUPABASE
+        const SUPABASE_URL = "https://fnjqzcnufkhrfzxfallj.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_PHk3rHljidKOQ5ByIoME0Q_jPa2Ldd=";
+
+        const DB_HEADERS = {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        };
+
+        async function dbGet(table, query = "") {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, { headers: DB_HEADERS });
+          if (!res.ok) throw new Error(await res.text());
+          return res.json();
+        }
+
+        async function dbInsert(table, data) {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+            method: "POST",
+            headers: DB_HEADERS,
+            body: JSON.stringify(data),
+          });
+          if (!res.ok) throw new Error(await res.text());
+          return res.json();
+        }
+
+        // COLORES DE MARCA
+        const G = {
+          brand: "#00C896", brandD: "#009E78", brandL: "#33DFB0",
+          bg: "#080b0f", card: "#0F1419", card2: "#161D25",
+          text: "#EEF2F7", muted: "#6B7A8D",
+          bdr: "rgba(255,255,255,0.06)",
+          green: "#34D399", red: "#F87171", blue: "#60A5FA", gold: "#F59E0B",
+        };
+
+        // AYUDANTES DE INTERFAZ
+        const Av = ({ txt, size = 38, bg = "#1A2535", color = G.brand }) => (
+          <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.34, fontWeight: 700, color, flexShrink: 0 }}>
+            {txt}
+          </div>
+        );
+
+        const Pill = ({ children, color = G.brand, bg }) => (
+          <span style={{ background: bg || `${color}18`, color, fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, letterSpacing: "0.04em", whitespace: "nowrap" }}>
+            {children}
+          </span>
+        );
+
+        // COMPONENTE PRINCIPAL (Tu Dashboard)
+        function GonnieSupabase() {
+          const [tab, setTab] = useState("overview");
+          const [prods, setProds] = useState([]);
+          const [orders, setOrders] = useState([]);
+          const [users, setUsers] = useState([]);
+          const [loading, setLoading] = useState(true);
+          const [err, setErr] = useState(null);
+
+          // Formularios
+          const [pForm, setPForm] = useState({ name: "", price: "", stock: "", img: "", category: "Prendas" });
+          const [oForm, setOForm] = useState({ user_id: "", total: "", status: "pending", items: "" });
+          const [uForm, setUForm] = useState({ name: "", email: "", role: "customer" });
+
+          const loadAll = useCallback(async () => {
+            try {
+              setLoading(true);
+              setErr(null);
+              const [p, o, u] = await Promise.all([
+                dbGet("products", "?order=created_at.desc"),
+                dbGet("orders", "?order=created_at.desc"),
+                dbGet("users", "?order=created_at.desc")
+              ]);
+              setProds(p);
+              setOrders(o);
+              setUsers(u);
+            } catch (e) {
+              setErr(e.message);
+            } finally {
+              setLoading(false);
+            }
+          }, []);
+
+          useEffect(() => { loadAll(); }, [loadAll]);
+
+          const addProd = async (e) => {
+            e.preventDefault();
+            try {
+              const res = await dbInsert("products", { ...pForm, price: parseFloat(pForm.price), stock: parseInt(pForm.stock) });
+              setProds([res[0], ...prods]);
+              setPForm({ name: "", price: "", stock: "", img: "", category: "Prendas" });
+            } catch (e) { alert(e.message); }
+          };
+
+          const addOrder = async (e) => {
+            e.preventDefault();
+            try {
+              const res = await dbInsert("orders", { ...oForm, total: parseFloat(oForm.total), items: oForm.items ? JSON.parse(oForm.items) : [] });
+              setOrders([res[0], ...orders]);
+              setOForm({ user_id: "", total: "", status: "pending", items: "" });
+            } catch (e) { alert("Error: Verifica el ID de usuario o JSON de items válido."); }
+          };
+
+          const addUser = async (e) => {
+            e.preventDefault();
+            try {
+              const res = await dbInsert("users", uForm);
+              setUsers([res[0], ...users]);
+              setUForm({ name: "", email: "", role: "customer" });
+            } catch (e) { alert(e.message); }
+          };
+
+          if (loading) return (
+            <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: G.bg }}>
+              <RefreshCw className="animate-spin mb-3" size={32} style={{ color: G.brand }} />
+              <p style={{ color: G.muted, fontSize: 14 }}>Conectando con Gonnie Supabase...</p>
+            </div>
+          );
+
+          if (err) return (
+            <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center" style={{ background: G.bg }}>
+              <AlertCircle size={40} className="mb-2" style={{ color: G.red }} />
+              <h3 className="text-lg font-bold mb-1">Error de Conexión</h3>
+              <p className="max-w-md text-sm mb-4" style={{ color: G.muted }}>{err}</p>
+              <button onClick={loadAll} className="px-4 py-2 rounded text-sm font-semibold transition" style={{ background: G.brand, color: G.bg }}>Reintentar</button>
+            </div>
+          );
+
+          // Cálculos para el Overview
+          const totalSales = orders.reduce((acc, o) => acc + (o.total || 0), 0);
+          const chartData = [...orders].reverse().map(o => ({
+            fecha: new Date(o.created_at).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }),
+            monto: o.total
+          }));
+
+          return (
+            <div className="flex min-h-screen" style={{ background: G.bg, color: G.text }}>
+              {/* BANCO LATERAL */}
+              <div className="w-64 flex-shrink-0 p-6 flex flex-col border-r" style={{ borderColor: G.bdr, background: G.card }}>
+                <div className="flex items-center gap-3 mb-8 px-2">
+                  <div className="w-8 h-8 rounded flex items-center justify-center font-bold text-lg" style={{ background: G.brand, color: G.bg }}>G</div>
+                  <span className="font-bold text-lg tracking-tight">gonnieshop</span>
+                </div>
+                
+                <nav className="flex flex-col gap-1 flex-1">
+                  {[
+                    { id: "overview", label: "Vista General", icon: BarChart2 },
+                    { id: "products", label: "Productos", icon: Package, count: prods.length },
+                    { id: "orders", label: "Pedidos", icon: ShoppingCart, count: orders.length },
+                    { id: "users", label: "Clientes", icon: Users, count: users.length },
+                  ].map(item => {
+                    const Icon = item.icon;
+                    const active = tab === item.id;
+                    return (
+                      <button key={item.id} onClick={() => setTab(item.id)} className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition group" style={{ background: active ? `${G.brand}12` : "transparent", color: active ? G.brand : G.muted }}>
+                        <div className="flex items-center gap-3">
+                          <Icon size={18} style={{ color: active ? G.brand : G.muted }} />
+                          <span>{item.label}</span>
+                        </div>
+                        {item.count !== undefined && (
+                          <span className="text-xs px-2 py-0.5 rounded-md font-semibold" style={{ background: active ? `${G.brand}20` : "rgba(255,255,255,0.03)", color: active ? G.brand : G.muted }}>
+                            {item.count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* CONTENIDO PRINCIPAL */}
+              <div className="flex-1 overflow-y-auto p-8">
+                {tab === "overview" && (
+                  <div className="space-y-8">
+                    <div>
+                      <h1 className="text-2xl font-bold tracking-tight">Panel de Control</h1>
+                      <p className="text-sm mt-1" style={{ color: G.muted }}>Revisión del estado actual de la tienda.</p>
+                    </div>
+
+                    {/* TARJETAS METRICAS */}
+                    <div className="grid grid-cols-4 gap-5">
+                      {[
+                        { title: "Ingresos Totales", value: `$${totalSales.toLocaleString()}`, icon: DollarSign, color: G.brand },
+                        { title: "Pedidos Realizados", value: orders.length, icon: ShoppingCart, color: G.blue },
+                        { title: "Productos Activos", value: prods.length, icon: Package, color: G.gold },
+                        { title: "Usuarios Registrados", value: users.length, icon: Users, color: G.green },
+                      ].map((card, i) => {
+                        const Icon = card.icon;
+                        return (
+                          <div key={i} className="p-5 rounded-xl border flex flex-col justify-between h-28" style={{ background: G.card, borderColor: G.bdr }}>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: G.muted }}>{card.title}</span>
+                              <Icon size={16} style={{ color: card.color }} />
+                            </div>
+                            <span className="text-2xl font-bold tracking-tight">{card.value}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* GRAFICA Y RECIENTES */}
+                    <div className="grid grid-cols-3 gap-6">
+                      <div className="col-span-2 p-5 rounded-xl border flex flex-col justify-between" style={{ background: G.card, borderColor: G.bdr, height: 320 }}>
+                        <div>
+                          <h3 className="text-sm font-bold">Flujo de Ventas</h3>
+                          <p className="text-xs" style={{ color: G.muted }}>Historial de montos por orden recibida.</p>
+                        </div>
+                        <div className="w-full h-52 mt-4">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                              <XAxis dataKey="fecha" stroke={G.muted} fontSize={10} tickLine={false} axisLine={false} />
+                              <Tooltip contentStyle={{ background: G.card2, borderColor: G.bdr, borderRadius: 8, fontSize: 12, color: G.text }} />
+                              <Area type="monotone" dataKey="monto" stroke={G.brand} fill={`${G.brand}10`} strokeWidth={2} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                      <div className="p-5 rounded-xl border flex flex-col" style={{ background: G.card, borderColor: G.bdr, height: 320 }}>
+                        <div className="mb-4">
+                          <h3 className="text-sm font-bold">Últimos Clientes</h3>
+                          <p className="text-xs" style={{ color: G.muted }}>Usuarios que se han unido recientemente.</p>
+                        </div>
+                        <div className="flex-1 overflow-y-auto space-y-3.5 pr-1">
+                          {users.slice(0, 4).map(u => (
+                            <div key={u.id} className="flex items-center gap-3">
+                              <Av txt={u.name ? u.name.substring(0,2).toUpperCase() : "US"} size={34} />
+                              <div className="flex flex-col min-w-0 flex-1">
+                                <span className="text-xs font-bold truncate">{u.name || 'Sin Nombre'}</span>
+                                <span className="text-[11px] truncate" style={{ color: G.muted }}>{u.email}</span>
+                              </div>
+                              <Pill color={u.role === 'admin' ? G.gold : G.muted}>{u.role}</Pill>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {tab === "products" && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h1 className="text-2xl font-bold tracking-tight">Productos</h1>
+                        <p className="text-sm mt-1" style={{ color: G.muted }}>Listado e ingreso de inventario.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-6 items-start">
+                      <div className="col-span-2 rounded-xl border overflow-hidden" style={{ background: G.card, borderColor: G.bdr }}>
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="border-b" style={{ borderColor: G.bdr, background: "rgba(255,255,255,0.01)" }}>
+                              <th className="p-4 font-bold uppercase tracking-wider text-center" style={{ color: G.muted, width: 60 }}>Imagen</th>
+                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Producto</th>
+                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Categoría</th>
+                              <th className="p-4 font-bold uppercase tracking-wider text-right" style={{ color: G.muted }}>Precio</th>
+                              <th className="p-4 font-bold uppercase tracking-wider text-center" style={{ color: G.muted }}>Stock</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
+                            {prods.map(p => (
+                              <tr key={p.id} className="hover:bg-[rgba(255,255,255,0.01)] transition">
+                                <td className="p-3 text-center">
+                                  {p.img ? (
+                                    <img src={p.img} alt={p.name} className="w-9 h-9 object-cover rounded-lg mx-auto border" style={{ borderColor: G.bdr }} />
+                                  ) : (
+                                    <div className="w-9 h-9 rounded-lg mx-auto flex items-center justify-center border" style={{ borderColor: G.bdr, background: G.card2 }}><Package size={14} style={{ color: G.muted }} /></div>
+                                  )}
+                                </td>
+                                <td className="p-3 font-bold">{p.name}</td>
+                                <td className="p-3 text-slate-400"><Pill color={G.blue} bg="rgba(96,165,250,0.1)">{p.category || 'General'}</Pill></td>
+                                <td className="p-3 text-right font-semibold text-emerald-400">${p.price?.toFixed(2)}</td>
+                                <td className="p-3 text-center font-medium" style={{ color: p.stock < 5 ? G.red : G.text }}>{p.stock} u</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <form onSubmit={addProd} className="p-5 rounded-xl border space-y-4 sticky top-8" style={{ background: G.card, borderColor: G.bdr }}>
+                        <h3 className="text-sm font-bold flex items-center gap-2"><Plus size={16} style={{ color: G.brand }} /> Nuevo Producto</h3>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>Nombre</label>
+                          <input required type="text" value={pForm.name} onChange={e => setPForm({...pForm, name: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none transition focus:border-emerald-500" style={{ background: G.card2, borderColor: G.bdr, color: G.text }} placeholder="Ej: Polera Gonnie" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>Precio ($)</label>
+                            <input required type="number" step="0.01" value={pForm.price} onChange={e => setPForm({...pForm, price: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="19.99" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>Stock</label>
+                            <input required type="number" value={pForm.stock} onChange={e => setPForm({...pForm, stock: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="50" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>Categoría</label>
+                          <select value={pForm.category} onChange={e => setPForm({...pForm, category: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr, color: G.text }}>
+                            <option value="Prendas">Prendas</option>
+                            <option value="Accesorios">Accesorios</option>
+                            <option value="Otros">Otros</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>URL Imagen</label>
+                          <input type="text" value={pForm.img} onChange={e => setPForm({...pForm, img: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }} placeholder="https://..." />
+                        </div>
+                        <button type="submit" className="w-full py-2.5 rounded-lg text-xs font-bold transition mt-2" style={{ background: G.brand, color: G.bg }}>Crear Producto</button>
+                      </form>
+                    </div>
+                  </div>
+                )}
+
+                {tab === "orders" && (
+                  <div className="space-y-6">
+                    <div>
+                      <h1 className="text-2xl font-bold tracking-tight">Pedidos</h1>
+                      <p className="text-sm mt-1" style={{ color: G.muted }}>Gestión y control de ventas.</p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-6 items-start">
+                      <div className="col-span-2 rounded-xl border overflow-hidden" style={{ background: G.card, borderColor: G.bdr }}>
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="border-b" style={{ borderColor: G.bdr, background: "rgba(255,255,255,0.01)" }}>
+                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>ID Pedido</th>
+                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>ID Cliente</th>
+                              <th className="p-4 font-bold uppercase tracking-wider" style={{ color: G.muted }}>Estado</th>
+                              <th className="p-4 font-bold uppercase tracking-wider text-right" style={{ color: G.muted }}>Total</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
+                            {orders.map(o => (
+                              <tr key={o.id} className="hover:bg-[rgba(255,255,255,0.01)] transition">
+                                <td className="p-4 font-mono text-[11px] text-slate-400">#{o.id}</td>
+                                <td className="p-4 font-mono text-[11px]">{o.user_id}</td>
+                                <td className="p-4">
+                                  <Pill 
+                                    color={o.status === 'completed' ? G.green : o.status === 'pending' ? G.gold : G.red}
+                                    bg={o.status === 'completed' ? '#34D39915' : o.status === 'pending' ? '#F59E0B15' : '#F8717115'}
+                                  >
+                                    {o.status}
+                                  </Pill>
+                                </td>
+                                <td className="p-4 text-right font-bold text-emerald-400">${o.total?.toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <form onSubmit={addOrder} className="p-5 rounded-xl border space-y-4 sticky top-8" style={{ background: G.card, borderColor: G.bdr }}>
+                        <h3 className="text-sm font-bold flex items-center gap-2"><Plus size={16} style={{ color: G.brand }} /> Simular Venta</h3>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>UUID del Usuario (Cliente)</label>
+                          <input required type="text" value={oForm.user_id} onChange={e => setOForm({...oForm, user_id: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none font-mono" style={{ background: G.card2, borderColor: G.bdr }} placeholder="Pegar ID de la pestaña Clientes" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: G.muted }}>Total de la Compra ($)</label>
+                          <input required type="number" step="0.01" value={oForm.total} onChange={e => setOForm({...oForm, total: e.target.value})} className="w-full text-xs p-2.5 rounded-lg border outline-none" style={{ background: G.card2, borderColor: G.bdr }}
