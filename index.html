@@ -80,7 +80,7 @@
         // ─── EMAIL DE CONFIRMACIÓN VÍA SUPABASE EDGE FUNCTION ──────────────────
         async function sendConfirmationEmail({ barberia, barbero, servicio, fecha, hora, precio, cliente, email_cliente }) {
           try {
-            await fetch(`${SUPABASE_URL}/functions/v1/enviar-confirmacion`, {
+            await fetch(`${SUPABASE_URL}/functions/v1/rapid-processor`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
