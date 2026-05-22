@@ -249,11 +249,15 @@
         }
 
         // ─── VISTA 1: HOME SCREEN ─────────────────────────────────────────────
-        function HomeScreen({ nav }) {
+        function HomeScreen({ nav, user, puntos = 0 }) {
+          const nivel = getNivel(puntos);
+          const progreso = getProgreso(puntos);
+          const ptsSiguiente = getPtsParaSiguiente(puntos);
+          const nombre = user?.user_metadata?.full_name?.split(" ")[0] || "tú";
           return (
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
               <div style={{ padding: "16px 18px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div><GonnieLogo /><p style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>Buenas 👋 Javier</p></div>
+                <div><GonnieLogo /><p style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>Buenas 👋 {nombre}</p></div>
                 <div style={{ position: "relative" }}>
                   <div style={{ width: 38, height: 38, borderRadius: "50%", background: G.card, border: `0.5px solid ${G.bdr}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🔔</div>
                   <div style={{ position: "absolute", top: 2, right: 2, width: 9, height: 9, borderRadius: "50%", background: G.brand, border: `2px solid ${G.bg}` }} />
