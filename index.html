@@ -478,13 +478,17 @@
             if (!date || !slot) return alert("Selecciona fecha y hora");
             setSaving(true);
             try {
-              const payload = {
-                barberia_id: booking.barberia.id,
-                barbero_id: booking.bar.id,
-                date,
-                time: slot,
-                price: booking.svc.price,
-                service_name: booking.svc.name
+             const payload = {
+  barberia_id: booking.barberia.id,
+  barbero_id: booking.bar.id,
+  servicio_id: booking.svc.id,
+  client_name: user?.user_metadata?.full_name || "Cliente",
+  client_email: user?.email || "",
+  date,
+  time: slot,
+  price: booking.svc.price,
+  points_earned: Math.floor(booking.svc.price * 2)
+};
               };
               await dbInsert("appointments", payload);
               setConfirmedAppt(payload);
