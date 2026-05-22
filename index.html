@@ -468,7 +468,7 @@
         }
 
         // ─── VISTA 4: AGENDA Y TURNOS (BOOKING SCREEN) ────────────────────────
-        function BookingScreen({ booking, nav, setConfirmedAppt, setPuntos }) {
+        function BookingScreen({ booking, nav, setConfirmedAppt, setPuntos, user }) {
           const [date, setDate] = useState("");
           const [slot, setSlot] = useState("");
           const [saving, setSaving] = useState(false);
@@ -779,7 +779,7 @@
                       {view === "home" && <HomeScreen nav={setView} user={user} puntos={puntos} />}
                       {view === "explore" && <ExploreScreen nav={setView} setBarberia={setBarberia} />}
                       {view === "detail" && <DetailScreen barberia={barberia} nav={setView} setBooking={setBooking} />}
-                      {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} setPuntos={setPuntos} />}
+                      {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} setPuntos={setPuntos} user={user} />}
                       {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
                       {view === "appointments" && <AppointmentsScreen />}
                       {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
