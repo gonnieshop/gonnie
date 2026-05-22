@@ -102,6 +102,27 @@
           green: "#34D399", red: "#F87171", blue: "#60A5FA", gold: "#F59E0B",
         };
 
+
+        // ─── HELPER: NIVELES DE PUNTOS ────────────────────────────────────────
+        function getNivel(puntos) {
+          if (puntos >= 1500) return { nombre: "Platino", icono: "💎", color: "#60A5FA", min: 1500, max: 2000 };
+          if (puntos >= 1000) return { nombre: "Oro",     icono: "🏆", color: "#F59E0B", min: 1000, max: 1500 };
+          if (puntos >= 500)  return { nombre: "Plata",   icono: "🥈", color: "#9CA3AF", min: 500,  max: 1000 };
+          return                     { nombre: "Bronce",  icono: "🥉", color: "#CD7F32", min: 0,    max: 500  };
+        }
+
+        function getProgreso(puntos) {
+          const nivel = getNivel(puntos);
+          if (nivel.nombre === "Platino") return 100;
+          return Math.min(((puntos - nivel.min) / (nivel.max - nivel.min)) * 100, 100);
+        }
+
+        function getPtsParaSiguiente(puntos) {
+          const nivel = getNivel(puntos);
+          if (nivel.nombre === "Platino") return 0;
+          return nivel.max - puntos;
+        }
+
         const BARBER_COLORS = [
           { bg: "#1A2535", color: G.blue },
           { bg: "#1A2520", color: G.green },
@@ -248,16 +269,18 @@
                         <p style={{ fontSize: 10, color: `${G.brand}90`, letterSpacing: "0.08em", textTransform: "uppercase" }}>Gonnie Points</p>
                         <NewPill />
                       </div>
-                      <p style={{ fontSize: 38, fontWeight: 900, color: G.brand, lineHeight: 1 }}>1.240</p>
-                      <p style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>Nivel Oro · 260 pts para Platino</p>
+                      <p style={{ fontSize: 38, fontWeight: 900, color: G.brand, lineHeight: 1 }}>{puntos.toLocaleString("es-ES")}</p>
+                      <p style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>
+                        Nivel {nivel.nombre} · {ptsSiguiente > 0 ? `${ptsSiguiente} pts para ${getNivel(puntos + ptsSiguiente).nombre}` : "¡Nivel máximo! 🎉"}
+                      </p>
                     </div>
                     <div style={{ background: `${G.brand}15`, border: `0.5px solid ${G.brand}30`, borderRadius: 14, padding: "10px 12px", textAlign: "center" }}>
-                      <p style={{ fontSize: 22, marginBottom: 2 }}>🏆</p>
-                      <p style={{ fontSize: 9, fontWeight: 800, color: G.brand }}>ORO</p>
+                      <p style={{ fontSize: 22, marginBottom: 2 }}>{nivel.icono}</p>
+                      <p style={{ fontSize: 9, fontWeight: 800, color: nivel.color }}>{nivel.nombre.toUpperCase()}</p>
                     </div>
                   </div>
                   <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 8, height: 5, overflow: "hidden" }}>
-                    <div style={{ width: "72%", height: "100%", background: `linear-gradient(90deg,${G.brand},${G.brandL})` }} />
+                    <div style={{ width: `${progreso}%`, height: "100%", background: `linear-gradient(90deg,${G.brand},${G.brandL})`, transition: "width 0.8s ease" }} />
                   </div>
                 </div>
 
@@ -441,7 +464,7 @@
         }
 
         // ─── VISTA 4: AGENDA Y TURNOS (BOOKING SCREEN) ────────────────────────
-        function BookingScreen({ booking, nav, setConfirmedAppt }) {
+        function BookingScreen({ booking, nav, setConfirmedAppt, setPuntos }) {
           const [date, setDate] = useState("");
           const [slot, setSlot] = useState("");
           const [saving, setSaving] = useState(false);
@@ -472,6 +495,7 @@
                 cliente: user?.user_metadata?.full_name || user?.email || "Cliente",
                 email_cliente: user?.email || "",
               });
+              setPuntos(prev => prev + Math.floor((booking.svc?.price || 0) * 2));
               nav("confirmed");
             } catch (e) {
               // Si falla la tabla simulada, igual avanza para experiencia fluida
@@ -543,7 +567,7 @@
         }
 
         // ─── VISTA 7: FIDELIZACIÓN Y PREMIOS (LOYALTY) ────────────────────────
-        function LoyaltyScreen() {
+        function LoyaltyScreen({ puntos }) {
           const rewards = [
             { pts: 500, title: "Lavado Premium Gratis", claim: true },
             { pts: 1000, title: "Descuento del 50% en tu Corte", claim: false },
@@ -674,18 +698,36 @@
           const [barberia, setBarberia] = useState(null);
           const [booking, setBooking] = useState(null);
           const [confirmedAppt, setConfirmedAppt] = useState(null);
+          const [puntos, setPuntos] = useState(0);
+
+          // Cargar puntos reales del usuario desde Supabase
+          const cargarPuntos = async (email) => {
+            try {
+              const data = await dbGet("appointments", `?client_email=eq.${encodeURIComponent(email)}&select=points_earned`);
+              if (Array.isArray(data)) {
+                const total = data.reduce((sum, a) => sum + (a.points_earned || 0), 0);
+                setPuntos(total);
+              }
+            } catch(e) { console.warn("No se pudieron cargar los puntos:", e.message); }
+          };
 
           useEffect(() => {
             // Comprobar sesión existente (cuando Google redirige de vuelta)
             supabaseClient.auth.getSession().then(({ data: { session } }) => {
               setUser(session?.user || null);
               setAuthLoading(false);
-              if (session?.user) setSplash(false);
+              if (session?.user) {
+                setSplash(false);
+                cargarPuntos(session.user.email);
+              }
             });
             // Escuchar cambios de sesión en tiempo real
             const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
               setUser(session?.user || null);
-              if (session?.user) setSplash(false);
+              if (session?.user) {
+                setSplash(false);
+                cargarPuntos(session.user.email);
+              }
             });
             return () => subscription.unsubscribe();
           }, []);
@@ -726,13 +768,13 @@
                     <BusinessScreen />
                   ) : (
                     <>
-                      {view === "home" && <HomeScreen nav={setView} />}
+                      {view === "home" && <HomeScreen nav={setView} user={user} puntos={puntos} />}
                       {view === "explore" && <ExploreScreen nav={setView} setBarberia={setBarberia} />}
                       {view === "detail" && <DetailScreen barberia={barberia} nav={setView} setBooking={setBooking} />}
-                      {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} />}
+                      {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} setPuntos={setPuntos} />}
                       {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
                       {view === "appointments" && <AppointmentsScreen />}
-                      {view === "loyalty" && <LoyaltyScreen />}
+                      {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
                       {view === "plans" && <PlansScreen />}
                       {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} />}
                     </>
@@ -763,4 +805,5 @@
     </script>
 </body>
 </html>
+
 
