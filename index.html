@@ -489,7 +489,7 @@
   price: booking.svc.price,
   points_earned: Math.floor(booking.svc.price * 2)
 };
-              };
+             
               await dbInsert("appointments", payload);
               setConfirmedAppt(payload);
               // Enviar emails de confirmación
