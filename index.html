@@ -18,7 +18,7 @@
 
     <style>
         body { 
-            background-color: #06080B; 
+            background-color: #F2F2F7; 
             color: #EEF2F7;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             margin: 0;
@@ -96,10 +96,10 @@
         // ─── PALETA DE COLORES GONNIE ──────────────────────────────────────────
         const G = {
           brand: "#00C896", brandD: "#009E78", brandL: "#33DFB0",
-          bg: "#080B0F", card: "#0F1419", card2: "#161D25",
-          text: "#EEF2F7", muted: "#6B7A8D",
-          bdr: "rgba(255,255,255,0.06)",
-          green: "#34D399", red: "#F87171", blue: "#60A5FA", gold: "#F59E0B",
+          bg: "#F2F2F7", card: "#FFFFFF", card2: "#F2F2F7",
+          text: "#1C1C1E", muted: "#8E8E93",
+          bdr: "rgba(0,0,0,0.08)",
+          green: "#34C759", red: "#FF3B30", blue: "#007AFF", gold: "#FF9500",
         };
 
 
@@ -124,10 +124,10 @@
         }
 
         const BARBER_COLORS = [
-          { bg: "#1A2535", color: G.blue },
-          { bg: "#1A2520", color: G.green },
-          { bg: "#251A25", color: "#C084FC" },
-          { bg: "#2A1A1A", color: "#FB923C" },
+          { bg: "#E8F4FD", color: "#007AFF" },
+          { bg: "#E8F8F2", color: "#00C896" },
+          { bg: "#F3E8FD", color: "#AF52DE" },
+          { bg: "#FFF3E8", color: "#FF9500" },
         ];
 
         // ─── COMPONENTES AUXILIARES DE UI ───────────────────────────────────────
@@ -139,16 +139,16 @@
           <span style={{ background: bg || `${color}18`, color, fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{children}</span>
         );
 
-        const NewPill = () => <Pill color="#080B0F" bg={G.brand}>NUEVO</Pill>;
+        const NewPill = () => <Pill color="#FFFFFF" bg={G.brand}>NUEVO</Pill>;
 
         const PrimaryBtn = ({ onClick, children, disabled, style = {} }) => (
-          <button onClick={disabled ? undefined : onClick} style={{ background: disabled ? `${G.brand}40` : G.brand, color: disabled ? "rgba(255,255,255,0.3)" : "#080B0F", border: "none", borderRadius: 14, padding: "13px 20px", fontSize: 14, fontWeight: 800, cursor: disabled ? "not-allowed" : "pointer", width: "100%", fontFamily: "inherit", ...style }}>
+          <button onClick={disabled ? undefined : onClick} style={{ background: disabled ? `${G.brand}40` : G.brand, color: disabled ? "rgba(255,255,255,0.3)" : "#FFFFFF", border: "none", borderRadius: 14, padding: "13px 20px", fontSize: 14, fontWeight: 800, cursor: disabled ? "not-allowed" : "pointer", width: "100%", fontFamily: "inherit", ...style }}>
             {children}
           </button>
         );
 
         const GhostBtn = ({ onClick, children }) => (
-          <button onClick={onClick} style={{ background: "transparent", border: `0.5px solid ${G.bdr}`, borderRadius: 14, padding: "12px 20px", fontSize: 13, fontWeight: 500, cursor: "pointer", width: "100%", fontFamily: "inherit", color: G.muted }}>
+          <button onClick={onClick} style={{ background: "transparent", border: `1px solid ${G.bdr}`, borderRadius: 14, padding: "12px 20px", fontSize: 13, fontWeight: 500, cursor: "pointer", width: "100%", fontFamily: "inherit", color: G.muted }}>
             {children}
           </button>
         );
@@ -164,25 +164,22 @@
         );
 
         const Skeleton = ({ h = 60, r = 14 }) => (
-          <div style={{ height: h, borderRadius: r, background: G.card, border: `0.5px solid ${G.bdr}`, marginBottom: 12, opacity: 0.6 }} />
+          <div style={{ height: h, borderRadius: r, background: "#E5E5EA", border: "none", marginBottom: 12, opacity: 1 }} />
         );
 
-        const GONNIE_LOGO = null; // Añade aquí tu URL de logo
+        const GONNIE_LOGO = "https://i.imgur.com/VCuWiBN.png";
         const GonnieLogo = ({ size = 26 }) => (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: size, height: size, borderRadius: size * 0.3, background: G.brand, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.55 }}>✂</div>
-            <span style={{ fontSize: size * 0.75, fontWeight: 900, color: G.text, letterSpacing: "-0.02em" }}>gonnie</span>
-          </div>
+          <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: size * 1.6, width: "auto", objectFit: "contain" }} alt="Gonnie" />
         );
+
 
         // ─── VISTA LOGIN: ACCESO CON GOOGLE ───────────────────────────────────
         function LoginScreen() {
           const [loading, setLoading] = useState(false);
           return (
-            <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", background: G.bg }}>
+            <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", background: "#FFFFFF" }}>
               <div style={{ textAlign: "center", marginBottom: 40 }}>
-                <div style={{ width: 88, height: 88, borderRadius: 28, background: G.brand, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42, marginBottom: 20, marginLeft: "auto", marginRight: "auto" }}>✂</div>
-                <h1 style={{ fontSize: 42, fontWeight: 900, color: G.text, letterSpacing: "-0.04em", marginBottom: 6 }}>gonnie</h1>
+                <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: 110, width: "auto", marginBottom: 20, marginLeft: "auto", marginRight: "auto", display: "block" }} alt="Gonnie" />
                 <p style={{ fontSize: 14, color: G.muted }}>Tu barbería, en tu bolsillo</p>
               </div>
 
@@ -223,7 +220,7 @@
         // ─── VISTA 0: SPLASH SCREEN ───────────────────────────────────────────
         function SplashScreen({ onDone }) {
           return (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", minHeight: "80vh" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", minHeight: "80vh", background: "#FFFFFF" }}>
               <div style={{ marginBottom: 36, textAlign: "center" }}>
                <img src="https://imgur.com/a/8B5Wxp8" style={{ height: size * 1.4, width: "auto" }} alt="Gonnie" />
                 <p style={{ fontSize: 14, color: G.muted }}>Tu barbería, en tu bolsillo</p>
@@ -266,11 +263,11 @@
 
               <div style={{ padding: "0 18px" }}>
                 {/* Caja de Puntos */}
-                <div onClick={() => nav("loyalty")} style={{ background: "linear-gradient(135deg,#091A14,#0A1F18)", border: `1px solid ${G.brand}30`, borderRadius: 20, padding: "18px 20px", marginBottom: 16, cursor: "pointer", position: "relative" }}>
+                <div onClick={() => nav("loyalty")} style={{ background: "linear-gradient(135deg,#E8F8F2,#D0F5E8)", border: `1px solid ${G.brand}30`, borderRadius: 20, padding: "18px 20px", marginBottom: 16, cursor: "pointer", position: "relative" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                     <div>
                       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
-                        <p style={{ fontSize: 10, color: `${G.brand}90`, letterSpacing: "0.08em", textTransform: "uppercase" }}>Gonnie Points</p>
+                        <p style={{ fontSize: 10, color: G.brandD, letterSpacing: "0.08em", textTransform: "uppercase" }}>Gonnie Points</p>
                         <NewPill />
                       </div>
                       <p style={{ fontSize: 38, fontWeight: 900, color: G.brand, lineHeight: 1 }}>{puntos.toLocaleString("es-ES")}</p>
@@ -289,7 +286,7 @@
                 </div>
 
                 {/* Próxima Cita */}
-                <div style={{ background: G.card, border: `0.5px solid ${G.green}30`, borderRadius: 18, padding: "14px 16px", marginBottom: 16 }}>
+                <div style={{ background: G.card, boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)", borderRadius: 18, padding: "14px 16px", marginBottom: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                     <p style={{ fontSize: 10, color: G.muted, fontWeight: 700, textTransform: "uppercase" }}>Próxima cita</p>
                     <Pill color="#080B0F" bg={G.green}>Hoy 11:30h</Pill>
@@ -652,7 +649,7 @@
                 {mode === "customer" ? "🔄 Cambiar a Modo Negocio" : "🔄 Cambiar a Modo Cliente"}
               </GhostBtn>
 
-              <button onClick={signOut} style={{ marginTop: 12, width: "100%", background: "transparent", border: `0.5px solid ${G.red}40`, borderRadius: 14, padding: "12px", fontSize: 13, color: G.red, cursor: "pointer", fontWeight: 600 }}>
+              <button onClick={signOut} style={{ marginTop: 12, width: "100%", background: "transparent", border: `1px solid ${G.red}30`, borderRadius: 14, padding: "12px", fontSize: 13, color: G.red, cursor: "pointer", fontWeight: 600 }}>
                 Cerrar sesión
               </button>
             </div>
@@ -705,9 +702,9 @@
 
           // Pantalla de carga mientras comprueba sesión
           if (authLoading) return (
-            <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: G.bg }}>
+            <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#FFFFFF" }}>
               <div style={{ textAlign: "center" }}>
-                <div style={{ width: 60, height: 60, borderRadius: 18, background: G.brand, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, marginBottom: 16, marginLeft: "auto", marginRight: "auto" }}>✂</div>
+                <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: 80, width: "auto", marginBottom: 16, marginLeft: "auto", marginRight: "auto", display: "block" }} alt="Gonnie" />
                 <p style={{ color: G.muted, fontSize: 13 }}>Cargando Gonnie...</p>
               </div>
             </div>
@@ -751,7 +748,7 @@
                   )}
                 </div>
                 {view !== "confirmed" && (
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 68, background: G.card, borderTop: `0.5px solid ${G.bdr}`, display: "flex", alignItems: "center", zIndex: 50 }}>
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 68, background: "#FFFFFF", borderTop: `1px solid ${G.bdr}`, boxShadow: "0 -1px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", zIndex: 50 }}>
                     {[
                       { id: "home", l: "Inicio", i: "🏠" },
                       { id: "explore", l: "Explorar", i: "🔍" },
@@ -775,7 +772,3 @@
     </script>
 </body>
 </html>
-
-
-
-
