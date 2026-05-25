@@ -167,6 +167,7 @@
           <div style={{ height: h, borderRadius: r, background: G.card, border: `0.5px solid ${G.bdr}`, marginBottom: 12, opacity: 0.6 }} />
         );
 
+        const GONNIE_LOGO = null; // Añade aquí tu URL de logo
         const GonnieLogo = ({ size = 26 }) => (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: size, height: size, borderRadius: size * 0.3, background: G.brand, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.55 }}>✂</div>
@@ -180,7 +181,8 @@
           return (
             <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", background: G.bg }}>
               <div style={{ textAlign: "center", marginBottom: 40 }}>
-                <img src={GONNIE_LOGO} style={{ height: 110, width: "auto", marginBottom: 20, marginLeft: "auto", marginRight: "auto", display: "block" }} alt="Gonnie" />
+                <div style={{ width: 88, height: 88, borderRadius: 28, background: G.brand, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42, marginBottom: 20, marginLeft: "auto", marginRight: "auto" }}>✂</div>
+                <h1 style={{ fontSize: 42, fontWeight: 900, color: G.text, letterSpacing: "-0.04em", marginBottom: 6 }}>gonnie</h1>
                 <p style={{ fontSize: 14, color: G.muted }}>Tu barbería, en tu bolsillo</p>
               </div>
 
@@ -705,7 +707,7 @@
           if (authLoading) return (
             <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: G.bg }}>
               <div style={{ textAlign: "center" }}>
-                <img src={GONNIE_LOGO} style={{ height: 80, width: "auto", marginBottom: 16, marginLeft: "auto", marginRight: "auto", display: "block" }} alt="Gonnie" />
+                <div style={{ width: 60, height: 60, borderRadius: 18, background: G.brand, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, marginBottom: 16, marginLeft: "auto", marginRight: "auto" }}>✂</div>
                 <p style={{ color: G.muted, fontSize: 13 }}>Cargando Gonnie...</p>
               </div>
             </div>
