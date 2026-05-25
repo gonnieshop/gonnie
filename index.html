@@ -602,31 +602,8 @@
           );
         }
 
-        // ─── VISTA 8: SUSCRIPCIONES Y PLANES (PLANS) ──────────────────────────
-        function PlansScreen() {
-          const planes = [
-            { name: "Plan Basic", price: "19€", desc: "Corte ilimitado al mes (Lunes a Jueves)" },
-            { name: "Plan VIP Pro", price: "29€", desc: "Cortes y mantenimiento de barba ilimitados cualquier día + 1 Bebida VIP" }
-          ];
-
-          return (
-            <div style={{ flex: 1, padding: 18, paddingBottom: 80 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Tarifas Planas</h2>
-              <p style={{ fontSize: 12, color: G.muted, marginBottom: 16 }}>Despreocúpate del dinero y luce perfecto siempre</p>
-
-              {planes.map((p, i) => (
-                <div key={i} style={{ background: "linear-gradient(135deg, #0F1419, #161D25)", padding: 18, borderRadius: 16, border: `1px solid ${G.bdr}`, marginBottom: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>{p.name}</h3>
-                    <span style={{ fontSize: 20, fontWeight: 900, color: G.brand }}>{p.price}<span style={{ fontSize: 11, color: G.muted }}>/mes</span></span>
-                  </div>
-                  <p style={{ fontSize: 12, color: G.muted, marginBottom: 14 }}>{p.desc}</p>
-                  <PrimaryBtn onClick={() => alert("Suscripción procesada con éxito")}>Suscribirme</PrimaryBtn>
-                </div>
-              ))}
-            </div>
-          );
-        }
+       
+       
 
         // ─── VISTA 9: PANEL DE CONTROL DE NEGOCIO (BUSINESS MODE / RECHARTS) ──
         function BusinessScreen() {
