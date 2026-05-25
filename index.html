@@ -310,7 +310,6 @@
                   {[
                     { icon: "✂️", label: "Reservar cita", action: () => nav("explore") },
                     { icon: "👥", label: "Reserva grupal", action: () => nav("explore"), isNew: true },
-                    { icon: "📦", label: "Suscripciones", action: () => nav("plans"), isNew: true },
                     { icon: "💬", label: "Chat barbería", action: () => alert("Módulo de chat próximamente disponible"), isNew: true },
                   ].map((a, i) => (
                     <div key={i} onClick={a.action} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 16, padding: "14px 14px 12px", cursor: "pointer", position: "relative" }}>
@@ -760,7 +759,6 @@
                       {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
                       {view === "appointments" && <AppointmentsScreen />}
                       {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
-                      {view === "plans" && <PlansScreen />}
                       {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} />}
                     </>
                   )}
