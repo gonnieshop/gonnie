@@ -551,7 +551,7 @@
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>Mis Reservas</h2>
               <div style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 14, padding: 14, marginBottom: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Corte de pelo Degradado</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: G.text }}>Corte de pelo Degradado</p>
                   <Pill bg={`${G.green}20`} color={G.green}>Completado</Pill>
                 </div>
                 <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>💈 BarberKing • 📅 12 Mayo • 💰 15€</p>
@@ -577,7 +577,7 @@
                 <div key={i} style={{ background: G.card, padding: 16, borderRadius: 14, border: `1px solid ${G.bdr}`, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <span style={{ fontSize: 11, color: G.brand, fontWeight: 700 }}>{r.pts} PUNTOS</span>
-                    <h4 style={{ fontSize: 14, fontWeight: 700, margin: "2px 0 0" }}>{r.title}</h4>
+                    <h4 style={{ fontSize: 14, fontWeight: 700, margin: "2px 0 0", color: G.text }}>{r.title}</h4>
                   </div>
                   <button disabled={!r.claim} style={{ background: r.claim ? G.brand : G.card2, color: r.claim ? "#000" : G.muted, border: "none", padding: "6px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: r.claim ? "pointer" : "not-allowed" }}>
                     {r.claim ? "Canjear" : "Bloqueado"}
