@@ -755,16 +755,22 @@
                 {view !== "confirmed" && (
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 68, background: "#FFFFFF", borderTop: `1px solid ${G.bdr}`, boxShadow: "0 -1px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", zIndex: 50 }}>
                     {[
-                      { id: "home", l: "Inicio", i: "🏠" },
-                      { id: "explore", l: "Explorar", i: "🔍" },
-                      { id: "appointments", l: "Citas", i: "📅" },
-                      { id: "loyalty", l: "Club", i: "🏆" },
-                      { id: "profile", l: "Perfil", i: "👤" }
-                    ].map(n => (
-                      <button key={n.id} onClick={() => { if(mode === "business") setMode("customer"); setView(n.id); }} style={{ flex: 1, background: "transparent", border: "none", color: (view === n.id && mode === "customer") ? G.brand : "#1C1C1E", fontSize: 11, fontWeight: 600, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }}>
-                        <span style={{ fontSize: 18 }}>{n.i}</span> {n.l}
-                      </button>
-                    ))}
+                      { id: "home", l: "Inicio", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" /><path d="M9 21V12h6v9"/></svg>' },
+                      { id: "explore", l: "Explorar", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>' },
+                      { id: "appointments", l: "Citas", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="8" cy="14" r="0.5" fill="FILL"/><circle cx="12" cy="14" r="0.5" fill="FILL"/><circle cx="8" cy="18" r="0.5" fill="FILL"/></svg>' },
+                      { id: "loyalty", l: "Club", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' },
+                      { id: "profile", l: "Perfil", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>' },
+                    ].map(n => {
+                      const active = view === n.id && mode === "customer";
+                      const col = active ? G.brand : "#2C3B42";
+                      const svgHtml = n.svg.replace(/FILL/g, col).replace(/<svg /, '<svg stroke="' + col + '" ');
+                      return (
+                        <button key={n.id} onClick={() => { if(mode === "business") setMode("customer"); setView(n.id); }} style={{ flex: 1, background: "transparent", border: "none", fontSize: 10, fontWeight: active ? 700 : 500, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", padding: "6px 0", color: col }}>
+                          <span dangerouslySetInnerHTML={{ __html: svgHtml }} />
+                          <span>{n.l}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
