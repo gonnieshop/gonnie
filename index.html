@@ -95,11 +95,11 @@
 
         // ─── PALETA DE COLORES GONNIE ──────────────────────────────────────────
         const G = {
-          brand: "#00C896", brandD: "#009E78", brandL: "#33DFB0",
+          brand: "#1C1C1E", brandD: "#1E2B30", brandL: "#4A5F6A",
           bg: "#F2F2F7", card: "#FFFFFF", card2: "#F2F2F7",
-          text: "#1C1C1E", muted: "#8E8E93",
+          text: "#1C1C1E", muted: "#1C1C1E",
           bdr: "rgba(0,0,0,0.08)",
-          green: "#34C759", red: "#FF3B30", blue: "#007AFF", gold: "#FF9500",
+          green: "#1C1C1E", red: "#FF3B30", blue: "#007AFF", gold: "#FF9500",
         };
 
 
@@ -125,7 +125,7 @@
 
         const BARBER_COLORS = [
           { bg: "#E8F4FD", color: "#007AFF" },
-          { bg: "#E8F8F2", color: "#00C896" },
+          { bg: "#E8F8F2", color: "#1C1C1E" },
           { bg: "#F3E8FD", color: "#AF52DE" },
           { bg: "#FFF3E8", color: "#FF9500" },
         ];
@@ -135,7 +135,7 @@
           <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.34, fontWeight: 700, color, flexShrink: 0 }}>{txt}</div>
         );
 
-        const Pill = ({ children, color = G.brand, bg }) => (
+        const Pill = ({ children, color = "#2C3B42", bg }) => (
           <span style={{ background: bg || `${color}18`, color, fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{children}</span>
         );
 
@@ -148,19 +148,19 @@
         );
 
         const GhostBtn = ({ onClick, children }) => (
-          <button onClick={onClick} style={{ background: "transparent", border: `1px solid ${G.bdr}`, borderRadius: 14, padding: "12px 20px", fontSize: 13, fontWeight: 500, cursor: "pointer", width: "100%", fontFamily: "inherit", color: G.muted }}>
+          <button onClick={onClick} style={{ background: "transparent", border: `1px solid ${G.bdr}`, borderRadius: 14, padding: "12px 20px", fontSize: 13, fontWeight: 500, cursor: "pointer", width: "100%", fontFamily: "inherit", color: "#1C1C1E" }}>
             {children}
           </button>
         );
 
         const Back = ({ onBack }) => (
-          <button onClick={onBack} style={{ background: `${G.brand}15`, border: "none", borderRadius: 10, padding: "6px 12px", fontSize: 12, color: G.brand, cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>
+          <button onClick={onBack} style={{ background: `${G.brand}15`, border: "none", borderRadius: 10, padding: "6px 12px", fontSize: 12, color: "#2C3B42", cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>
             ← Volver
           </button>
         );
 
         const SLabel = ({ children }) => (
-          <p style={{ fontSize: 10, color: G.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10 }}>{children}</p>
+          <p style={{ fontSize: 10, color: "#1C1C1E", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10 }}>{children}</p>
         );
 
         const Skeleton = ({ h = 60, r = 14 }) => (
@@ -180,7 +180,7 @@
             <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", background: "#FFFFFF" }}>
               <div style={{ textAlign: "center", marginBottom: 40 }}>
                 <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: 110, width: "auto", marginBottom: 20, marginLeft: "auto", marginRight: "auto", display: "block" }} alt="Gonnie" />
-                <p style={{ fontSize: 14, color: G.muted }}>Tu barbería, en tu bolsillo</p>
+                <p style={{ fontSize: 14, color: "#1C1C1E" }}>Tu barbería, en tu bolsillo</p>
               </div>
 
               <div style={{ width: "100%", marginBottom: 32 }}>
@@ -209,7 +209,7 @@
                   </svg>
                   {loading ? "Redirigiendo..." : "Continuar con Google"}
                 </button>
-                <p style={{ fontSize: 11, color: G.muted, textAlign: "center" }}>
+                <p style={{ fontSize: 11, color: "#1C1C1E", textAlign: "center" }}>
                   Al continuar aceptas los términos de uso · Gratis para clientes
                 </p>
               </div>
@@ -223,7 +223,7 @@
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", minHeight: "80vh", background: "#FFFFFF" }}>
               <div style={{ marginBottom: 36, textAlign: "center" }}>
                <img src="https://imgur.com/a/8B5Wxp8" style={{ height: size * 1.4, width: "auto" }} alt="Gonnie" />
-                <p style={{ fontSize: 14, color: G.muted }}>Tu barbería, en tu bolsillo</p>
+                <p style={{ fontSize: 14, color: "#1C1C1E" }}>Tu barbería, en tu bolsillo</p>
               </div>
               <div style={{ width: "100%", marginBottom: 28 }}>
                 {[
@@ -239,7 +239,7 @@
               </div>
               <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
                 <PrimaryBtn onClick={onDone}>Empezar →</PrimaryBtn>
-                <p style={{ fontSize: 11, color: G.muted, textAlign: "center" }}>Gratis para clientes · Barberías desde 29€/mes</p>
+                <p style={{ fontSize: 11, color: "#1C1C1E", textAlign: "center" }}>Gratis para clientes · Barberías desde 29€/mes</p>
               </div>
             </div>
           );
@@ -255,20 +255,18 @@
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
               <div style={{ padding: "16px 18px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
-                  <div style={{ border: "2px solid #1C1C1E", borderRadius: 10, padding: "3px 6px", display: "inline-flex" }}>
-                    <GonnieLogo size={22} />
-                  </div>
-                  <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Buenas 👋 {nombre}</p>
+                  <GonnieLogo size={22} />
+                  <p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>Buenas 👋 {nombre}</p>
                 </div>
                 <div style={{ position: "relative" }}>
                   <div style={{ width: 38, height: 38, borderRadius: "50%", background: G.card, border: `0.5px solid ${G.bdr}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🔔</div>
-                  <div style={{ position: "absolute", top: 2, right: 2, width: 9, height: 9, borderRadius: "50%", background: G.brand, border: `2px solid ${G.bg}` }} />
+                  <div style={{ position: "absolute", top: 2, right: 2, width: 9, height: 9, borderRadius: "50%", background: G.brand, border: "2px solid #F2F2F7" }} />
                 </div>
               </div>
 
               <div style={{ padding: "0 18px" }}>
                 {/* Caja de Puntos */}
-                <div onClick={() => nav("loyalty")} style={{ background: "linear-gradient(135deg,#E8F8F2,#D0F5E8)", border: `1px solid ${G.brand}30`, borderRadius: 20, padding: "18px 20px", marginBottom: 16, cursor: "pointer", position: "relative" }}>
+                <div onClick={() => nav("loyalty")} style={{ background: "linear-gradient(135deg,#EEF1F2,#DDE3E6)", border: `1px solid ${G.brand}30`, borderRadius: 20, padding: "18px 20px", marginBottom: 16, cursor: "pointer", position: "relative" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                     <div>
                       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
@@ -276,7 +274,7 @@
                         <NewPill />
                       </div>
                       <p style={{ fontSize: 38, fontWeight: 900, color: G.brand, lineHeight: 1 }}>{puntos.toLocaleString("es-ES")}</p>
-                      <p style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>
+                      <p style={{ fontSize: 11, color: "#1C1C1E", marginTop: 4 }}>
                         Nivel {nivel.nombre} · {ptsSiguiente > 0 ? `${ptsSiguiente} pts para ${getNivel(puntos + ptsSiguiente).nombre}` : "¡Nivel máximo! 🎉"}
                       </p>
                     </div>
@@ -293,14 +291,14 @@
                 {/* Próxima Cita */}
                 <div style={{ background: G.card, boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)", borderRadius: 18, padding: "14px 16px", marginBottom: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <p style={{ fontSize: 10, color: G.muted, fontWeight: 700, textTransform: "uppercase" }}>Próxima cita</p>
+                    <p style={{ fontSize: 10, color: "#1C1C1E", fontWeight: 700, textTransform: "uppercase" }}>Próxima cita</p>
                     <Pill color="#080B0F" bg={G.green}>Hoy 11:30h</Pill>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <Av txt="CM" size={42} bg="#1A2535" color={G.blue} />
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 15, fontWeight: 700, color: G.text }}>Corte + Barba</p>
-                      <p style={{ fontSize: 12, color: G.muted }}>Carlos M. · BarberKing</p>
+                      <p style={{ fontSize: 12, color: "#1C1C1E" }}>Carlos M. · BarberKing</p>
                     </div>
                     <button onClick={() => nav("confirmed")} style={{ background: `${G.brand}15`, border: `0.5px solid ${G.brand}40`, borderRadius: 10, padding: "8px 12px", fontSize: 11, color: G.brand, fontWeight: 700 }}>📱 QR</button>
                   </div>
@@ -353,7 +351,7 @@
               <h2 style={{ fontSize: 22, fontWeight: 900, color: G.text, marginBottom: 14 }}>Explorar locales</h2>
 
               <div style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 14, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                <span style={{ color: G.muted }}>🔍</span>
+                <span style={{ color: "#1C1C1E" }}>🔍</span>
                 <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar barberías..." style={{ background: "transparent", border: "none", outline: "none", color: G.text, fontSize: 13, flex: 1 }} />
               </div>
 
@@ -381,7 +379,7 @@
                         <span style={{ fontSize: 13, fontWeight: 700 }}>{b.rating}</span>
                       </div>
                     </div>
-                    <p style={{ fontSize: 11, color: G.muted, marginBottom: 8 }}>📍 {b.city} · {b.hours}</p>
+                    <p style={{ fontSize: 11, color: "#1C1C1E", marginBottom: 8 }}>📍 {b.city} · {b.hours}</p>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                       {(b.specialties || []).map(sp => <Pill key={sp}>{sp}</Pill>)}
                     </div>
@@ -421,7 +419,7 @@
 
               <div style={{ padding: "16px 18px" }}>
                 <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{barberia.name}</h2>
-                <p style={{ fontSize: 12, color: G.muted, marginBottom: 14 }}>📍 {barberia.city} • {barberia.hours}</p>
+                <p style={{ fontSize: 12, color: "#1C1C1E", marginBottom: 14 }}>📍 {barberia.city} • {barberia.hours}</p>
 
                 <div style={{ display: "flex", background: G.card2, borderRadius: 12, padding: 3, marginBottom: 18 }}>
                   {[{ id: "barberos", l: "Barberos" }, { id: "servicios", l: "Servicios" }].map(t => (
@@ -434,7 +432,7 @@
                 {tab === "barberos" && !loading && barberos.map((br, idx) => (
                   <div key={br.id} onClick={() => setSelB(br)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: selB?.id === br.id ? `${G.brand}10` : G.card, border: `0.5px solid ${selB?.id === br.id ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
                     <Av txt={br.initials || "B"} bg={BARBER_COLORS[idx % 4].bg} color={BARBER_COLORS[idx % 4].color} />
-                    <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{br.name}</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{br.role}</p></div>
+                    <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{br.name}</p><p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>{br.role}</p></div>
                     <p style={{ fontSize: 12, color: G.gold, fontWeight: 700 }}>⭐ {br.rating}</p>
                   </div>
                 ))}
@@ -442,7 +440,7 @@
                 {tab === "servicios" && !loading && servicios.map(sv => (
                   <div key={sv.id} onClick={() => setSelS(sv)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: selS?.id === sv.id ? `${G.brand}10` : G.card, border: `0.5px solid ${selS?.id === sv.id ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
                     <span style={{ fontSize: 20 }}>{sv.icon || "✂️"}</span>
-                    <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{sv.name}</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>⏱ {sv.duration_min} min</p></div>
+                    <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{sv.name}</p><p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>⏱ {sv.duration_min} min</p></div>
                     <p style={{ fontSize: 16, fontWeight: 800 }}>{sv.price}€</p>
                   </div>
                 ))}
@@ -504,7 +502,7 @@
             <div style={{ flex: 1, padding: 18 }}>
               <Back onBack={() => nav("detail")} />
               <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 14 }}>Programar Horario</h3>
-              <p style={{ fontSize: 12, color: G.muted }}>{booking.svc.name} con {booking.bar.name}</p>
+              <p style={{ fontSize: 12, color: "#1C1C1E" }}>{booking.svc.name} con {booking.bar.name}</p>
 
               <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, padding: 12, borderRadius: 12, color: G.text, marginTop: 14, marginBottom: 18 }} />
 
@@ -526,7 +524,7 @@
             <div style={{ flex: 1, padding: 24, textAlign: "center", paddingTop: 40 }}>
               <div style={{ fontSize: 50, marginBottom: 12 }}>✅</div>
               <h2 style={{ fontSize: 22, fontWeight: 900 }}>¡Todo Listo!</h2>
-              <p style={{ fontSize: 12, color: G.muted, marginBottom: 20 }}>Muestra este código QR al llegar al establecimiento</p>
+              <p style={{ fontSize: 12, color: "#1C1C1E", marginBottom: 20 }}>Muestra este código QR al llegar al establecimiento</p>
 
               {/* QR Simulado */}
               <div style={{ background: "#FFF", padding: 16, width: 160, height: 160, marginLeft: "auto", marginRight: "auto", borderRadius: 16, display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 24 }}>
@@ -556,7 +554,7 @@
                   <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Corte de pelo Degradado</p>
                   <Pill bg={`${G.green}20`} color={G.green}>Completado</Pill>
                 </div>
-                <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>💈 BarberKing • 📅 12 Mayo • 💰 15€</p>
+                <p style={{ fontSize: 12, color: "#1C1C1E", margin: 0 }}>💈 BarberKing • 📅 12 Mayo • 💰 15€</p>
               </div>
             </div>
           );
@@ -573,7 +571,7 @@
           return (
             <div style={{ flex: 1, padding: 18, paddingBottom: 80 }}>
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Gonnie Rewards Club</h2>
-              <p style={{ fontSize: 12, color: G.muted, marginBottom: 18 }}>Canjea tus puntos acumulados por servicios gratis</p>
+              <p style={{ fontSize: 12, color: "#1C1C1E", marginBottom: 18 }}>Canjea tus puntos acumulados por servicios gratis</p>
 
               {rewards.map((r, i) => (
                 <div key={i} style={{ background: G.card, padding: 16, borderRadius: 14, border: `1px solid ${G.bdr}`, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -603,10 +601,10 @@
           return (
             <div style={{ flex: 1, padding: 18, paddingBottom: 80 }}>
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Panel de Control Profesional</h2>
-              <p style={{ fontSize: 12, color: G.muted, marginBottom: 16 }}>Métricas de rendimiento en tiempo real</p>
+              <p style={{ fontSize: 12, color: "#1C1C1E", marginBottom: 16 }}>Métricas de rendimiento en tiempo real</p>
 
               <div style={{ background: G.card, padding: 14, borderRadius: 14, border: `1px solid ${G.bdr}`, marginBottom: 16 }}>
-                <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>INGRESOS TOTALES (SEMANAL)</p>
+                <p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>INGRESOS TOTALES (SEMANAL)</p>
                 <p style={{ fontSize: 28, fontWeight: 900, color: G.brand, margin: "2px 0 10px" }}>4,120.00€</p>
                 
                 <div style={{ width: "100%", height: 140 }}>
@@ -622,8 +620,8 @@
 
               <SLabel>Control de Barbería</SLabel>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "center" }}><p style={{ fontSize: 20, margin: 0 }}>24</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Citas Hoy</p></div>
-                <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "center" }}><p style={{ fontSize: 20, margin: 0 }}>96%</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Ocupación</p></div>
+                <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "center" }}><p style={{ fontSize: 20, margin: 0 }}>24</p><p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>Citas Hoy</p></div>
+                <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "center" }}><p style={{ fontSize: 20, margin: 0 }}>96%</p><p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>Ocupación</p></div>
               </div>
             </div>
           );
@@ -643,7 +641,7 @@
                 : <Av txt={iniciales} size={64} />
               }
               <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 10, marginBottom: 2 }}>{nombre}</h3>
-              <p style={{ fontSize: 12, color: G.muted, marginTop: 0, marginBottom: 24 }}>{email}</p>
+              <p style={{ fontSize: 12, color: "#1C1C1E", marginTop: 0, marginBottom: 24 }}>{email}</p>
 
               <div style={{ textAlign: "left", background: G.card, borderRadius: 14, padding: 12, border: `1px solid ${G.bdr}`, marginBottom: 18 }}>
                 <div style={{ padding: "10px 4px", cursor: "pointer", borderBottom: `1px solid ${G.bdr}` }} onClick={() => alert("Editar perfil en desarrollo")}>⚙️ Ajustes de Cuenta</div>
@@ -710,7 +708,7 @@
             <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#FFFFFF" }}>
               <div style={{ textAlign: "center" }}>
                 <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: 80, width: "auto", marginBottom: 16, marginLeft: "auto", marginRight: "auto", display: "block" }} alt="Gonnie" />
-                <p style={{ color: G.muted, fontSize: 13 }}>Cargando Gonnie...</p>
+                <p style={{ color: "#1C1C1E", fontSize: 13 }}>Cargando Gonnie...</p>
               </div>
             </div>
           );
@@ -762,7 +760,7 @@
                       { id: "profile", l: "Perfil", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>' },
                     ].map(n => {
                       const active = view === n.id && mode === "customer";
-                      const col = active ? G.brand : "#2C3B42";
+                      const col = active ? G.brand : "#1C1C1E";
                       const svgHtml = n.svg.replace(/FILL/g, col).replace(/<svg /, '<svg stroke="' + col + '" ');
                       return (
                         <button key={n.id} onClick={() => { if(mode === "business") setMode("customer"); setView(n.id); }} style={{ flex: 1, background: "transparent", border: "none", fontSize: 10, fontWeight: active ? 700 : 500, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", padding: "6px 0", color: col }}>
