@@ -95,11 +95,11 @@
 
         // ─── PALETA DE COLORES GONNIE ──────────────────────────────────────────
         const G = {
-          brand: "#2C3B42", brandD: "#1E2B30", brandL: "#4A5F6A",
+          brand: "#00A1C9", brandD: "#0081A3", brandL: "#33BDD9",
           bg: "#F2F2F7", card: "#FFFFFF", card2: "#F2F2F7",
           text: "#1C1C1E", muted: "#3C3C43",
           bdr: "rgba(0,0,0,0.08)",
-          green: "#2C3B42", red: "#FF3B30", blue: "#007AFF", gold: "#FF9500",
+          green: "#34C759", red: "#FF3B30", blue: "#007AFF", gold: "#FF9500",
         };
 
 
@@ -125,7 +125,7 @@
 
         const BARBER_COLORS = [
           { bg: "#E8F4FD", color: "#007AFF" },
-          { bg: "#E8F8F2", color: "#2C3B42" },
+          { bg: "#E8F8F2", color: "#00A1C9" },
           { bg: "#F3E8FD", color: "#AF52DE" },
           { bg: "#FFF3E8", color: "#FF9500" },
         ];
@@ -308,13 +308,13 @@
                 <SLabel>Acciones rápidas</SLabel>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 18 }}>
                   {[
-                    { icon: "✂️", label: "Reservar cita", action: () => nav("explore") },
-                    { icon: "👥", label: "Reserva grupal", action: () => nav("explore"), isNew: true },
-                    { icon: "💬", label: "Chat barbería", action: () => alert("Módulo de chat próximamente disponible"), isNew: true },
+                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>', label: "Reservar cita", action: () => nav("explore") },
+                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>', label: "Reserva grupal", action: () => nav("explore"), isNew: true },
+                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', label: "Chat barbería", action: () => alert("Módulo de chat próximamente disponible"), isNew: true },
                   ].map((a, i) => (
                     <div key={i} onClick={a.action} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 16, padding: "14px 14px 12px", cursor: "pointer", position: "relative" }}>
                       {a.isNew && <div style={{ position: "absolute", top: 10, right: 10 }}><NewPill /></div>}
-                      <span style={{ fontSize: 26, display: "block", marginBottom: 8 }}>{a.icon}</span>
+                      <span style={{ color: G.brand, display: "block", marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: a.svg.replace(/stroke="currentColor"/g, 'stroke="' + G.brand + '"') }} />
                       <span style={{ fontSize: 12, fontWeight: 600, color: G.text }}>{a.label}</span>
                     </div>
                   ))}
@@ -760,7 +760,7 @@
                       { id: "profile", l: "Perfil", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>' },
                     ].map(n => {
                       const active = view === n.id && mode === "customer";
-                      const col = active ? G.brand : "#2C3B42";
+                      const col = active ? G.brand : "#00A1C9";
                       const svgHtml = n.svg.replace(/FILL/g, col).replace(/<svg /, '<svg stroke="' + col + '" ');
                       return (
                         <button key={n.id} onClick={() => { if(mode === "business") setMode("customer"); setView(n.id); }} style={{ flex: 1, background: "transparent", border: "none", fontSize: 10, fontWeight: active ? 700 : 500, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", padding: "6px 0", color: col }}>
@@ -781,4 +781,5 @@
     </script>
 </body>
 </html>
+
 
