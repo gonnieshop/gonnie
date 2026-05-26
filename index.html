@@ -445,6 +445,11 @@
                   </div>
                 ))}
 
+
+                {tab === "resenas" && (
+                  <ResenasList barberia={barberia} nav={nav} />
+                )}
+
                 <div style={{ marginTop: 20 }}>
                   <PrimaryBtn disabled={!selB || !selS} onClick={() => { setBooking({ barberia, bar: selB, svc: selS }); nav("booking"); }}>Proceder a la Reserva →</PrimaryBtn>
                 </div>
@@ -942,5 +947,3 @@
     </script>
 </body>
 </html>
-
-
