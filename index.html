@@ -895,7 +895,7 @@
               <div style={{ fontSize: 64, marginBottom: 16 }}>⭐</div>
               <h2 style={{ fontSize: 22, fontWeight: 800, color: G.text, marginBottom: 8 }}>¡Gracias por tu reseña!</h2>
               <p style={{ fontSize: 14, color: G.muted, marginBottom: 32 }}>Tu opinión ayuda a otros clientes.</p>
-              <PBtn onClick={function(){ nav("explore"); }}>Volver</PBtn>
+              <PrimaryBtn onClick={function(){ nav("explore"); }}>Volver</PrimaryBtn>
             </div>
           );
 
@@ -929,9 +929,9 @@
                 style={{ width: "100%", background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: "12px 14px", fontSize: 14, color: G.text, resize: "none", outline: "none", fontFamily: "inherit", boxSizing: "border-box", marginBottom: 20 }}
               />
 
-              <PBtn onClick={submit} disabled={stars === 0 || saving}>
+              <PrimaryBtn onClick={submit} disabled={stars === 0 || saving}>
                 {saving ? "Enviando..." : "Publicar reseña"}
-              </PBtn>
+              </PrimaryBtn>
             </div>
           );
         }
@@ -941,4 +941,3 @@
     </script>
 </body>
 </html>
-
