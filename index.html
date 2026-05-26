@@ -644,8 +644,8 @@
               <p style={{ fontSize: 12, color: G.muted, marginTop: 0, marginBottom: 24 }}>{email}</p>
 
               <div style={{ textAlign: "left", background: G.card, borderRadius: 14, padding: 12, border: `1px solid ${G.bdr}`, marginBottom: 18 }}>
-                <div style={{ padding: "10px 4px", cursor: "pointer", borderBottom: `1px solid ${G.bdr}` }} onClick={() => alert("Editar perfil en desarrollo")}>⚙️ Ajustes de Cuenta</div>
-                <div style={{ padding: "10px 4px", cursor: "pointer" }} onClick={() => alert("Métodos de pago en desarrollo")}>💳 Tarjetas Guardadas</div>
+               <div style={{ padding: "10px 4px", cursor: "pointer", borderBottom: `1px solid ${G.bdr}`, color: G.text }} onClick={() => alert("Editar perfil en desarrollo")}>⚙️ Ajustes de Cuenta</div>
+               <div style={{ padding: "10px 4px", cursor: "pointer", color: G.text }} onClick={() => alert("Métodos de pago en desarrollo")}>💳 Tarjetas Guardadas</div>
               </div>
 
               <GhostBtn onClick={() => setMode(mode === "customer" ? "business" : "customer")}>
