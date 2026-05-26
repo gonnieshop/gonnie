@@ -673,10 +673,10 @@
 
           useEffect(() => {
             if (!barberia?.id) return;
-            dbGet("resenas", `?barberia_id=eq.${barberia.id}&select=*&order=created_at.desc&limit=20`)
+            dbGet("resenas", `?barberia_id=eq.${barberia && barberia.id}&select=*&order=created_at.desc&limit=20`)
               .then(d => { setResenas(Array.isArray(d) ? d : []); setLoading(false); })
               .catch(() => setLoading(false));
-          }, [barberia?.id]);
+          }, [barberia && barberia.id]);
 
           const avg = resenas.length ? (resenas.reduce((s,r) => s + r.stars, 0) / resenas.length).toFixed(1) : null;
 
@@ -746,19 +746,14 @@
             setSaving(true);
             try {
               await dbInsert("resenas", {
-                barberia_id: barberia?.id,
-                barberia_name: barberia?.name || "GonnieBarbershop",
+                barberia_id: barberia && barberia.id,
+                barberia_name: (barberia && barberia.name) || "GonnieBarbershop",
                 client_name: user?.user_metadata?.full_name || "Cliente",
                 client_email: user?.email || "",
                 stars,
                 comment,
               });
-              // Update barberia rating in DB
-              await fetch(`${SUPABASE_URL}/rest/v1/rpc/update_barberia_rating`, {
-                method: "POST",
-                headers: { ...DB_HEADERS },
-                body: JSON.stringify({ barberia_id_input: barberia?.id }),
-              });
+              // Rating update skipped (handled server-side)
               setDone(true);
             } catch(e) {
               alert("Error al guardar la reseña");
