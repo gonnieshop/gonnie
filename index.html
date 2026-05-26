@@ -422,7 +422,7 @@
                 <p style={{ fontSize: 12, color: G.muted, marginBottom: 14 }}>📍 {barberia.city} • {barberia.hours}</p>
 
                 <div style={{ display: "flex", background: G.card2, borderRadius: 12, padding: 3, marginBottom: 18 }}>
-                  {[{ id: "barberos", l: "Barberos" }, { id: "servicios", l: "Servicios" }].map(t => (
+                  {[{ id: "barberos", l: "Barberos" }, { id: "servicios", l: "Servicios" }, { id: "resenas", l: "Reseñas ⭐" }].map(t => (
                     <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: tab === t.id ? G.brand : "transparent", color: tab === t.id ? "#080B0F" : G.muted, border: "none", borderRadius: 10, padding: "8px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{t.l}</button>
                   ))}
                 </div>
@@ -659,6 +659,166 @@
           );
         }
 
+
+
+        // ─── COMPONENTE: LISTA DE RESEÑAS ────────────────────────────────────────
+        function ResenasList({ barberia, nav }) {
+          const [resenas, setResenas] = useState([]);
+          const [loading, setLoading] = useState(true);
+
+          useEffect(() => {
+            if (!barberia?.id) return;
+            dbGet("resenas", `?barberia_id=eq.${barberia.id}&select=*&order=created_at.desc&limit=20`)
+              .then(d => { setResenas(Array.isArray(d) ? d : []); setLoading(false); })
+              .catch(() => setLoading(false));
+          }, [barberia?.id]);
+
+          const avg = resenas.length ? (resenas.reduce((s,r) => s + r.stars, 0) / resenas.length).toFixed(1) : null;
+
+          return (
+            <div>
+              {/* Resumen rating */}
+              {avg && (
+                <div style={{ display: "flex", alignItems: "center", gap: 14, background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 14, padding: "14px 16px", marginBottom: 14 }}>
+                  <div style={{ textAlign: "center" }}>
+                    <p style={{ fontSize: 36, fontWeight: 900, color: G.text, lineHeight: 1 }}>{avg}</p>
+                    <p style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>de 5 estrellas</p>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    {[5,4,3,2,1].map(s => {
+                      const count = resenas.filter(r => r.stars === s).length;
+                      const pct = resenas.length ? (count/resenas.length*100) : 0;
+                      return (
+                        <div key={s} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                          <span style={{ fontSize: 10, color: G.muted, width: 8 }}>{s}</span>
+                          <div style={{ flex: 1, height: 5, background: G.card2, borderRadius: 3, overflow: "hidden" }}>
+                            <div style={{ width: `${pct}%`, height: "100%", background: G.brand, borderRadius: 3 }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Botón escribir reseña */}
+              <button onClick={() => nav("review")} style={{ width: "100%", background: G.brand, color: "#fff", border: "none", borderRadius: 12, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 14, fontFamily: "inherit" }}>
+                ✏️ Escribir reseña
+              </button>
+
+              {/* Lista */}
+              {loading && [1,2].map(i => <Skel key={i} h={80} />)}
+              {!loading && resenas.length === 0 && (
+                <div style={{ textAlign: "center", padding: "30px 0" }}>
+                  <p style={{ fontSize: 32, marginBottom: 8 }}>⭐</p>
+                  <p style={{ fontSize: 14, color: G.muted }}>Sé el primero en dejar una reseña</p>
+                </div>
+              )}
+              {resenas.map((r, i) => (
+                <div key={i} style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 14, padding: "14px", marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{r.client_name}</p>
+                    <p style={{ fontSize: 14 }}>{"⭐".repeat(r.stars)}</p>
+                  </div>
+                  {r.comment && <p style={{ fontSize: 13, color: G.text, lineHeight: 1.5 }}>{r.comment}</p>}
+                  <p style={{ fontSize: 10, color: G.muted, marginTop: 6 }}>{new Date(r.created_at).toLocaleDateString("es-ES")}</p>
+                </div>
+              ))}
+            </div>
+          );
+        }
+
+        // ─── VISTA: RESEÑAS ──────────────────────────────────────────────────────
+        function ReviewScreen({ barberia, nav, user }) {
+          const [stars, setStars] = useState(0);
+          const [hover, setHover] = useState(0);
+          const [comment, setComment] = useState("");
+          const [saving, setSaving] = useState(false);
+          const [done, setDone] = useState(false);
+
+          const submit = async () => {
+            if (stars === 0) return alert("Selecciona una valoración");
+            setSaving(true);
+            try {
+              await dbInsert("resenas", {
+                barberia_id: barberia?.id,
+                barberia_name: barberia?.name || "GonnieBarbershop",
+                client_name: user?.user_metadata?.full_name || "Cliente",
+                client_email: user?.email || "",
+                stars,
+                comment,
+              });
+              // Update barberia rating in DB
+              await fetch(`${SUPABASE_URL}/rest/v1/rpc/update_barberia_rating`, {
+                method: "POST",
+                headers: { ...DB_HEADERS },
+                body: JSON.stringify({ barberia_id_input: barberia?.id }),
+              });
+              setDone(true);
+            } catch(e) {
+              alert("Error al guardar la reseña");
+            }
+            setSaving(false);
+          };
+
+          if (done) return (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", textAlign: "center" }}>
+              <div style={{ fontSize: 64, marginBottom: 16 }}>⭐</div>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: G.text, marginBottom: 8 }}>¡Gracias por tu reseña!</h2>
+              <p style={{ fontSize: 14, color: G.muted, marginBottom: 32 }}>Tu opinión ayuda a otros clientes a elegir mejor.</p>
+              <PBtn onClick={() => nav("home")}>Volver al inicio</PBtn>
+            </div>
+          );
+
+          return (
+            <div style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
+              <Back onBack={() => nav("home")} />
+              <div style={{ textAlign: "center", margin: "20px 0 28px" }}>
+                <div style={{ fontSize: 40, marginBottom: 10 }}>💈</div>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, marginBottom: 4 }}>
+                  {barberia?.name || "GonnieBarbershop"}
+                </h2>
+                <p style={{ fontSize: 13, color: G.muted }}>¿Cómo fue tu experiencia?</p>
+              </div>
+
+              {/* Estrellas */}
+              <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 28 }}>
+                {[1,2,3,4,5].map(s => (
+                  <span
+                    key={s}
+                    onClick={() => setStars(s)}
+                    onMouseEnter={() => setHover(s)}
+                    onMouseLeave={() => setHover(0)}
+                    style={{ fontSize: 40, cursor: "pointer", transition: "transform 0.1s", transform: (hover||stars) >= s ? "scale(1.2)" : "scale(1)", filter: (hover||stars) >= s ? "none" : "grayscale(1) opacity(0.4)" }}
+                  >⭐</span>
+                ))}
+              </div>
+
+              {stars > 0 && (
+                <p style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: G.brand, marginBottom: 20 }}>
+                  {["","Muy mejorable 😕","Podría mejorar 😐","Bien 🙂","Muy bien 😊","Excelente 🤩"][stars]}
+                </p>
+              )}
+
+              {/* Comentario */}
+              <div style={{ marginBottom: 20 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 8 }}>Comentario (opcional)</p>
+                <textarea
+                  value={comment}
+                  onChange={e => setComment(e.target.value)}
+                  placeholder="Cuéntanos tu experiencia..."
+                  rows={4}
+                  style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 14, padding: "12px 14px", fontSize: 14, color: G.text, resize: "none", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+                />
+              </div>
+
+              <PBtn onClick={submit} disabled={stars === 0 || saving}>
+                {saving ? "Enviando..." : "Publicar reseña"}
+              </PBtn>
+            </div>
+          );
+        }
+
         // ─── ENRUTADOR PRINCIPAL (APP CONTAINER) ────────────────────────────────
         function GonnieApp() {
           const [user, setUser] = useState(null);
@@ -747,6 +907,7 @@
                       {view === "appointments" && <AppointmentsScreen />}
                       {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
                       {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} />}
+                      {view === "review" && <ReviewScreen barberia={barberia} nav={setView} user={user} />}
                     </>
                   )}
                 </div>
