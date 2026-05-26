@@ -250,7 +250,7 @@
           const nivel = getNivel(puntos);
           const progreso = getProgreso(puntos);
           const ptsSiguiente = getPtsParaSiguiente(puntos);
-          const nombre = user?.user_metadata?.full_name?.split(" ")[0] || "tú";
+          const nombre = (user && user.user_metadata && user.user_metadata.full_name && user.user_metadata.full_name.split(" ")[0]) || "tú";
           return (
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
               <div style={{ padding: "16px 18px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -400,7 +400,7 @@
           const [selS, setSelS] = useState(null);
 
           useEffect(() => {
-            if (!barberia?.id) return;
+            if (!(barberia && barberia.id)) return;
             setLoading(true);
             Promise.all([
               dbGet("barberos", `?barberia_id=eq.${barberia.id}&select=*`),
@@ -430,7 +430,7 @@
                 {loading && <Skeleton h={80} />}
 
                 {tab === "barberos" && !loading && barberos.map((br, idx) => (
-                  <div key={br.id} onClick={() => setSelB(br)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: selB?.id === br.id ? `${G.brand}10` : G.card, border: `0.5px solid ${selB?.id === br.id ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
+                  <div key={br.id} onClick={() => setSelB(br)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: (selB && selB.id) === br.id ? `${G.brand}10` : G.card, border: `0.5px solid ${(selB && selB.id) === br.id ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
                     <Av txt={br.initials || "B"} bg={BARBER_COLORS[idx % 4].bg} color={BARBER_COLORS[idx % 4].color} />
                     <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{br.name}</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{br.role}</p></div>
                     <p style={{ fontSize: 12, color: G.gold, fontWeight: 700 }}>⭐ {br.rating}</p>
@@ -438,7 +438,7 @@
                 ))}
 
                 {tab === "servicios" && !loading && servicios.map(sv => (
-                  <div key={sv.id} onClick={() => setSelS(sv)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: selS?.id === sv.id ? `${G.brand}10` : G.card, border: `0.5px solid ${selS?.id === sv.id ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
+                  <div key={sv.id} onClick={() => setSelS(sv)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: (selS && selS.id) === sv.id ? `${G.brand}10` : G.card, border: `0.5px solid ${(selS && selS.id) === sv.id ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
                     <span style={{ fontSize: 20 }}>{sv.icon || "✂️"}</span>
                     <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{sv.name}</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>⏱ {sv.duration_min} min</p></div>
                     <p style={{ fontSize: 16, fontWeight: 800 }}>{sv.price}€</p>
@@ -473,8 +473,8 @@
   barberia_id: booking.barberia.id,
   barbero_id: booking.bar.id,
   servicio_id: booking.svc.id,
-  client_name: user?.user_metadata?.full_name || "Cliente",
-  client_email: user?.email || "",
+  client_name: (user && user.user_metadata && user.user_metadata.full_name) || "Cliente",
+  client_email: (user && user.email) || "",
   date,
   time: slot,
   price: booking.svc.price,
@@ -485,16 +485,16 @@
               setConfirmedAppt(payload);
               // Enviar emails de confirmación
               await sendConfirmationEmail({
-                barberia: booking.barberia?.name || "GonnieBarbershop",
-                barbero: booking.bar?.name || "Barbero",
-                servicio: booking.svc?.name || "Servicio",
+                barberia: booking.(barberia && barberia.name) || "GonnieBarbershop",
+                barbero: (booking.bar && booking.bar.name) || "Barbero",
+                servicio: (booking.svc && booking.svc.name) || "Servicio",
                 fecha: date,
                 hora: slot,
-                precio: booking.svc?.price || 0,
-                cliente: user?.user_metadata?.full_name || user?.email || "Cliente",
-                email_cliente: user?.email || "",
+                precio: (booking.svc && booking.svc.price) || 0,
+                cliente: (user && user.user_metadata && user.user_metadata.full_name) || (user && user.email) || "Cliente",
+                email_cliente: (user && user.email) || "",
               });
-              setPuntos(prev => prev + Math.floor((booking.svc?.price || 0) * 2));
+              setPuntos(prev => prev + Math.floor(((booking.svc && booking.svc.price) || 0) * 2));
               nav("confirmed");
             } catch (e) {
               // Si falla la tabla simulada, igual avanza para experiencia fluida
@@ -539,9 +539,9 @@
               </div>
 
               <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "left", marginBottom: 20, border: `1px solid ${G.bdr}` }}>
-                <p style={{ fontSize: 13, margin: "2px 0" }}>📅 <b>Fecha:</b> {appt?.date || "Hoy"}</p>
-                <p style={{ fontSize: 13, margin: "2px 0" }}>⏰ <b>Hora:</b> {appt?.time || "11:30h"}</p>
-                <p style={{ fontSize: 13, margin: "2px 0" }}>💰 <b>Importe:</b> {appt?.price || 20}€</p>
+                <p style={{ fontSize: 13, margin: "2px 0" }}>📅 <b>Fecha:</b> {(appt && appt.date) || "Hoy"}</p>
+                <p style={{ fontSize: 13, margin: "2px 0" }}>⏰ <b>Hora:</b> {(appt && appt.time) || "11:30h"}</p>
+                <p style={{ fontSize: 13, margin: "2px 0" }}>💰 <b>Importe:</b> {(appt && appt.price) || 20}€</p>
               </div>
 
               <PrimaryBtn onClick={() => nav("home")}>Volver a Inicio</PrimaryBtn>
@@ -634,9 +634,9 @@
 
         // ─── VISTA 10: PERFIL DE USUARIO ──────────────────────────────────────
         function ProfileScreen({ setMode, mode, user }) {
-          const nombre = user?.user_metadata?.full_name || user?.email || "Usuario";
-          const avatar = user?.user_metadata?.avatar_url;
-          const email = user?.email || "";
+          const nombre = (user && user.user_metadata && user.user_metadata.full_name) || (user && user.email) || "Usuario";
+          const avatar = (user && user.user_metadata && user.user_metadata.avatar_url);
+          const email = (user && user.email) || "";
           const iniciales = nombre.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase();
 
           return (
@@ -672,7 +672,7 @@
           const [loading, setLoading] = useState(true);
 
           useEffect(() => {
-            if (!barberia?.id) return;
+            if (!(barberia && barberia.id)) return;
             dbGet("resenas", `?barberia_id=eq.${barberia && barberia.id}&select=*&order=created_at.desc&limit=20`)
               .then(d => { setResenas(Array.isArray(d) ? d : []); setLoading(false); })
               .catch(() => setLoading(false));
@@ -748,8 +748,8 @@
               await dbInsert("resenas", {
                 barberia_id: barberia && barberia.id,
                 barberia_name: (barberia && barberia.name) || "GonnieBarbershop",
-                client_name: user?.user_metadata?.full_name || "Cliente",
-                client_email: user?.email || "",
+                client_name: (user && user.user_metadata && user.user_metadata.full_name) || "Cliente",
+                client_email: (user && user.email) || "",
                 stars,
                 comment,
               });
@@ -776,7 +776,7 @@
               <div style={{ textAlign: "center", margin: "20px 0 28px" }}>
                 <div style={{ fontSize: 40, marginBottom: 10 }}>💈</div>
                 <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, marginBottom: 4 }}>
-                  {barberia?.name || "GonnieBarbershop"}
+                  {(barberia && barberia.name) || "GonnieBarbershop"}
                 </h2>
                 <p style={{ fontSize: 13, color: G.muted }}>¿Cómo fue tu experiencia?</p>
               </div>
@@ -845,17 +845,17 @@
           useEffect(() => {
             // Comprobar sesión existente (cuando Google redirige de vuelta)
             supabaseClient.auth.getSession().then(({ data: { session } }) => {
-              setUser(session?.user || null);
+              setUser((session && session.user) || null);
               setAuthLoading(false);
-              if (session?.user) {
+              if ((session && session.user)) {
                 setSplash(false);
                 cargarPuntos(session.user.email);
               }
             });
             // Escuchar cambios de sesión en tiempo real
             const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-              setUser(session?.user || null);
-              if (session?.user) {
+              setUser((session && session.user) || null);
+              if ((session && session.user)) {
                 setSplash(false);
                 cargarPuntos(session.user.email);
               }
