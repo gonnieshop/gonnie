@@ -322,6 +322,20 @@
                       </div>
                       <button onClick={function(){ nav("confirmed"); }} style={{ background: G.brand + "15", border: "0.5px solid " + G.brand + "40", borderRadius: 10, padding: "8px 12px", fontSize: 11, color: G.brand, fontWeight: 700 }}>📱 QR</button>
                     </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                      <button onClick={function(){
+                        if (window.confirm("¿Seguro que quieres cancelar esta cita?")) {
+                          cancelBooking(
+                            nextAppt.id,
+                            nextAppt,
+                            user && user.email,
+                            user && user.user_metadata && user.user_metadata.full_name
+                          ).then(function(){ setNextAppt(null); });
+                        }
+                      }} style={{ flex: 1, background: "transparent", border: "1px solid " + G.red + "40", borderRadius: 10, padding: "9px", fontSize: 12, color: G.red, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                        Cancelar cita
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div style={{ textAlign: "center", padding: "10px 0" }}>
