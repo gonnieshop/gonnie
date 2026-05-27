@@ -1239,6 +1239,36 @@
         }
 
 
+        // ─── CANCELAR RESERVA ─────────────────────────────────────────────────────
+        async function cancelBooking(apptId, apptData, userEmail, userName) {
+          // 1. Marcar como cancelada en Supabase
+          var res = await fetch(SUPABASE_URL + '/rest/v1/appointments?id=eq.' + apptId, {
+            method: 'PATCH',
+            headers: DB_HEADERS,
+            body: JSON.stringify({ status: 'cancelled' })
+          });
+          if (!res.ok) throw new Error('Error al cancelar: ' + await res.text());
+
+          // 2. Enviar email de cancelación
+          try {
+            await fetch(SUPABASE_URL + '/functions/v1/rapid-processor', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+              body: JSON.stringify({
+                barberia: (apptData && apptData.barberias && apptData.barberias.name) || 'GonnieBarbershop',
+                barbero:  (apptData && apptData.barberos  && apptData.barberos.name)  || 'Barbero',
+                servicio: (apptData && apptData.servicios && apptData.servicios.name) || 'Servicio',
+                fecha:    (apptData && apptData.date)  || '',
+                hora:     (apptData && apptData.time)  || '',
+                precio:   (apptData && apptData.price) || 0,
+                cliente:  userName  || 'Cliente',
+                email_cliente: userEmail || '',
+                tipo: 'cancelacion',
+              })
+            });
+          } catch(e) { console.warn('Email cancelación no enviado:', e); }
+        }
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<GonnieApp />);
     </script>
