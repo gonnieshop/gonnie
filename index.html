@@ -256,7 +256,19 @@
           const nivel = getNivel(puntos);
           const progreso = getProgreso(puntos);
           const ptsSiguiente = getPtsParaSiguiente(puntos);
-          const nombre = user?.user_metadata?.full_name?.split(" ")[0] || "tú";
+          const [nextAppt, setNextAppt] = useState(null);
+
+          useEffect(function() {
+            var email = user && user.email;
+            if (!email) return;
+            var today = new Date().toISOString().split('T')[0];
+            dbGet('appointments', '?client_email=eq.' + encodeURIComponent(email) + '&date=gte.' + today + '&status=eq.confirmed&order=date.asc,time.asc&limit=1&select=*,servicios(name),barberos(name)')
+              .then(function(d) {
+                if (Array.isArray(d) && d.length > 0) setNextAppt(d[0]);
+              }).catch(function(){});
+          }, [user && user.email]);
+
+         const nombre = user?.user_metadata?.full_name?.split(" ")[0] || "tú";
           return (
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
               <div style={{ padding: "16px 18px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -296,18 +308,27 @@
 
                 {/* Próxima Cita */}
                 <div style={{ background: G.card, boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)", borderRadius: 18, padding: "14px 16px", marginBottom: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <p style={{ fontSize: 10, color: G.muted, fontWeight: 700, textTransform: "uppercase" }}>Próxima cita</p>
-                    <Pill color="#080B0F" bg={G.green}>Hoy 11:30h</Pill>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <Av txt="" size={42} bg="#1A2535" color={G.blue} />
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 15, fontWeight: 700, color: G.text }}>Corte + Barba</p>
-                      <p style={{ fontSize: 12, color: G.muted }}>Mario Lozano</p>
+                  {nextAppt ? (
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <p style={{ fontSize: 10, color: G.muted, fontWeight: 700, textTransform: "uppercase" }}>Próxima cita</p>
+                      <Pill color="#080B0F" bg={G.green}>{nextAppt.date} · {nextAppt.time}</Pill>
                     </div>
-                    <button onClick={() => nav("confirmed")} style={{ background: `${G.brand}15`, border: `0.5px solid ${G.brand}40`, borderRadius: 10, padding: "8px 12px", fontSize: 11, color: G.brand, fontWeight: 700 }}>📱 QR</button>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <Av txt={(nextAppt.barberos && nextAppt.barberos.name || "B").slice(0,2).toUpperCase()} size={42} bg="#1A2535" color={G.blue} />
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 15, fontWeight: 700, color: G.text }}>{nextAppt.servicios && nextAppt.servicios.name}</p>
+                        <p style={{ fontSize: 12, color: G.muted }}>{nextAppt.barberos && nextAppt.barberos.name}</p>
+                      </div>
+                      <button onClick={function(){ nav("confirmed"); }} style={{ background: G.brand + "15", border: "0.5px solid " + G.brand + "40", borderRadius: 10, padding: "8px 12px", fontSize: 11, color: G.brand, fontWeight: 700 }}>📱 QR</button>
+                    </div>
                   </div>
+                ) : (
+                  <div style={{ textAlign: "center", padding: "10px 0" }}>
+                    <p style={{ fontSize: 13, color: G.muted }}>No tienes citas próximas</p>
+                    <button onClick={function(){ nav("explore"); }} style={{ marginTop: 8, background: "transparent", border: "none", color: G.brand, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Reservar ahora →</button>
+                  </div>
+                )}
                 </div>
 
                 {/* Botones de acción */}
