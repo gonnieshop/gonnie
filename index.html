@@ -640,499 +640,75 @@
 
         // ─── VISTA 10: PERFIL DE USUARIO ──────────────────────────────────────
         function ProfileScreen({ setMode, mode, user, nav }) {
-          var nombre = (user && user.user_metadata && user.user_metadata.full_name) || (user && user.email) || "Usuario";
+          var email = (user && user.email) || '';
           var googleAvatar = (user && user.user_metadata && user.user_metadata.avatar_url) || null;
-          var email = (user && user.email) || "";
-          var iniciales = nombre.split(" ").map(function(n){ return n[0]; }).join("").slice(0,2).toUpperCase();
+          var googleName = (user && user.user_metadata && user.user_metadata.full_name) || (user && user.email) || 'Usuario';
 
           const [photoUrl, setPhotoUrl] = useState(googleAvatar);
-          const [displayName, setDisplayName] = useState(nombre);
-
-          useEffect(function() {
-            if (!email) return;
-            dbGet("profiles", "?id=eq." + encodeURIComponent(email) + "&select=photo_url,full_name")
-              .then(function(d) {
-                if (Array.isArray(d) && d.length > 0) {
-                  if (d[0].photo_url) setPhotoUrl(d[0].photo_url);
-                  if (d[0].full_name) setDisplayName(d[0].full_name);
-                }
-              }).catch(function(){});
-          }, [email]);
-
-          return (
-            <div style={{ flex: 1, padding: 18, textAlign: "center", paddingTop: 30 }}>
-              {photoUrl
-                ? <img src={photoUrl} style={{ width: 80, height: 80, borderRadius: "50%", marginBottom: 10, objectFit: "cover", border: "3px solid " + G.brand }} />
-                : <Av txt={iniciales} size={80} />
-              }
-              <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 10, marginBottom: 2 }}>{displayName}</h3>
-              <p style={{ fontSize: 12, color: G.muted, marginTop: 0, marginBottom: 24 }}>{email}</p>
-
-              <div style={{ textAlign: "left", background: G.card, borderRadius: 14, padding: 12, border: `1px solid ${G.bdr}`, marginBottom: 18 }}>
-               <div style={{ padding: "10px 4px", cursor: "pointer", borderBottom: `1px solid ${G.bdr}`, color: G.text }} onClick={() => nav("settings")}>⚙️ Ajustes de Cuenta</div>
-               <div style={{ padding: "10px 4px", cursor: "pointer", color: G.text }} onClick={() => alert("Métodos de pago en desarrollo")}>💳 Tarjetas Guardadas</div>
-              </div>
-
-              <GhostBtn onClick={() => setMode(mode === "customer" ? "business" : "customer")}>
-                {mode === "customer" ? "🔄 Cambiar a Modo Negocio" : "🔄 Cambiar a Modo Cliente"}
-              </GhostBtn>
-
-              <button onClick={signOut} style={{ marginTop: 12, width: "100%", background: "transparent", border: `1px solid ${G.red}30`, borderRadius: 14, padding: "12px", fontSize: 13, color: G.red, cursor: "pointer", fontWeight: 600 }}>
-                Cerrar sesión
-              </button>
-            </div>
-          );
-        }
-
-        // ─── ENRUTADOR PRINCIPAL (APP CONTAINER) ────────────────────────────────
-        function GonnieApp() {
-          const [user, setUser] = useState(null);
-          const [authLoading, setAuthLoading] = useState(true);
-          const [splash, setSplash] = useState(true);
-          const [view, setView] = useState("home");
-          const [mode, setMode] = useState("customer");
-          const [barberia, setBarberia] = useState(null);
-          const [booking, setBooking] = useState(null);
-          const [confirmedAppt, setConfirmedAppt] = useState(null);
-          const [puntos, setPuntos] = useState(0);
-
-          // Cargar puntos reales del usuario desde Supabase
-          const cargarPuntos = async (email) => {
-            try {
-              const data = await dbGet("appointments", `?client_email=eq.${encodeURIComponent(email)}&select=points_earned`);
-              if (Array.isArray(data)) {
-                const total = data.reduce((sum, a) => sum + (a.points_earned || 0), 0);
-                setPuntos(total);
-              }
-            } catch(e) { console.warn("No se pudieron cargar los puntos:", e.message); }
-          };
-
-          useEffect(() => {
-            // Comprobar sesión existente (cuando Google redirige de vuelta)
-            supabaseClient.auth.getSession().then(({ data: { session } }) => {
-              setUser(session?.user || null);
-              setAuthLoading(false);
-              if (session?.user) {
-                setSplash(false);
-                cargarPuntos(session.user.email);
-              }
-            });
-            // Escuchar cambios de sesión en tiempo real
-            const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-              setUser(session?.user || null);
-              if (session?.user) {
-                setSplash(false);
-                cargarPuntos(session.user.email);
-              }
-            });
-            return () => subscription.unsubscribe();
-          }, []);
-
-          // Pantalla de carga mientras comprueba sesión
-          if (authLoading) return (
-            <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#FFFFFF" }}>
-              <div style={{ textAlign: "center" }}>
-                <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: 80, width: "auto", marginBottom: 16, marginLeft: "auto", marginRight: "auto", display: "block" }} alt="Gonnie" />
-                <p style={{ color: G.muted, fontSize: 13 }}>Cargando Gonnie...</p>
-              </div>
-            </div>
-          );
-
-          // Sin sesión → pantalla de login
-          if (!user) return (
-            <div className="flex justify-center bg-black min-h-screen">
-              <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
-                <LoginScreen />
-              </div>
-            </div>
-          );
-
-          // Con sesión → splash o app
-          if (splash) return (
-            <div className="flex justify-center bg-black min-h-screen">
-              <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
-                <SplashScreen onDone={() => setSplash(false)} />
-              </div>
-            </div>
-          );
-
-          return (
-            <div className="flex justify-center bg-black min-h-screen">
-              <div style={{ width: "100%", maxWidth: 420, background: G.bg, minHeight: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
-                <div style={{ flex: 1, overflowY: "auto" }}>
-                  {mode === "business" ? (
-                    <BusinessScreen />
-                  ) : (
-                    <>
-                      {view === "home" && <HomeScreen nav={setView} user={user} puntos={puntos} />}
-                      {view === "explore" && <ExploreScreen nav={setView} setBarberia={setBarberia} />}
-                      {view === "detail" && <DetailScreen barberia={barberia} nav={setView} setBooking={setBooking} />}
-                      {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} setPuntos={setPuntos} user={user} />}
-                      {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
-                      {view === "appointments" && <AppointmentsScreen />}
-                      {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
-                      {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} nav={setView} />}
-                      {view === "settings" && <SettingsScreen nav={setView} user={user} />}
-                      {view === "editprofile" && <EditProfileScreen nav={setView} user={user} />}
-                      {view === "review" && <ReviewScreen barberia={barberia} nav={setView} user={user} />}
-                    </>
-                  )}
-                </div>
-                {view !== "confirmed" && (
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 68, background: "#FFFFFF", borderTop: `1px solid ${G.bdr}`, boxShadow: "0 -1px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", zIndex: 50 }}>
-                    {[
-                      { id: "home", l: "Inicio", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" /><path d="M9 21V12h6v9"/></svg>' },
-                      { id: "explore", l: "Explorar", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>' },
-                      { id: "appointments", l: "Citas", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="8" cy="14" r="0.5" fill="FILL"/><circle cx="12" cy="14" r="0.5" fill="FILL"/><circle cx="8" cy="18" r="0.5" fill="FILL"/></svg>' },
-                      { id: "loyalty", l: "Club", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' },
-                      { id: "profile", l: "Perfil", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>' },
-                    ].map(n => {
-                      const active = view === n.id && mode === "customer";
-                      const col = active ? G.brand : "#00A1C9";
-                      const svgHtml = n.svg.replace(/FILL/g, col).replace(/<svg /, '<svg stroke="' + col + '" ');
-                      return (
-                        <button key={n.id} onClick={() => { if(mode === "business") setMode("customer"); setView(n.id); }} style={{ flex: 1, background: "transparent", border: "none", fontSize: 10, fontWeight: active ? 700 : 500, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", padding: "6px 0", color: col }}>
-                          <span dangerouslySetInnerHTML={{ __html: svgHtml }} />
-                          <span>{n.l}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        }
-
-
-        // ─── RESEÑAS: LISTA ──────────────────────────────────────────────────────
-        function ResenasList({ barberiaId, barberiaName, navReview }) {
-          const [resenas, setResenas] = useState([]);
-          const [loading, setLoading] = useState(true);
-
-          useEffect(function() {
-            if (!barberiaId) { setLoading(false); return; }
-            dbGet("resenas", "?barberia_id=eq." + barberiaId + "&select=*&order=created_at.desc&limit=20")
-              .then(function(d) { setResenas(Array.isArray(d) ? d : []); setLoading(false); })
-              .catch(function() { setLoading(false); });
-          }, [barberiaId]);
-
-          var avg = resenas.length ? (resenas.reduce(function(s,r){ return s + r.stars; }, 0) / resenas.length).toFixed(1) : null;
-
-          return (
-            <div style={{ paddingBottom: 20 }}>
-              {avg && (
-                <div style={{ background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: "14px 16px", marginBottom: 14 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                    <div style={{ textAlign: "center" }}>
-                      <p style={{ fontSize: 36, fontWeight: 900, color: G.text, lineHeight: 1, margin: 0 }}>{avg}</p>
-                      <p style={{ fontSize: 11, color: G.muted, marginTop: 4, marginBottom: 0 }}>de 5 ⭐</p>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      {[5,4,3,2,1].map(function(s) {
-                        var count = resenas.filter(function(r){ return r.stars === s; }).length;
-                        var pct = resenas.length ? (count/resenas.length*100) : 0;
-                        return (
-                          <div key={s} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-                            <span style={{ fontSize: 10, color: G.muted, width: 8 }}>{s}</span>
-                            <div style={{ flex: 1, height: 5, background: G.card2, borderRadius: 3, overflow: "hidden" }}>
-                              <div style={{ width: pct + "%", height: "100%", background: G.brand, borderRadius: 3 }} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <button onClick={navReview} style={{ width: "100%", background: G.brand, color: "#fff", border: "none", borderRadius: 12, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 16, fontFamily: "inherit" }}>
-                ✏️ Escribir reseña
-              </button>
-
-              {loading && <div style={{ textAlign: "center", padding: 20, color: G.muted }}>Cargando...</div>}
-
-              {!loading && resenas.length === 0 && (
-                <div style={{ textAlign: "center", padding: "30px 0" }}>
-                  <p style={{ fontSize: 32, margin: "0 0 8px" }}>⭐</p>
-                  <p style={{ fontSize: 14, color: G.muted }}>Sé el primero en dejar una reseña</p>
-                </div>
-              )}
-
-              {resenas.map(function(r, i) {
-                return (
-                  <div key={i} style={{ background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: 14, marginBottom: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: 0 }}>{r.client_name}</p>
-                      <p style={{ fontSize: 13, margin: 0 }}>{"⭐".repeat(r.stars)}</p>
-                    </div>
-                    {r.comment ? <p style={{ fontSize: 13, color: G.text, lineHeight: 1.5, margin: "0 0 6px" }}>{r.comment}</p> : null}
-                    <p style={{ fontSize: 10, color: G.muted, margin: 0 }}>{new Date(r.created_at).toLocaleDateString("es-ES")}</p>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        }
-
-        // ─── RESEÑAS: FORMULARIO ─────────────────────────────────────────────────
-        function ReviewScreen({ barberia, nav, user }) {
-          var barberiaName = (barberia && barberia.name) || "GonnieBarbershop";
-          var barberiaId = barberia && barberia.id;
-          var clientName = (user && user.user_metadata && user.user_metadata.full_name) || "Cliente";
-          var clientEmail = (user && user.email) || "";
-
-          const [stars, setStars] = useState(0);
-          const [hover, setHover] = useState(0);
-          const [comment, setComment] = useState("");
-          const [saving, setSaving] = useState(false);
-          const [done, setDone] = useState(false);
-
-          function submit() {
-            if (stars === 0) { alert("Selecciona una valoración"); return; }
-            setSaving(true);
-            dbInsert("resenas", {
-              barberia_id: barberiaId,
-              barberia_name: barberiaName,
-              client_name: clientName,
-              client_email: clientEmail,
-              stars: stars,
-              comment: comment,
-            }).then(function() {
-              setDone(true);
-              setSaving(false);
-            }).catch(function() {
-              alert("Error al guardar la reseña");
-              setSaving(false);
-            });
-          }
-
-          var labels = ["","Muy mejorable 😕","Podría mejorar 😐","Bien 🙂","Muy bien 😊","Excelente 🤩"];
-
-          if (done) return (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", textAlign: "center" }}>
-              <div style={{ fontSize: 64, marginBottom: 16 }}>⭐</div>
-              <h2 style={{ fontSize: 22, fontWeight: 800, color: G.text, marginBottom: 8 }}>¡Gracias por tu reseña!</h2>
-              <p style={{ fontSize: 14, color: G.muted, marginBottom: 32 }}>Tu opinión ayuda a otros clientes.</p>
-              <PrimaryBtn onClick={function(){ nav("explore"); }}>Volver</PrimaryBtn>
-            </div>
-          );
-
-          return (
-            <div style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
-              <Back onBack={function(){ nav("explore"); }} />
-              <div style={{ textAlign: "center", margin: "20px 0 28px" }}>
-                <div style={{ fontSize: 40, marginBottom: 10 }}>💈</div>
-                <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, marginBottom: 4 }}>{barberiaName}</h2>
-                <p style={{ fontSize: 13, color: G.muted }}>¿Cómo fue tu experiencia?</p>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 16 }}>
-                {[1,2,3,4,5].map(function(s) {
-                  var active = (hover || stars) >= s;
-                  return (
-                    <span key={s} onClick={function(){ setStars(s); }} onMouseEnter={function(){ setHover(s); }} onMouseLeave={function(){ setHover(0); }}
-                      style={{ fontSize: 40, cursor: "pointer", opacity: active ? 1 : 0.3, transition: "opacity 0.1s" }}>⭐</span>
-                  );
-                })}
-              </div>
-
-              {stars > 0 && (
-                <p style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: G.brand, marginBottom: 20 }}>{labels[stars]}</p>
-              )}
-
-              <p style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 8 }}>Comentario (opcional)</p>
-              <textarea value={comment} onChange={function(e){ setComment(e.target.value); }}
-                placeholder="Cuéntanos tu experiencia..."
-                rows={4}
-                style={{ width: "100%", background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: "12px 14px", fontSize: 14, color: G.text, resize: "none", outline: "none", fontFamily: "inherit", boxSizing: "border-box", marginBottom: 20 }}
-              />
-
-              <PrimaryBtn onClick={submit} disabled={stars === 0 || saving}>
-                {saving ? "Enviando..." : "Publicar reseña"}
-              </PrimaryBtn>
-            </div>
-          );
-        }
-
-
-        // ─── SUBIR FOTO A SUPABASE STORAGE ───────────────────────────────────────
-        async function uploadProfilePhoto(file, userEmail) {
-          var ext = file.name.split('.').pop() || 'jpg';
-          var filename = userEmail.replace(/[@.]/g, '_') + '_' + Date.now() + '.' + ext;
-          var bucketName = 'avatars';
-          var url = SUPABASE_URL + '/storage/v1/object/' + bucketName + '/' + filename;
-
-          var res = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': 'Bearer ' + SUPABASE_KEY,
-              'Content-Type': file.type || 'image/jpeg',
-              'x-upsert': 'true',
-            },
-            body: file
-          });
-
-          if (!res.ok) {
-            var err = await res.text();
-            throw new Error('Upload error: ' + err);
-          }
-
-          return SUPABASE_URL + '/storage/v1/object/public/' + bucketName + '/' + filename;
-        }
-
-        // ─── GUARDAR PERFIL EN SUPABASE ───────────────────────────────────────────
-        async function saveProfile(email, data) {
-          var existing = await dbGet('profiles', '?id=eq.' + encodeURIComponent(email) + '&select=id');
-          if (Array.isArray(existing) && existing.length > 0) {
-            await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
-              method: 'PATCH',
-              headers: { ...DB_HEADERS },
-              body: JSON.stringify(data)
-            });
-          } else {
-            await dbInsert('profiles', { ...data, id: email });
-          }
-        }
-
-        // ─── AJUSTES: EDITAR PERFIL ───────────────────────────────────────────────
-        function EditProfileScreen({ nav, user }) {
-          var currentEmail = (user && user.email) || '';
-          var currentName = (user && user.user_metadata && user.user_metadata.full_name) || '';
-          var googlePhoto = (user && user.user_metadata && user.user_metadata.avatar_url) || '';
-
-          const [name, setName] = useState(currentName);
-          const [phone, setPhone] = useState('');
-          const [birthdate, setBirthdate] = useState('');
-          const [photoUrl, setPhotoUrl] = useState(googlePhoto);
-          const [uploading, setUploading] = useState(false);
-          const [saving, setSaving] = useState(false);
-          const [saved, setSaved] = useState(false);
-          const [error, setError] = useState('');
-
-          useEffect(function() {
-            if (!currentEmail) return;
-            dbGet('profiles', '?id=eq.' + encodeURIComponent(currentEmail) + '&select=*')
-              .then(function(d) {
-                if (Array.isArray(d) && d.length > 0) {
-                  if (d[0].full_name) setName(d[0].full_name);
-                  if (d[0].phone) setPhone(d[0].phone);
-                  if (d[0].birthdate) setBirthdate(d[0].birthdate);
-                  if (d[0].photo_url) setPhotoUrl(d[0].photo_url);
-                }
-              }).catch(function(){});
-          }, [currentEmail]);
-
-          function handlePhotoChange(e) {
-            var file = e.target.files && e.target.files[0];
-            if (!file) return;
-            setUploading(true);
-            setError('');
-            uploadProfilePhoto(file, currentEmail)
-              .then(function(url) { setPhotoUrl(url); setUploading(false); })
-              .catch(function(err) { setError('Error al subir la foto'); setUploading(false); });
-          }
-
-          function handleSave() {
-            setSaving(true); setError('');
-            saveProfile(currentEmail, {
-              full_name: name,
-              phone: phone,
-              birthdate: birthdate || null,
-              photo_url: photoUrl,
-              updated_at: new Date().toISOString()
-            }).then(function() {
-              setSaving(false); setSaved(true);
-              setTimeout(function(){ setSaved(false); }, 2500);
-            }).catch(function() {
-              setError('Error al guardar'); setSaving(false);
-            });
-          }
-
-          return (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 40 }}>
-              <Back onBack={function(){ nav('settings'); }} />
-              <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 24px' }}>Perfil</h2>
-
-              {/* Foto */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 28 }}>
-                <div style={{ position: 'relative', marginBottom: 12 }}>
-                  {photoUrl
-                    ? <img src={photoUrl} style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: '3px solid ' + G.brand }} alt="foto" />
-                    : <div style={{ width: 96, height: 96, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, color: '#fff', fontWeight: 700 }}>
-                        {name ? name.charAt(0).toUpperCase() : '?'}
-                      </div>
-                  }
-                  <label htmlFor="photoInput" style={{ position: 'absolute', bottom: 0, right: 0, width: 30, height: 30, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px solid #fff' }}>
-                    <span style={{ fontSize: 14, color: '#fff' }}>📷</span>
-                  </label>
-                  <input id="photoInput" type="file" accept="image/*" onChange={handlePhotoChange} style={{ display: 'none' }} />
-                </div>
-                {uploading && <p style={{ fontSize: 12, color: G.brand }}>Subiendo foto...</p>}
-                {!uploading && <p style={{ fontSize: 12, color: G.muted }}>Toca 📷 para cambiar tu foto</p>}
-              </div>
-
-              {/* Campos */}
-              {[
-                { label: 'Nombre completo', value: name, setter: setName, type: 'text', placeholder: 'Tu nombre completo' },
-                { label: 'Teléfono', value: phone, setter: setPhone, type: 'tel', placeholder: '+34 600 000 000' },
-                { label: 'Email', value: currentEmail, setter: function(){}, type: 'email', disabled: true },
-                { label: 'Fecha de nacimiento', value: birthdate, setter: setBirthdate, type: 'date' },
-              ].map(function(field, i) {
-                return (
-                  <div key={i} style={{ marginBottom: 16 }}>
-                    <p style={{ fontSize: 12, fontWeight: 600, color: G.text, marginBottom: 6 }}>{field.label}</p>
-                    <input
-                      type={field.type}
-                      value={field.value}
-                      onChange={function(e){ if (!field.disabled) field.setter(e.target.value); }}
-                      placeholder={field.placeholder || ''}
-                      disabled={field.disabled || false}
-                      style={{ width: '100%', background: field.disabled ? G.card2 : G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: field.disabled ? G.muted : G.text, outline: 'none', fontFamily: 'inherit', opacity: field.disabled ? 0.6 : 1, boxSizing: 'border-box' }}
-                    />
-                    {field.disabled && <p style={{ fontSize: 10, color: G.muted, marginTop: 4 }}>No se puede cambiar</p>}
-                  </div>
-                );
-              })}
-
-              {error && <p style={{ fontSize: 12, color: G.red, marginBottom: 10 }}>{error}</p>}
-              {saved && <p style={{ fontSize: 12, color: G.brand, marginBottom: 10, textAlign: 'center' }}>✓ Perfil guardado correctamente</p>}
-
-              <PrimaryBtn onClick={handleSave} disabled={saving || uploading}>
-                {saving ? 'Guardando...' : 'Guardar cambios'}
-              </PrimaryBtn>
-            </div>
-          );
-        }
-
-        // ─── AJUSTES: PANTALLA PRINCIPAL ─────────────────────────────────────────
-        function SettingsScreen({ nav, user }) {
-          var nombre = (user && user.user_metadata && user.user_metadata.full_name) || 'Usuario';
-          var email = (user && user.email) || '';
-          var avatar = (user && user.user_metadata && user.user_metadata.avatar_url) || null;
-          var iniciales = nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
-          const [settingsPhoto, setSettingsPhoto] = useState((user && user.user_metadata && user.user_metadata.avatar_url) || null);
-          const [settingsName, setSettingsName] = useState((user && user.user_metadata && user.user_metadata.full_name) || 'Usuario');
+          const [nombre, setNombre] = useState(googleName);
 
           useEffect(function() {
             if (!email) return;
             dbGet('profiles', '?id=eq.' + encodeURIComponent(email) + '&select=photo_url,full_name')
               .then(function(d) {
                 if (Array.isArray(d) && d.length > 0) {
-                  if (d[0].photo_url) setSettingsPhoto(d[0].photo_url);
-                  if (d[0].full_name) setSettingsName(d[0].full_name);
+                  if (d[0].photo_url) setPhotoUrl(d[0].photo_url);
+                  if (d[0].full_name) setNombre(d[0].full_name);
                 }
               }).catch(function(){});
           }, [email]);
 
+          var iniciales = nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
 
-               {settingsPhoto
-                  ? <img src={settingsPhoto} style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} alt="avatar" />
+          return (
+            <div style={{ flex: 1, padding: 18, textAlign: 'center', paddingTop: 30 }}>
+              {photoUrl
+                ? <img src={photoUrl} style={{ width: 80, height: 80, borderRadius: '50%', marginBottom: 10, objectFit: 'cover', border: '3px solid ' + G.brand }} />
+                : <Av txt={iniciales} size={80} />
+              }
+              <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 10, marginBottom: 2 }}>{nombre}</h3>
+              <p style={{ fontSize: 12, color: G.muted, marginTop: 0, marginBottom: 24 }}>{email}</p>
+
+              <div style={{ textAlign: 'left', background: G.card, borderRadius: 14, padding: 12, border: '1px solid ' + G.bdr, marginBottom: 18 }}>
+                <div style={{ padding: '10px 4px', cursor: 'pointer', borderBottom: '1px solid ' + G.bdr, color: G.text }} onClick={function(){ nav('settings'); }}>⚙️ Ajustes de Cuenta</div>
+                <div style={{ padding: '10px 4px', cursor: 'pointer', color: G.text }} onClick={function(){ alert('Próximamente'); }}>💳 Tarjetas Guardadas</div>
+              </div>
+
+              <GhostBtn onClick={function(){ setMode(mode === 'customer' ? 'business' : 'customer'); }}>
+                {mode === 'customer' ? '🔄 Cambiar a Modo Negocio' : '🔄 Cambiar a Modo Cliente'}
+              </GhostBtn>
+              <button onClick={signOut} style={{ marginTop: 12, width: '100%', background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 14, padding: '12px', fontSize: 13, color: G.red, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                Cerrar sesión
+              </button>
+            </div>
+          );
+        }
+
+
+        function SettingsScreen({ nav, user }) {
+          var email = (user && user.email) || '';
+          const [photo, setPhoto] = useState((user && user.user_metadata && user.user_metadata.avatar_url) || null);
+          const [displayName, setDisplayName] = useState((user && user.user_metadata && user.user_metadata.full_name) || 'Usuario');
+
+          useEffect(function() {
+            if (!email) return;
+            dbGet('profiles', '?id=eq.' + encodeURIComponent(email) + '&select=photo_url,full_name')
+              .then(function(d) {
+                if (Array.isArray(d) && d.length > 0) {
+                  if (d[0].photo_url) setPhoto(d[0].photo_url);
+                  if (d[0].full_name) setDisplayName(d[0].full_name);
+                }
+              }).catch(function(){});
+          }, [email]);
+
+          var iniciales = displayName.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
+
+          var opciones = [
+            { icon: '👤', label: 'Perfil', desc: 'Foto, nombre, teléfono, fecha de nacimiento', action: function(){ nav('editprofile'); } },
             { icon: '🔔', label: 'Notificaciones', desc: 'Avisos de citas y promociones', action: function(){ alert('Próximamente'); } },
             { icon: '💳', label: 'Métodos de pago', desc: 'Tarjetas guardadas', action: function(){ alert('Próximamente'); } },
             { icon: '🔒', label: 'Privacidad', desc: 'Gestiona tus datos', action: function(){ alert('Próximamente'); } },
-                  <p style={{ fontSize: 15, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{settingsName}</p>
+            { icon: '❓', label: 'Ayuda y soporte', desc: 'Contacta con Gonnie', action: function(){ alert('Próximamente'); } },
           ];
 
           return (
@@ -1141,12 +717,12 @@
               <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 20px' }}>Ajustes</h2>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '14px 16px', marginBottom: 24 }}>
-                {avatar
-                  ? <img src={avatar} style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} alt="avatar" />
+                {photo
+                  ? <img src={photo} style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} alt="avatar" />
                   : <div style={{ width: 50, height: 50, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#fff', fontWeight: 700, flexShrink: 0 }}>{iniciales}</div>
                 }
                 <div>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{nombre}</p>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{displayName}</p>
                   <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{email}</p>
                 </div>
               </div>
@@ -1168,6 +744,7 @@
             </div>
           );
         }
+
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<GonnieApp />);
