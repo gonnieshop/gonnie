@@ -686,10 +686,10 @@
           }, [email]);
           var iniciales = nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
           return (
-            <div style={{ flex: 1, padding: 18, textAlign: 'center', paddingTop: 30 }}>
+            <div style={{ flex: 1, padding: 18, paddingTop: 30, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               {photoUrl
-                ? <img src={photoUrl} style={{ width: 80, height: 80, borderRadius: '50%', marginBottom: 10, objectFit: 'cover', border: '3px solid ' + G.brand }} />
-                : <Av txt={iniciales} size={80} />
+                ? <img src={photoUrl} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid ' + G.brand, display: 'block', margin: '0 auto 12px' }} />
+                : <div style={{ width: 80, height: 80, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, color: '#fff', fontWeight: 700, margin: '0 auto 12px' }}>{iniciales}</div>
               }
               <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 10, marginBottom: 2 }}>{nombre}</h3>
               <p style={{ fontSize: 12, color: G.muted, marginTop: 0, marginBottom: 24 }}>{email}</p>
