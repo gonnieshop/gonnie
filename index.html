@@ -111,10 +111,10 @@
 
         // ─── HELPER: NIVELES DE PUNTOS ────────────────────────────────────────
         function getNivel(puntos) {
-          if (puntos >= 1500) return { nombre: "Platino", icono: "💎", color: "#60A5FA", min: 1500, max: 2000 };
-          if (puntos >= 1000) return { nombre: "Oro",     icono: "🏆", color: "#F59E0B", min: 1000, max: 1500 };
-          if (puntos >= 500)  return { nombre: "Plata",   icono: "🥈", color: "#1C1C1E", min: 500,  max: 1000 };
-          return                     { nombre: "Bronce",  icono: "🥉", color: "#CD7F32", min: 0,    max: 500  };
+          if (puntos >= 1500) return { nombre: "Platino", icono: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>', color: "#60A5FA", min: 1500, max: 2000 };
+          if (puntos >= 1000) return { nombre: "Oro",     icono: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>', color: "#F59E0B", min: 1000, max: 1500 };
+          if (puntos >= 500)  return { nombre: "Plata",   icono: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>', color: "#1C1C1E", min: 500,  max: 1000 };
+          return                     { nombre: "Bronce",  icono: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#CD7F32" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>', color: "#CD7F32", min: 0,    max: 500  };
         }
 
         function getProgreso(puntos) {
@@ -285,7 +285,7 @@
                       </p>
                     </div>
                     <div style={{ background: `${G.brand}15`, border: `0.5px solid ${G.brand}30`, borderRadius: 14, padding: "10px 12px", textAlign: "center" }}>
-                      <p style={{ fontSize: 22, marginBottom: 2 }}>{nivel.icono}</p>
+                      <span dangerouslySetInnerHTML={{ __html: nivel.icono }} />
                       <p style={{ fontSize: 9, fontWeight: 800, color: nivel.color }}>{nivel.nombre.toUpperCase()}</p>
                     </div>
                   </div>
@@ -694,8 +694,8 @@
               <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 10, marginBottom: 2 }}>{nombre}</h3>
               <p style={{ fontSize: 12, color: G.muted, marginTop: 0, marginBottom: 24 }}>{email}</p>
               <div style={{ textAlign: 'left', background: G.card, borderRadius: 14, padding: 12, border: '1px solid ' + G.bdr, marginBottom: 18 }}>
-                <div style={{ padding: '10px 4px', cursor: 'pointer', borderBottom: '1px solid ' + G.bdr, color: G.text }} onClick={function(){ nav('settings'); }}>⚙️ Ajustes de Cuenta</div>
-                <div style={{ padding: '10px 4px', cursor: 'pointer', color: G.text }} onClick={function(){ alert('Próximamente'); }}>💳 Tarjetas Guardadas</div>
+                <div style={{ padding: '10px 4px', cursor: 'pointer', borderBottom: '1px solid ' + G.bdr, color: G.text }} onClick={function(){ nav('settings'); }}><span dangerouslySetInnerHTML={{ __html: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' }} /> Ajustes de Cuenta</div>
+                <div style={{ padding: '10px 4px', cursor: 'pointer', color: G.text }} onClick={function(){ alert('Próximamente'); }}><span dangerouslySetInnerHTML={{ __html: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>' }} /> Tarjetas Guardadas</div>
               </div>
               <GhostBtn onClick={function(){ setMode(mode === 'customer' ? 'business' : 'customer'); }}>
                 {mode === 'customer' ? '🔄 Cambiar a Modo Negocio' : '🔄 Cambiar a Modo Cliente'}
@@ -1148,11 +1148,11 @@
           }, [email]);
           var iniciales = displayName.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
           var opciones = [
-            { icon: '👤', label: 'Perfil', desc: 'Foto, nombre, teléfono, fecha de nacimiento', action: function(){ nav('editprofile'); } },
-            { icon: '🔔', label: 'Notificaciones', desc: 'Avisos de citas y promociones', action: function(){ alert('Próximamente'); } },
-            { icon: '💳', label: 'Métodos de pago', desc: 'Tarjetas guardadas', action: function(){ alert('Próximamente'); } },
-            { icon: '🔒', label: 'Privacidad', desc: 'Gestiona tus datos', action: function(){ alert('Próximamente'); } },
-            { icon: '❓', label: 'Ayuda y soporte', desc: 'Contacta con Gonnie', action: function(){ alert('Próximamente'); } },
+            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>', label: 'Perfil', desc: 'Foto, nombre, teléfono, fecha de nacimiento', action: function(){ nav('editprofile'); } },
+            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>', label: 'Notificaciones', desc: 'Avisos de citas y promociones', action: function(){ alert('Próximamente'); } },
+            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>', label: 'Métodos de pago', desc: 'Tarjetas guardadas', action: function(){ alert('Próximamente'); } },
+            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>', label: 'Privacidad', desc: 'Gestiona tus datos', action: function(){ alert('Próximamente'); } },
+            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>', label: 'Ayuda y soporte', desc: 'Contacta con Gonnie', action: function(){ alert('Próximamente'); } },
           ];
           return (
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px' }}>
@@ -1172,7 +1172,7 @@
                 {opciones.map(function(op, i) {
                   return (
                     <div key={i} onClick={op.action} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderBottom: i < opciones.length - 1 ? '1px solid ' + G.bdr : 'none', cursor: 'pointer' }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 10, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{op.icon}</div>
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: (op.svg || '').replace(/COL/g, G.brand) }} />
                       <div style={{ flex: 1 }}>
                         <p style={{ fontSize: 14, fontWeight: 600, color: G.text, margin: '0 0 2px' }}>{op.label}</p>
                         <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{op.desc}</p>
