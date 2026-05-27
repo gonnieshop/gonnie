@@ -639,7 +639,7 @@
         }
 
         // ─── VISTA 10: PERFIL DE USUARIO ──────────────────────────────────────
-        function ProfileScreen({ setMode, mode, user }) {
+        function ProfileScreen({ setMode, mode, user, nav }) {
           const nombre = user?.user_metadata?.full_name || user?.email || "Usuario";
           const avatar = user?.user_metadata?.avatar_url;
           const email = user?.email || "";
@@ -655,7 +655,7 @@
               <p style={{ fontSize: 12, color: G.muted, marginTop: 0, marginBottom: 24 }}>{email}</p>
 
               <div style={{ textAlign: "left", background: G.card, borderRadius: 14, padding: 12, border: `1px solid ${G.bdr}`, marginBottom: 18 }}>
-               <div style={{ padding: "10px 4px", cursor: "pointer", borderBottom: `1px solid ${G.bdr}`, color: G.text }} onClick={() => alert("Editar perfil en desarrollo")}>⚙️ Ajustes de Cuenta</div>
+               <div style={{ padding: "10px 4px", cursor: "pointer", borderBottom: `1px solid ${G.bdr}`, color: G.text }} onClick={() => nav("settings")}>⚙️ Ajustes de Cuenta</div>
                <div style={{ padding: "10px 4px", cursor: "pointer", color: G.text }} onClick={() => alert("Métodos de pago en desarrollo")}>💳 Tarjetas Guardadas</div>
               </div>
 
@@ -757,7 +757,9 @@
                       {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
                       {view === "appointments" && <AppointmentsScreen />}
                       {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
-                      {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} />}
+                      {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} nav={setView} />}
+                      {view === "settings" && <SettingsScreen nav={setView} user={user} />}
+                      {view === "editprofile" && <EditProfileScreen nav={setView} user={user} />}
                       {view === "review" && <ReviewScreen barberia={barberia} nav={setView} user={user} />}
                     </>
                   )}
@@ -935,6 +937,206 @@
               <PrimaryBtn onClick={submit} disabled={stars === 0 || saving}>
                 {saving ? "Enviando..." : "Publicar reseña"}
               </PrimaryBtn>
+            </div>
+          );
+        }
+
+
+        // ─── SUBIR FOTO A SUPABASE STORAGE ───────────────────────────────────────
+        async function uploadProfilePhoto(file, userEmail) {
+          var ext = file.name.split('.').pop() || 'jpg';
+          var filename = userEmail.replace(/[@.]/g, '_') + '_' + Date.now() + '.' + ext;
+          var bucketName = 'Foto Perfil';
+          var url = SUPABASE_URL + '/storage/v1/object/' + encodeURIComponent(bucketName) + '/' + filename;
+
+          var res = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY,
+              'Content-Type': file.type || 'image/jpeg',
+              'x-upsert': 'true',
+            },
+            body: file
+          });
+
+          if (!res.ok) {
+            var err = await res.text();
+            throw new Error('Upload error: ' + err);
+          }
+
+          return SUPABASE_URL + '/storage/v1/object/public/' + encodeURIComponent(bucketName) + '/' + filename;
+        }
+
+        // ─── GUARDAR PERFIL EN SUPABASE ───────────────────────────────────────────
+        async function saveProfile(email, data) {
+          var existing = await dbGet('profiles', '?id=eq.' + encodeURIComponent(email) + '&select=id');
+          if (Array.isArray(existing) && existing.length > 0) {
+            await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
+              method: 'PATCH',
+              headers: { ...DB_HEADERS },
+              body: JSON.stringify(data)
+            });
+          } else {
+            await dbInsert('profiles', { ...data, id: email });
+          }
+        }
+
+        // ─── AJUSTES: EDITAR PERFIL ───────────────────────────────────────────────
+        function EditProfileScreen({ nav, user }) {
+          var currentEmail = (user && user.email) || '';
+          var currentName = (user && user.user_metadata && user.user_metadata.full_name) || '';
+          var googlePhoto = (user && user.user_metadata && user.user_metadata.avatar_url) || '';
+
+          const [name, setName] = useState(currentName);
+          const [phone, setPhone] = useState('');
+          const [birthdate, setBirthdate] = useState('');
+          const [photoUrl, setPhotoUrl] = useState(googlePhoto);
+          const [uploading, setUploading] = useState(false);
+          const [saving, setSaving] = useState(false);
+          const [saved, setSaved] = useState(false);
+          const [error, setError] = useState('');
+
+          useEffect(function() {
+            if (!currentEmail) return;
+            dbGet('profiles', '?id=eq.' + encodeURIComponent(currentEmail) + '&select=*')
+              .then(function(d) {
+                if (Array.isArray(d) && d.length > 0) {
+                  if (d[0].full_name) setName(d[0].full_name);
+                  if (d[0].phone) setPhone(d[0].phone);
+                  if (d[0].birthdate) setBirthdate(d[0].birthdate);
+                  if (d[0].photo_url) setPhotoUrl(d[0].photo_url);
+                }
+              }).catch(function(){});
+          }, [currentEmail]);
+
+          function handlePhotoChange(e) {
+            var file = e.target.files && e.target.files[0];
+            if (!file) return;
+            setUploading(true);
+            setError('');
+            uploadProfilePhoto(file, currentEmail)
+              .then(function(url) { setPhotoUrl(url); setUploading(false); })
+              .catch(function(err) { setError('Error al subir la foto'); setUploading(false); });
+          }
+
+          function handleSave() {
+            setSaving(true); setError('');
+            saveProfile(currentEmail, {
+              full_name: name,
+              phone: phone,
+              birthdate: birthdate || null,
+              photo_url: photoUrl,
+              updated_at: new Date().toISOString()
+            }).then(function() {
+              setSaving(false); setSaved(true);
+              setTimeout(function(){ setSaved(false); }, 2500);
+            }).catch(function() {
+              setError('Error al guardar'); setSaving(false);
+            });
+          }
+
+          return (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 40 }}>
+              <Back onBack={function(){ nav('settings'); }} />
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 24px' }}>Perfil</h2>
+
+              {/* Foto */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 28 }}>
+                <div style={{ position: 'relative', marginBottom: 12 }}>
+                  {photoUrl
+                    ? <img src={photoUrl} style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: '3px solid ' + G.brand }} alt="foto" />
+                    : <div style={{ width: 96, height: 96, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, color: '#fff', fontWeight: 700 }}>
+                        {name ? name.charAt(0).toUpperCase() : '?'}
+                      </div>
+                  }
+                  <label htmlFor="photoInput" style={{ position: 'absolute', bottom: 0, right: 0, width: 30, height: 30, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px solid #fff' }}>
+                    <span style={{ fontSize: 14, color: '#fff' }}>📷</span>
+                  </label>
+                  <input id="photoInput" type="file" accept="image/*" onChange={handlePhotoChange} style={{ display: 'none' }} />
+                </div>
+                {uploading && <p style={{ fontSize: 12, color: G.brand }}>Subiendo foto...</p>}
+                {!uploading && <p style={{ fontSize: 12, color: G.muted }}>Toca 📷 para cambiar tu foto</p>}
+              </div>
+
+              {/* Campos */}
+              {[
+                { label: 'Nombre completo', value: name, setter: setName, type: 'text', placeholder: 'Tu nombre completo' },
+                { label: 'Teléfono', value: phone, setter: setPhone, type: 'tel', placeholder: '+34 600 000 000' },
+                { label: 'Email', value: currentEmail, setter: function(){}, type: 'email', disabled: true },
+                { label: 'Fecha de nacimiento', value: birthdate, setter: setBirthdate, type: 'date' },
+              ].map(function(field, i) {
+                return (
+                  <div key={i} style={{ marginBottom: 16 }}>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: G.text, marginBottom: 6 }}>{field.label}</p>
+                    <input
+                      type={field.type}
+                      value={field.value}
+                      onChange={function(e){ if (!field.disabled) field.setter(e.target.value); }}
+                      placeholder={field.placeholder || ''}
+                      disabled={field.disabled || false}
+                      style={{ width: '100%', background: field.disabled ? G.card2 : G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: field.disabled ? G.muted : G.text, outline: 'none', fontFamily: 'inherit', opacity: field.disabled ? 0.6 : 1, boxSizing: 'border-box' }}
+                    />
+                    {field.disabled && <p style={{ fontSize: 10, color: G.muted, marginTop: 4 }}>No se puede cambiar</p>}
+                  </div>
+                );
+              })}
+
+              {error && <p style={{ fontSize: 12, color: G.red, marginBottom: 10 }}>{error}</p>}
+              {saved && <p style={{ fontSize: 12, color: G.brand, marginBottom: 10, textAlign: 'center' }}>✓ Perfil guardado correctamente</p>}
+
+              <PrimaryBtn onClick={handleSave} disabled={saving || uploading}>
+                {saving ? 'Guardando...' : 'Guardar cambios'}
+              </PrimaryBtn>
+            </div>
+          );
+        }
+
+        // ─── AJUSTES: PANTALLA PRINCIPAL ─────────────────────────────────────────
+        function SettingsScreen({ nav, user }) {
+          var nombre = (user && user.user_metadata && user.user_metadata.full_name) || 'Usuario';
+          var email = (user && user.email) || '';
+          var avatar = (user && user.user_metadata && user.user_metadata.avatar_url) || null;
+          var iniciales = nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
+
+          var opciones = [
+            { icon: '👤', label: 'Perfil', desc: 'Foto, nombre, teléfono, fecha de nacimiento', action: function(){ nav('editprofile'); } },
+            { icon: '🔔', label: 'Notificaciones', desc: 'Avisos de citas y promociones', action: function(){ alert('Próximamente'); } },
+            { icon: '💳', label: 'Métodos de pago', desc: 'Tarjetas guardadas', action: function(){ alert('Próximamente'); } },
+            { icon: '🔒', label: 'Privacidad', desc: 'Gestiona tus datos', action: function(){ alert('Próximamente'); } },
+            { icon: '❓', label: 'Ayuda y soporte', desc: 'Contacta con Gonnie', action: function(){ alert('Próximamente'); } },
+          ];
+
+          return (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px' }}>
+              <Back onBack={function(){ nav('profile'); }} />
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 20px' }}>Ajustes</h2>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '14px 16px', marginBottom: 24 }}>
+                {avatar
+                  ? <img src={avatar} style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} alt="avatar" />
+                  : <div style={{ width: 50, height: 50, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#fff', fontWeight: 700, flexShrink: 0 }}>{iniciales}</div>
+                }
+                <div>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{nombre}</p>
+                  <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{email}</p>
+                </div>
+              </div>
+
+              <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, overflow: 'hidden' }}>
+                {opciones.map(function(op, i) {
+                  return (
+                    <div key={i} onClick={op.action} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderBottom: i < opciones.length - 1 ? '1px solid ' + G.bdr : 'none', cursor: 'pointer' }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{op.icon}</div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: G.text, margin: '0 0 2px' }}>{op.label}</p>
+                        <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{op.desc}</p>
+                      </div>
+                      <span style={{ color: G.muted, fontSize: 16 }}>›</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           );
         }
