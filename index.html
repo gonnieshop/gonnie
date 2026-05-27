@@ -431,7 +431,10 @@
 
                 {tab === "barberos" && !loading && barberos.map((br, idx) => (
                   <div key={br.id} onClick={() => setSelB(br)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: selB?.id === br.id ? `${G.brand}10` : G.card, border: `0.5px solid ${selB?.id === br.id ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
-                    <Av txt={br.initials || "B"} bg={BARBER_COLORS[idx % 4].bg} color={BARBER_COLORS[idx % 4].color} />
+                    {br.photo_url
+                      ? <img src={br.photo_url} style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} alt={br.name} />
+                      : <Av txt={br.initials || br.name.slice(0,2).toUpperCase()} bg={BARBER_COLORS[idx % 4].bg} color={BARBER_COLORS[idx % 4].color} />
+                    }
                     <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{br.name}</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{br.role}</p></div>
                     <p style={{ fontSize: 12, color: G.gold, fontWeight: 700 }}>⭐ {br.rating}</p>
                   </div>
