@@ -946,8 +946,8 @@
         async function uploadProfilePhoto(file, userEmail) {
           var ext = file.name.split('.').pop() || 'jpg';
           var filename = userEmail.replace(/[@.]/g, '_') + '_' + Date.now() + '.' + ext;
-          var bucketName = 'Foto Perfil';
-          var url = SUPABASE_URL + '/storage/v1/object/' + encodeURIComponent(bucketName) + '/' + filename;
+          var bucketName = 'avatars';
+          var url = SUPABASE_URL + '/storage/v1/object/' + bucketName + '/' + filename;
 
           var res = await fetch(url, {
             method: 'POST',
@@ -965,7 +965,7 @@
             throw new Error('Upload error: ' + err);
           }
 
-          return SUPABASE_URL + '/storage/v1/object/public/' + encodeURIComponent(bucketName) + '/' + filename;
+          return SUPABASE_URL + '/storage/v1/object/public/' + bucketName + '/' + filename;
         }
 
         // ─── GUARDAR PERFIL EN SUPABASE ───────────────────────────────────────────
