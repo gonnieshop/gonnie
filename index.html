@@ -686,7 +686,7 @@
           }, [email]);
           var iniciales = nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
           return (
-            <div style={{ flex: 1, padding: 18, paddingTop: 30 }}>
+            <div style={{ flex: 1, padding: 18, paddingTop: 60 }}>
               {photoUrl
                 ? <img src={photoUrl} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid ' + G.brand, display: 'block', margin: '0 auto 12px' }} />
                 : <div style={{ width: 80, height: 80, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, color: '#fff', fontWeight: 700, margin: '0 auto 12px' }}>{iniciales}</div>
