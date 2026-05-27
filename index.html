@@ -640,18 +640,32 @@
 
         // ─── VISTA 10: PERFIL DE USUARIO ──────────────────────────────────────
         function ProfileScreen({ setMode, mode, user, nav }) {
-          const nombre = user?.user_metadata?.full_name || user?.email || "Usuario";
-          const avatar = user?.user_metadata?.avatar_url;
-          const email = user?.email || "";
-          const iniciales = nombre.split(" ").map(n => n[0]).join("").slice(0,2).toUpperCase();
+          var nombre = (user && user.user_metadata && user.user_metadata.full_name) || (user && user.email) || "Usuario";
+          var googleAvatar = (user && user.user_metadata && user.user_metadata.avatar_url) || null;
+          var email = (user && user.email) || "";
+          var iniciales = nombre.split(" ").map(function(n){ return n[0]; }).join("").slice(0,2).toUpperCase();
+
+          const [photoUrl, setPhotoUrl] = useState(googleAvatar);
+          const [displayName, setDisplayName] = useState(nombre);
+
+          useEffect(function() {
+            if (!email) return;
+            dbGet("profiles", "?id=eq." + encodeURIComponent(email) + "&select=photo_url,full_name")
+              .then(function(d) {
+                if (Array.isArray(d) && d.length > 0) {
+                  if (d[0].photo_url) setPhotoUrl(d[0].photo_url);
+                  if (d[0].full_name) setDisplayName(d[0].full_name);
+                }
+              }).catch(function(){});
+          }, [email]);
 
           return (
             <div style={{ flex: 1, padding: 18, textAlign: "center", paddingTop: 30 }}>
-              {avatar
-                ? <img src={avatar} style={{ width: 64, height: 64, borderRadius: "50%", marginBottom: 10 }} />
-                : <Av txt={iniciales} size={64} />
+              {photoUrl
+                ? <img src={photoUrl} style={{ width: 80, height: 80, borderRadius: "50%", marginBottom: 10, objectFit: "cover", border: "3px solid " + G.brand }} />
+                : <Av txt={iniciales} size={80} />
               }
-              <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 10, marginBottom: 2 }}>{nombre}</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 10, marginBottom: 2 }}>{displayName}</h3>
               <p style={{ fontSize: 12, color: G.muted, marginTop: 0, marginBottom: 24 }}>{email}</p>
 
               <div style={{ textAlign: "left", background: G.card, borderRadius: 14, padding: 12, border: `1px solid ${G.bdr}`, marginBottom: 18 }}>
@@ -1098,13 +1112,27 @@
           var email = (user && user.email) || '';
           var avatar = (user && user.user_metadata && user.user_metadata.avatar_url) || null;
           var iniciales = nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
+          const [settingsPhoto, setSettingsPhoto] = useState((user && user.user_metadata && user.user_metadata.avatar_url) || null);
+          const [settingsName, setSettingsName] = useState((user && user.user_metadata && user.user_metadata.full_name) || 'Usuario');
 
-          var opciones = [
-            { icon: '👤', label: 'Perfil', desc: 'Foto, nombre, teléfono, fecha de nacimiento', action: function(){ nav('editprofile'); } },
+          useEffect(function() {
+            if (!email) return;
+            dbGet('profiles', '?id=eq.' + encodeURIComponent(email) + '&select=photo_url,full_name')
+              .then(function(d) {
+                if (Array.isArray(d) && d.length > 0) {
+                  if (d[0].photo_url) setSettingsPhoto(d[0].photo_url);
+                  if (d[0].full_name) setSettingsName(d[0].full_name);
+                }
+              }).catch(function(){});
+          }, [email]);
+
+
+               {settingsPhoto
+                  ? <img src={settingsPhoto} style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} alt="avatar" />
             { icon: '🔔', label: 'Notificaciones', desc: 'Avisos de citas y promociones', action: function(){ alert('Próximamente'); } },
             { icon: '💳', label: 'Métodos de pago', desc: 'Tarjetas guardadas', action: function(){ alert('Próximamente'); } },
             { icon: '🔒', label: 'Privacidad', desc: 'Gestiona tus datos', action: function(){ alert('Próximamente'); } },
-            { icon: '❓', label: 'Ayuda y soporte', desc: 'Contacta con Gonnie', action: function(){ alert('Próximamente'); } },
+                  <p style={{ fontSize: 15, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{settingsName}</p>
           ];
 
           return (
