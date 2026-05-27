@@ -428,9 +428,21 @@
                 <p style={{ fontSize: 12, color: G.muted, marginBottom: 14 }}>📍 {barberia.city} • {barberia.hours}</p>
 
                 <div style={{ display: "flex", background: G.card2, borderRadius: 12, padding: 3, marginBottom: 18 }}>
-                  {[{ id: "barberos", l: "Barberos" }, { id: "servicios", l: "Servicios" }, { id: "resenas", l: "Reseñas ⭐" }].map(t => (
-                    <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: tab === t.id ? G.brand : "transparent", color: tab === t.id ? "#080B0F" : G.muted, border: "none", borderRadius: 10, padding: "8px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{t.l}</button>
-                  ))}
+                  {[
+                    { id: "barberos", l: "Barberos", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>' },
+                    { id: "servicios", l: "Servicios", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>' },
+                    { id: "resenas", l: "Reseñas", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' },
+                  ].map(t => {
+                    const active = tab === t.id;
+                    const col = active ? "#FFFFFF" : "#1C1C1E";
+                    const svgHtml = t.svg.replace(/<svg /, '<svg stroke="' + col + '" ');
+                    return (
+                      <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: active ? G.brand : "transparent", border: "none", borderRadius: 10, padding: "8px 4px", fontSize: 10, fontWeight: 700, cursor: "pointer", color: col, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                        <span dangerouslySetInnerHTML={{ __html: svgHtml }} />
+                        <span>{t.l}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {loading && <Skeleton h={80} />}
@@ -441,7 +453,7 @@
                       ? <img src={br.photo_url} style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} alt={br.name} />
                       : <Av txt={br.initials || br.name.slice(0,2).toUpperCase()} bg={BARBER_COLORS[idx % 4].bg} color={BARBER_COLORS[idx % 4].color} />
                     }
-                    <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{br.name}</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{br.role}</p></div>
+                    <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 700, color: "#1C1C1E", margin: 0 }}>{br.name}</p><p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>{br.role}</p></div>
                     <p style={{ fontSize: 12, color: G.gold, fontWeight: 700 }}>⭐ {br.rating}</p>
                   </div>
                 ))}
@@ -449,7 +461,7 @@
                 {tab === "servicios" && !loading && servicios.map(sv => (
                   <div key={sv.id} onClick={() => setSelS(sv)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: selS?.id === sv.id ? `${G.brand}10` : G.card, border: `0.5px solid ${selS?.id === sv.id ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
                     <span style={{ fontSize: 20 }}>{sv.icon || "✂️"}</span>
-                    <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{sv.name}</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>⏱ {sv.duration_min} min</p></div>
+                    <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 600, color: "#1C1C1E", margin: 0 }}>{sv.name}</p><p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>⏱ {sv.duration_min} min</p></div>
                     <p style={{ fontSize: 16, fontWeight: 800 }}>{sv.price}€</p>
                   </div>
                 ))}
