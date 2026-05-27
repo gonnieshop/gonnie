@@ -257,6 +257,8 @@
           const progreso = getProgreso(puntos);
           const ptsSiguiente = getPtsParaSiguiente(puntos);
           const [nextAppt, setNextAppt] = useState(null);
+          const [cancelling, setCancelling] = useState(false);
+          const [confirmCancel, setConfirmCancel] = useState(false);
 
           useEffect(function() {
             var email = user && user.email;
@@ -322,19 +324,29 @@
                       </div>
                       <button onClick={function(){ nav("confirmed"); }} style={{ background: G.brand + "15", border: "0.5px solid " + G.brand + "40", borderRadius: 10, padding: "8px 12px", fontSize: 11, color: G.brand, fontWeight: 700 }}>📱 QR</button>
                     </div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                      <button onClick={function(){
-                        if (window.confirm("¿Seguro que quieres cancelar esta cita?")) {
-                          cancelBooking(
-                            nextAppt.id,
-                            nextAppt,
-                            user && user.email,
-                            user && user.user_metadata && user.user_metadata.full_name
-                          ).then(function(){ setNextAppt(null); });
-                        }
-                      }} style={{ flex: 1, background: "transparent", border: "1px solid " + G.red + "40", borderRadius: 10, padding: "9px", fontSize: 12, color: G.red, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                        Cancelar cita
-                      </button>
+                    <div style={{ marginTop: 10 }}>
+                      {!confirmCancel ? (
+                        <button onClick={function(){ setConfirmCancel(true); }} style={{ width: "100%", background: "transparent", border: "1px solid " + G.red + "40", borderRadius: 10, padding: "9px", fontSize: 12, color: G.red, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                          Cancelar cita
+                        </button>
+                      ) : (
+                        <div style={{ background: G.red + "10", border: "1px solid " + G.red + "30", borderRadius: 10, padding: "12px" }}>
+                          <p style={{ fontSize: 12, color: G.red, textAlign: "center", marginBottom: 10, fontWeight: 600 }}>¿Seguro que quieres cancelar?</p>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button onClick={function(){ setConfirmCancel(false); }} style={{ flex: 1, background: "transparent", border: "1px solid " + G.bdr, borderRadius: 8, padding: "8px", fontSize: 12, color: G.muted, cursor: "pointer", fontFamily: "inherit" }}>
+                              No
+                            </button>
+                            <button onClick={function(){
+                              setCancelling(true);
+                              cancelBooking(nextAppt.id, nextAppt, user && user.email, user && user.user_metadata && user.user_metadata.full_name)
+                                .then(function(){ setNextAppt(null); setCancelling(false); setConfirmCancel(false); })
+                                .catch(function(){ setCancelling(false); });
+                            }} style={{ flex: 1, background: G.red, border: "none", borderRadius: 8, padding: "8px", fontSize: 12, color: "#fff", cursor: cancelling ? "not-allowed" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
+                              {cancelling ? "Cancelando..." : "Sí, cancelar"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
