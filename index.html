@@ -659,9 +659,7 @@
         // ─── VISTA 7: FIDELIZACIÓN Y PREMIOS (LOYALTY) ────────────────────────
         function LoyaltyScreen({ puntos }) {
           const rewards = [
-            { pts: 500, title: "Lavado Premium Gratis", claim: true },
-            { pts: 1000, title: "Descuento del 50% en tu Corte", claim: false },
-            { pts: 2000, title: "Servicio Completo + Tratamiento Gratis", claim: false }
+            { pts: 500, title: "Corte Gratis", claim: puntos >= 500 },
           ];
 
           return (
