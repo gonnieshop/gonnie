@@ -663,7 +663,7 @@
           );
         }
 
-        // ─── VISTA 5: CITAS CONFIRMADAS Y QR GENERATOR ────────────────────────
+        // ─── VISTA 5: CITAS CONFIRMADAS ─────────────────────────────────────────
         function ConfirmedScreen({ nav, appt }) {
           const [showConfetti, setShowConfetti] = useState(true);
           useEffect(function() {
@@ -674,27 +674,18 @@
             <div style={{ flex: 1, padding: 24, textAlign: "center", paddingTop: 40 }}>
               {showConfetti && <Confetti />}
               <AnimCheck type="check" />
-              
-              <h2 style={{ fontSize: 22, fontWeight: 900 }}>¡Todo Listo!</h2>
-              <p style={{ fontSize: 12, color: G.muted, marginBottom: 20 }}>Muestra este código QR al llegar al establecimiento</p>
-
-              {/* QR Simulado */}
-              <div style={{ background: "#FFF", padding: 16, width: 160, height: 160, marginLeft: "auto", marginRight: "auto", borderRadius: 16, display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 24 }}>
-                {Array.from({ length: 64 }).map((_, i) => (
-                  <div key={i} style={{ width: 14, height: 14, background: (i * 7) % 3 === 0 ? "#000" : "#FFF" }} />
-                ))}
+              <h2 style={{ fontSize: 22, fontWeight: 900, marginBottom: 8 }}>¡Reserva confirmada!</h2>
+              <p style={{ fontSize: 13, color: G.muted, marginBottom: 24 }}>Te esperamos en GonnieBarbershop</p>
+              <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "left", marginBottom: 24, border: "1px solid " + G.bdr }}>
+                <p style={{ fontSize: 13, margin: "6px 0" }}>📅 <b>Fecha:</b> {(appt && appt.date) || "Hoy"}</p>
+                <p style={{ fontSize: 13, margin: "6px 0" }}>⏰ <b>Hora:</b> {(appt && appt.time) || "—"}</p>
+                <p style={{ fontSize: 13, margin: "6px 0" }}>💰 <b>Importe:</b> {(appt && appt.price) || 0}€</p>
               </div>
-
-              <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "left", marginBottom: 20, border: `1px solid ${G.bdr}` }}>
-                <p style={{ fontSize: 13, margin: "2px 0" }}>📅 <b>Fecha:</b> {appt?.date || "Hoy"}</p>
-                <p style={{ fontSize: 13, margin: "2px 0" }}>⏰ <b>Hora:</b> {appt?.time || "11:30h"}</p>
-                <p style={{ fontSize: 13, margin: "2px 0" }}>💰 <b>Importe:</b> {appt?.price || 20}€</p>
-              </div>
-
-              <PrimaryBtn onClick={() => nav("home")}>Volver a Inicio</PrimaryBtn>
+              <PrimaryBtn onClick={function(){ nav("home"); }}>Volver al inicio</PrimaryBtn>
             </div>
           );
         }
+
 
         // ─── VISTA 6: HISTORIAL DE CITAS (APPOINTMENTS) ───────────────────────
         function AppointmentsScreen() {
