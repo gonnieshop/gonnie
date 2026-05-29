@@ -367,7 +367,7 @@
                         <p style={{ fontSize: 15, fontWeight: 700, color: G.text }}>{nextAppt.servicios && nextAppt.servicios.name}</p>
                         <p style={{ fontSize: 12, color: G.muted }}>{nextAppt.barberos && nextAppt.barberos.name}</p>
                       </div>
-                      <button onClick={function(){ nav("confirmed"); }} style={{ background: G.brand + "15", border: "0.5px solid " + G.brand + "40", borderRadius: 10, padding: "8px 12px", fontSize: 11, color: G.brand, fontWeight: 700 }}>📱 QR</button>
+                      
                     </div>
                     <div style={{ marginTop: 10 }}>
                       {!confirmCancel ? (
@@ -674,7 +674,7 @@
             <div style={{ flex: 1, padding: 24, textAlign: "center", paddingTop: 40 }}>
               {showConfetti && <Confetti />}
               <AnimCheck type="check" />
-              <div style={{ fontSize: 50, marginBottom: 12 }}>✅</div>
+              
               <h2 style={{ fontSize: 22, fontWeight: 900 }}>¡Todo Listo!</h2>
               <p style={{ fontSize: 12, color: G.muted, marginBottom: 20 }}>Muestra este código QR al llegar al establecimiento</p>
 
