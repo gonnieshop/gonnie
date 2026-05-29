@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -175,7 +175,7 @@
 
         const GONNIE_LOGO = "https://i.imgur.com/VCuWiBN.png";
         const GonnieLogo = ({ size = 26 }) => (
-          <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: size * 1.6, width: "auto", objectFit: "contain" }} alt="Gonnie" />
+          <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: size * 1.6, width: "auto", objectFit: "contain", objectPosition: "left", display: "block" }} alt="Gonnie" />
         );
 
 
@@ -273,7 +273,7 @@
          const nombre = user?.user_metadata?.full_name?.split(" ")[0] || "tú";
           return (
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
-              <div style={{ padding: "16px 10px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ padding: "12px 16px 12px 4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
                   <GonnieLogo size={22} />
                   <p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>Buenas 👋 {nombre}</p>
