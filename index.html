@@ -1468,31 +1468,41 @@
 
     async function initPush() {
       try {
+        // 1. Pedir permiso — esto lanza el popup nativo
         const permission = await Notification.requestPermission();
+        console.log('[Gonnie Push] Permiso:', permission);
         if (permission !== 'granted') return;
 
-        const swReg = await navigator.serviceWorker.getRegistration();
+        // 2. Esperar al SW registrado (navigator.serviceWorker.ready nunca devuelve undefined)
+        const swReg = await navigator.serviceWorker.ready;
+        console.log('[Gonnie Push] SW listo:', swReg.scope);
+
+        // 3. Obtener token FCM
         const token = await getToken(messaging, {
           vapidKey: 'BM8WAmPdL5MLA7xOBgFMw-j3CbWGOREtBROEA4-ORv3Gc8KOSUHC3FfNuVI_N11uCcg6sr21cbf4wPbEhVDOOF8',
           serviceWorkerRegistration: swReg
         });
+        console.log('[Gonnie Push] Token FCM:', token);
+        if (!token) { console.warn('[Gonnie Push] Token vacío'); return; }
 
-        if (token) {
-          console.log('FCM Token:', token);
-          const email = localStorage.getItem('gonnie_email');
-          if (email) {
-            fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
-              method: 'PATCH',
-              headers: {
-                'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
-                'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ fcm_token: token })
-            });
-          }
+        // 4. Leer email desde sesión Supabase (no localStorage)
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const email = session && session.user && session.user.email;
+        console.log('[Gonnie Push] Email sesión:', email);
+
+        if (email) {
+          await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
+            method: 'PATCH',
+            headers: {
+              'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
+              'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fcm_token: token })
+          });
+          console.log('[Gonnie Push] Token guardado en perfil ✓');
         }
-      } catch(e) { console.warn('Push error:', e); }
+      } catch(e) { console.warn('[Gonnie Push] Error:', e); }
     }
 
     onMessage(messaging, function(payload) {
