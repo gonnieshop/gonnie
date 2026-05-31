@@ -1244,6 +1244,16 @@
           var googleName = (user && user.user_metadata && user.user_metadata.full_name) || 'Usuario';
           const [photo, setPhoto] = useState(googleAvatar);
           const [displayName, setDisplayName] = useState(googleName);
+
+          // ── Estado del botón de notificaciones ──
+          // 'unknown' | 'requesting' | 'granted' | 'denied'
+          const [pushStatus, setPushStatus] = useState(function() {
+            if (typeof Notification === 'undefined') return 'unsupported';
+            if (Notification.permission === 'granted') return 'granted';
+            if (Notification.permission === 'denied')  return 'denied';
+            return 'unknown';
+          });
+
           useEffect(function() {
             if (!email) return;
             dbGet('profiles', '?id=eq.' + encodeURIComponent(email) + '&select=photo_url,full_name')
@@ -1254,14 +1264,33 @@
                 }
               }).catch(function(){});
           }, [email]);
+
+          async function handleActivarNotificaciones() {
+            if (pushStatus === 'granted' || pushStatus === 'requesting') return;
+            setPushStatus('requesting');
+            try {
+              if (window.__initPush) {
+                await window.__initPush();
+              }
+              var perm = (typeof Notification !== 'undefined') ? Notification.permission : 'denied';
+              setPushStatus(perm === 'granted' ? 'granted' : 'denied');
+            } catch(e) {
+              setPushStatus('denied');
+            }
+          }
+
           var iniciales = displayName.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
           var opciones = [
             { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>', label: 'Perfil', desc: 'Foto, nombre, teléfono, fecha de nacimiento', action: function(){ nav('editprofile'); } },
-            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>', label: 'Notificaciones', desc: 'Avisos de citas y promociones', action: function(){ alert('Próximamente'); } },
             { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>', label: 'Métodos de pago', desc: 'Tarjetas guardadas', action: function(){ alert('Próximamente'); } },
             { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>', label: 'Privacidad', desc: 'Gestiona tus datos', action: function(){ alert('Próximamente'); } },
             { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>', label: 'Ayuda y soporte', desc: 'Contacta con Gonnie', action: function(){ alert('Próximamente'); } },
           ];
+
+          // Etiqueta y color del botón de notificaciones según estado
+          var pushLabel = { unknown: 'Activar notificaciones', requesting: 'Activando…', granted: '✓ Notificaciones activas', denied: 'Permiso denegado — actívalas en Ajustes del sistema' };
+          var pushColor = { unknown: G.brand, requesting: G.brand, granted: G.green, denied: G.red };
+
           return (
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px' }}>
               <Back onBack={function(){ nav('profile'); }} />
@@ -1274,6 +1303,31 @@
                  <p style={{ fontSize: 16, fontWeight: 700, color: G.text, margin: '0 0 4px', textAlign: 'center' }}>{displayName}</p>
                  <p style={{ fontSize: 12, color: G.muted, margin: 0, textAlign: 'center' }}>{email}</p>
                </div>
+
+              {/* ── Tarjeta de Notificaciones ── */}
+              <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                    dangerouslySetInnerHTML={{ __html: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + G.brand + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>' }} />
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: G.text, margin: '0 0 2px' }}>Notificaciones push</p>
+                    <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>Avisos de citas y promociones</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleActivarNotificaciones}
+                  disabled={pushStatus === 'granted' || pushStatus === 'requesting' || pushStatus === 'denied' || pushStatus === 'unsupported'}
+                  style={{
+                    width: '100%', border: 'none', borderRadius: 12, padding: '12px',
+                    fontSize: 13, fontWeight: 700, cursor: (pushStatus === 'unknown') ? 'pointer' : 'default',
+                    background: (pushColor[pushStatus] || G.brand) + (pushStatus === 'unknown' ? '' : '22'),
+                    color: pushStatus === 'unknown' ? '#fff' : (pushColor[pushStatus] || G.brand),
+                    fontFamily: 'inherit', transition: 'all 0.2s',
+                  }}>
+                  {pushLabel[pushStatus] || 'Activar notificaciones'}
+                </button>
+              </div>
+
               <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, overflow: 'hidden' }}>
                 {opciones.map(function(op, i) {
                   return (
@@ -1447,11 +1501,8 @@
       if (title) new Notification(title, { body, icon: '/icon.png' });
     });
 
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.ready.then(function() { initPush(); });
-      });
-    }
+    // initPush() se llama manualmente desde la app (botón en Ajustes > Notificaciones)
+    window.__initPush = initPush;
   </script>
 
 </body>
