@@ -466,22 +466,28 @@
               {loading && [1, 2, 3].map(i => <Skeleton key={i} h={140} />)}
 
               {!loading && list.map((b) => {
-            var esFavCard = getFavoritos().includes(String(b.id));
+            var [esFavCard, setEsFavCard] = useState(getFavoritos().includes(String(b.id)));
             return (
-                <div key={b.id} onClick={() => { setBarberia(b); nav("detail"); }} style={{ background: G.card, border: `0.5px solid ${esFavCard ? '#FF3B3040' : G.bdr}`, borderRadius: 18, marginBottom: 12, overflow: "hidden", cursor: "pointer" }}>
+                <div key={b.id} onClick={() => { setBarberia(b); nav("detail"); }} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 18, marginBottom: 12, overflow: "hidden", cursor: "pointer" }}>
                   <div style={{ height: 90, background: `linear-gradient(135deg,#0D1A15,#111F1A)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, position: "relative" }}>
                     💈
-                    <div style={{ position: "absolute", top: 10, right: 10, display: "flex", gap: 6, alignItems: "center" }}>
-                      {esFavCard && <span style={{ fontSize: 14 }}>❤️</span>}
+                    <div style={{ position: "absolute", top: 10, right: 10 }}>
                       <Pill color={b.is_open ? "#080B0F" : G.red} bg={b.is_open ? G.green : `${G.red}18`}>{b.is_open ? "Abierto" : "Cerrado"}</Pill>
                     </div>
                   </div>
                   <div style={{ padding: "12px 14px 14px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                       <p style={{ fontSize: 15, fontWeight: 800, color: G.text }}>{b.name}</p>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ fontSize: 11 }}>⭐</span>
-                        <span style={{ fontSize: 13, fontWeight: 700 }}>{b.rating}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill={G.gold} stroke={G.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{b.rating}</span>
+                        </div>
+                        <button onClick={function(e){ e.stopPropagation(); setEsFavCard(toggleFavorito(b.id)); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill={esFavCard ? "#FF3B30" : "none"} stroke={esFavCard ? "#FF3B30" : G.muted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                          </svg>
+                        </button>
                       </div>
                     </div>
                     <p style={{ fontSize: 11, color: G.muted, marginBottom: 8 }}>📍 {b.city} · {b.hours}</p>
@@ -573,23 +579,6 @@
                   }} style={{ display: "flex", alignItems: "center", gap: 5, background: G.brand, border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     Cómo llegar
-                  </button>
-                </div>
-
-                {/* Rating + favorito */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill={G.gold} stroke={G.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{avgRating || barberia.rating}</span>
-                    {totalResenas !== null && <span style={{ fontSize: 11, color: G.muted }}>({totalResenas} reseñas)</span>}
-                  </div>
-                  <button onClick={handleFav} style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: "inherit" }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill={esFav ? "#FF3B30" : "none"} stroke={esFav ? "#FF3B30" : G.muted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                    </svg>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: esFav ? "#FF3B30" : G.muted }}>{esFav ? "Guardada" : "Guardar"}</span>
                   </button>
                 </div>
 
