@@ -457,6 +457,7 @@
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill={G.gold} stroke={G.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                       <span style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{b.rating}</span>
+                      {b.total_resenas && <span style={{ fontSize: 11, color: G.muted }}>({b.total_resenas})</span>}
                     </div>
                     <button onClick={function(e){ e.stopPropagation(); setEsFav(toggleFavorito(b.id)); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill={esFav ? "#FF3B30" : "none"} stroke={esFav ? "#FF3B30" : G.muted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -483,9 +484,26 @@
           const tags = ["Todos", "Fade", "Barba", "Navaja", "Clásico"];
 
           useEffect(() => {
-            dbGet("barberias", "?select=*&order=rating.desc")
-              .then(data => { setBarberias(Array.isArray(data) ? data : []); setLoading(false); })
-              .catch(e => { setError(e.message); setLoading(false); });
+            Promise.all([
+              dbGet("barberias", "?select=*&order=rating.desc"),
+              dbGet("resenas", "?select=barberia_id,stars"),
+            ]).then(function([barberias, resenas]) {
+              var resenasMap = {};
+              (resenas || []).forEach(function(r) {
+                if (!resenasMap[r.barberia_id]) resenasMap[r.barberia_id] = [];
+                resenasMap[r.barberia_id].push(r.stars);
+              });
+              var data = (barberias || []).map(function(b) {
+                var stars = resenasMap[b.id];
+                if (stars && stars.length) {
+                  b.rating = (stars.reduce(function(s,v){ return s+v; }, 0) / stars.length).toFixed(1);
+                  b.total_resenas = stars.length;
+                }
+                return b;
+              });
+              setBarberias(data);
+              setLoading(false);
+            }).catch(function(e) { setError(e.message); setLoading(false); });
           }, []);
 
           const list = barberias.filter(b =>
