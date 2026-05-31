@@ -804,35 +804,94 @@
 
         // ─── VISTA 9: PANEL DE CONTROL DE NEGOCIO (BUSINESS MODE / RECHARTS) ──
         function BusinessScreen() {
-          const stats = [
-            { m: "Lun", v: 420 }, { m: "Mar", v: 510 }, { m: "Mié", v: 490 },
-            { m: "Jue", v: 680 }, { m: "Vie", v: 920 }, { m: "Sáb", v: 1100 }
-          ];
+          const [citas, setCitas] = useState([]);
+          const [loading, setLoading] = useState(true);
+          const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+
+          useEffect(function() {
+            setLoading(true);
+            dbGet('appointments', '?date=eq.' + selectedDate + '&order=time.asc&select=*,barberos(name),servicios(name,price)')
+              .then(function(data) { setCitas(Array.isArray(data) ? data : []); setLoading(false); })
+              .catch(function() { setLoading(false); });
+          }, [selectedDate]);
+
+          function formatHora(t) { return t ? t.slice(0,5) : ''; }
+
+          var confirmadas = citas.filter(function(c){ return c.status === 'confirmed'; });
+          var canceladas  = citas.filter(function(c){ return c.status === 'cancelled'; });
+          var ingresos    = confirmadas.reduce(function(s,c){ return s + ((c.servicios && c.servicios.price) || 0); }, 0);
+
+          var now = new Date();
+          var nowMin = now.getHours() * 60 + now.getMinutes();
+          var esHoy = selectedDate === new Date().toISOString().split('T')[0];
+
+          function estadoCita(c) {
+            if (c.status === 'cancelled') return { label: 'Cancelada', color: G.red };
+            if (!esHoy) return { label: 'Confirmada', color: G.brand };
+            var [h, m] = (c.time || '00:00').split(':').map(Number);
+            var citaMin = h * 60 + m;
+            if (nowMin > citaMin + 30) return { label: 'Completada', color: G.green };
+            if (nowMin >= citaMin - 15) return { label: 'En breve', color: '#FF9500' };
+            return { label: 'Confirmada', color: G.brand };
+          }
 
           return (
-            <div style={{ flex: 1, padding: 18, paddingBottom: 80 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Panel de Control Profesional</h2>
-              <p style={{ fontSize: 12, color: G.muted, marginBottom: 16 }}>Métricas de rendimiento en tiempo real</p>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
+              {/* Header */}
+              <div style={{ padding: '20px 18px 0' }}>
+                <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 4px', color: G.text }}>Agenda del día</h2>
+                <input type="date" value={selectedDate} onChange={function(e){ setSelectedDate(e.target.value); }}
+                  style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '10px 14px', borderRadius: 12, color: G.text, fontSize: 14, marginTop: 12, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit' }} />
 
-              <div style={{ background: G.card, padding: 14, borderRadius: 14, border: `1px solid ${G.bdr}`, marginBottom: 16 }}>
-                <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>INGRESOS TOTALES (SEMANAL)</p>
-                <p style={{ fontSize: 28, fontWeight: 900, color: G.brand, margin: "2px 0 10px" }}>4,120.00€</p>
-                
-                <div style={{ width: "100%", height: 140 }}>
-                  <ResponsiveContainer>
-                    <AreaChart data={stats}>
-                      <XAxis dataKey="m" stroke={G.muted} fontSize={10} tickLine={false} />
-                      <Tooltip contentStyle={{ background: G.card2, borderColor: G.bdr }} />
-                      <Area type="monotone" dataKey="v" stroke={G.brand} fill={G.brand} fillOpacity={0.1} />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                {/* Stats */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 20 }}>
+                  {[
+                    { label: 'Citas', value: confirmadas.length },
+                    { label: 'Canceladas', value: canceladas.length },
+                    { label: 'Ingresos', value: ingresos.toFixed(0) + '€' },
+                  ].map(function(s) {
+                    return (
+                      <div key={s.label} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '12px 10px', textAlign: 'center' }}>
+                        <p style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '0 0 2px' }}>{s.value}</p>
+                        <p style={{ fontSize: 10, color: G.muted, margin: 0 }}>{s.label}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <SLabel>Control de Barbería</SLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "center" }}><p style={{ fontSize: 20, margin: 0 }}>24</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Citas Hoy</p></div>
-                <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "center" }}><p style={{ fontSize: 20, margin: 0 }}>96%</p><p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Ocupación</p></div>
+              {/* Lista de citas */}
+              <div style={{ padding: '0 18px' }}>
+                {loading && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
+                {!loading && citas.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <p style={{ fontSize: 32, margin: '0 0 8px' }}>📅</p>
+                    <p style={{ fontSize: 14, color: G.muted }}>No hay citas para este día</p>
+                  </div>
+                )}
+                {!loading && citas.map(function(c, i) {
+                  var estado = estadoCita(c);
+                  return (
+                    <div key={c.id || i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 14 }}>
+                      {/* Hora */}
+                      <div style={{ textAlign: 'center', minWidth: 44, flexShrink: 0 }}>
+                        <p style={{ fontSize: 16, fontWeight: 800, color: G.text, margin: 0 }}>{formatHora(c.time)}</p>
+                      </div>
+                      {/* Separador */}
+                      <div style={{ width: 2, height: 44, background: estado.color, borderRadius: 2, flexShrink: 0, opacity: 0.7 }} />
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.client_email ? c.client_email.split('@')[0] : 'Cliente'}</p>
+                        <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{(c.servicios && c.servicios.name) || 'Servicio'} · {(c.barberos && c.barberos.name) || 'Barbero'}</p>
+                      </div>
+                      {/* Estado + precio */}
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <p style={{ fontSize: 10, fontWeight: 700, color: estado.color, background: estado.color + '18', borderRadius: 20, padding: '3px 8px', margin: '0 0 4px' }}>{estado.label}</p>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: 0 }}>{c.servicios && c.servicios.price ? c.servicios.price + '€' : ''}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
