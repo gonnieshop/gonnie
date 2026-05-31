@@ -1391,6 +1391,7 @@
             if (Notification.permission === 'denied')  return 'denied';
             return 'unknown';
           });
+          const [pushLog, setPushLog] = useState('');
 
           useEffect(function() {
             if (!email) return;
@@ -1407,19 +1408,25 @@
             if (pushStatus === 'granted' || pushStatus === 'requesting') return;
             if (typeof Notification === 'undefined') {
               setPushStatus('unsupported');
+              setPushLog('❌ Notification API no disponible en este contexto');
               return;
             }
             setPushStatus('requesting');
+            setPushLog('Pidiendo permiso...');
             try {
-              // iOS exige que requestPermission sea la primera llamada síncrona
-              // del handler del gesto — no puede haber ningún await antes
               const perm = await Notification.requestPermission();
+              setPushLog('Permiso: ' + perm);
               if (perm !== 'granted') { setPushStatus('denied'); return; }
               setPushStatus('granted');
-              // El resto (token FCM + guardado) lo hace el módulo Firebase
-              if (window.__initPush) window.__initPush();
+              setPushLog('Permiso OK — obteniendo token FCM...');
+              if (window.__initPush) {
+                window.__gonniePushLog = function(msg) { setPushLog(msg); };
+                await window.__initPush();
+              } else {
+                setPushLog('❌ __initPush no está definido todavía');
+              }
             } catch(e) {
-              console.warn('[Gonnie Push] Error en botón:', e);
+              setPushLog('❌ Error: ' + e.message);
               setPushStatus('denied');
             }
           }
@@ -1471,6 +1478,7 @@
                   }}>
                   {pushLabel[pushStatus] || 'Activar notificaciones'}
                 </button>
+                {pushLog ? <p style={{ fontSize: 11, color: G.muted, margin: '8px 0 0', wordBreak: 'break-all', fontFamily: 'monospace', lineHeight: 1.5 }}>{pushLog}</p> : null}
               </div>
 
               <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, overflow: 'hidden' }}>
@@ -1614,26 +1622,44 @@
     // initPush() se llama DESPUÉS de que el botón ya obtuvo el permiso.
     // No vuelve a pedir permiso — solo registra el token FCM.
     async function initPush() {
+      const log = window.__gonniePushLog || function(){};
       try {
-        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        if (!('Notification' in window) || Notification.permission !== 'granted') {
+          log('❌ Sin permiso de notificación');
+          return;
+        }
 
-        // Esperar el SW
+        log('Esperando SW...');
         const swReg = await navigator.serviceWorker.ready;
-        console.log('[Gonnie Push] SW listo:', swReg.scope);
+        log('SW listo: ' + swReg.scope);
 
-        // 3. Obtener token FCM
+        log('Obteniendo token FCM...');
         const token = await getToken(messaging, {
           vapidKey: 'BM8WAmPdL5MLA7xOBgFMw-j3CbWGOREtBROEA4-ORv3Gc8KOSUHC3FfNuVI_N11uCcg6sr21cbf4wPbEhVDOOF8',
           serviceWorkerRegistration: swReg
         });
-        console.log('[Gonnie Push] Token FCM:', token);
-        if (!token) { console.warn('[Gonnie Push] Token vacío'); return; }
+        if (!token) { log('❌ Token FCM vacío'); return; }
+        log('Token: ' + token.slice(0,20) + '...');
 
-        // Leer email desde window (expuesto por React al hacer login)
         const email = window.__gonnieEmail;
-        console.log('[Gonnie Push] Email:', email);
+        log('Email: ' + (email || '❌ vacío'));
 
-      } catch(e) { console.warn('[Gonnie Push] Error:', e); }
+        if (email) {
+          const res = await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
+            method: 'PATCH',
+            headers: {
+              'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
+              'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ fcm_token: token })
+          });
+          log(res.ok ? '✓ Token guardado en Supabase' : '❌ Error Supabase: ' + res.status);
+        } else {
+          log('❌ Email vacío — inicia sesión primero');
+        }
+      } catch(e) { log('❌ Excepción: ' + e.message); }
     }
 
     onMessage(messaging, function(payload) {
