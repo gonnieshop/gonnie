@@ -429,6 +429,14 @@
         }
 
         // ─── VISTA 2: EXPLORAR BARBERÍAS (REAL DESDE SUPABASE) ────────────────
+        function estaAbierto() {
+          var now = new Date();
+          var h = now.getHours();
+          var m = now.getMinutes();
+          var t = h * 60 + m;
+          return (t >= 600 && t < 840) || (t >= 1020 && t < 1260); // 10-14 y 17-21
+        }
+
         function getFavoritos() {
           try { return JSON.parse(localStorage.getItem('gonnie_favoritos') || '[]'); } catch(e) { return []; }
         }
@@ -447,7 +455,7 @@
               <div style={{ height: 90, background: `linear-gradient(135deg,#0D1A15,#111F1A)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, position: "relative" }}>
                 💈
                 <div style={{ position: "absolute", top: 10, right: 10 }}>
-                  <Pill color={b.is_open ? "#080B0F" : G.red} bg={b.is_open ? G.green : `${G.red}18`}>{b.is_open ? "Abierto" : "Cerrado"}</Pill>
+                  <Pill color={estaAbierto() ? "#080B0F" : G.red} bg={estaAbierto() ? G.green : `${G.red}18`}>{estaAbierto() ? "Abierto" : "Cerrado"}</Pill>
                 </div>
               </div>
               <div style={{ padding: "12px 14px 14px" }}>
