@@ -992,6 +992,7 @@
             const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
               setUser(session?.user || null);
               if (session?.user) {
+                window.__gonnieEmail = session.user.email;
                 setSplash(false);
                 cargarPuntos(session.user.email);
               }
@@ -1631,23 +1632,10 @@
         console.log('[Gonnie Push] Token FCM:', token);
         if (!token) { console.warn('[Gonnie Push] Token vacío'); return; }
 
-        // 4. Email desde sesión Supabase
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        const email = session && session.user && session.user.email;
-        console.log('[Gonnie Push] Email sesión:', email);
+        // Leer email desde window (expuesto por React al hacer login)
+        const email = window.__gonnieEmail;
+        console.log('[Gonnie Push] Email:', email);
 
-        if (email) {
-          await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
-            method: 'PATCH',
-            headers: {
-              'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
-              'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ fcm_token: token })
-          });
-          console.log('[Gonnie Push] Token guardado en perfil ✓');
-        }
       } catch(e) { console.warn('[Gonnie Push] Error:', e); }
     }
 
