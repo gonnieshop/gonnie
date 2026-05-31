@@ -1478,6 +1478,16 @@
                   }}>
                   {pushLabel[pushStatus] || 'Activar notificaciones'}
                 </button>
+                {pushStatus === 'granted' && (
+                  <button onClick={async function() {
+                    setPushLog('Reintentando...');
+                    window.__gonniePushLog = function(msg) { setPushLog(msg); };
+                    if (window.__initPush) await window.__initPush();
+                    else setPushLog('❌ __initPush no definido');
+                  }} style={{ width: '100%', border: '1px solid ' + G.bdr, borderRadius: 12, padding: '8px', fontSize: 12, fontWeight: 600, color: G.muted, background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', marginTop: 8 }}>
+                    Reintentar guardado
+                  </button>
+                )}
                 {pushLog ? <p style={{ fontSize: 11, color: G.muted, margin: '8px 0 0', wordBreak: 'break-all', fontFamily: 'monospace', lineHeight: 1.5 }}>{pushLog}</p> : null}
               </div>
 
