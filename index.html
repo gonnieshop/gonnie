@@ -531,29 +531,21 @@
             return getFavoritos().includes(String(barberia && barberia.id));
           });
 
-          const [avgRating, setAvgRating] = useState(barberia && barberia.rating);
-          const [totalResenas, setTotalResenas] = useState(null);
-
           useEffect(() => {
             if (!barberia?.id) return;
             setLoading(true);
             Promise.all([
               dbGet("barberos", `?barberia_id=eq.${barberia.id}&select=*`),
-              dbGet("servicios", `?barberia_id=eq.${barberia.id}&select=*`),
-              dbGet("resenas", `?barberia_id=eq.${barberia.id}&select=stars`),
-            ]).then(([brs, svs, res]) => {
+              dbGet("servicios", `?barberia_id=eq.${barberia.id}&select=*`)
+            ]).then(([brs, svs]) => {
               setBarberos(brs); setServicios(svs); setLoading(false);
-              if (Array.isArray(res) && res.length > 0) {
-                var avg = (res.reduce(function(s,r){ return s + r.stars; }, 0) / res.length).toFixed(1);
-                setAvgRating(avg);
-                setTotalResenas(res.length);
-              }
             }).catch(() => setLoading(false));
           }, [barberia]);
 
           function handleFav(e) {
             e.stopPropagation();
-            setEsFav(toggleFavorito(barberia.id));
+            var ahora = toggleFavorito(barberia.id);
+            setEsFav(ahora);
           }
 
           return (
@@ -561,10 +553,19 @@
               <div style={{ height: 100, background: "linear-gradient(135deg,#0D1A15,#111F1A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 44, position: "relative" }}>
                 💈
                 <div style={{ position: "absolute", top: 14, left: 14 }}><Back onBack={() => nav("explore")} /></div>
+                {/* Botón favorito en la esquina del header */}
+                <button onClick={handleFav} style={{ position: "absolute", top: 14, right: 14, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.35)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", backdropFilter: "blur(4px)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill={esFav ? "#FF3B30" : "none"} stroke={esFav ? "#FF3B30" : "#ffffff"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                  </svg>
+                </button>
               </div>
 
               <div style={{ padding: "16px 18px" }}>
-                <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{barberia.name}</h2>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
+                  <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{barberia.name}</h2>
+                  {esFav && <span style={{ fontSize: 10, fontWeight: 700, color: "#FF3B30", background: "#FF3B3015", border: "1px solid #FF3B3030", borderRadius: 20, padding: "3px 10px", flexShrink: 0, marginTop: 3 }}>♥ Favorita</span>}
+                </div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                   <p style={{ fontSize: 12, color: "#1C1C1E", margin: 0 }}>📍 {barberia.city} • {barberia.hours}</p>
                   <button onClick={function(){
@@ -573,23 +574,6 @@
                   }} style={{ display: "flex", alignItems: "center", gap: 5, background: G.brand, border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     Cómo llegar
-                  </button>
-                </div>
-
-                {/* Rating + favorito */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill={G.gold} stroke={G.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{avgRating || barberia.rating}</span>
-                    {totalResenas !== null && <span style={{ fontSize: 11, color: G.muted }}>({totalResenas} reseñas)</span>}
-                  </div>
-                  <button onClick={handleFav} style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: "inherit" }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill={esFav ? "#FF3B30" : "none"} stroke={esFav ? "#FF3B30" : G.muted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                    </svg>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: esFav ? "#FF3B30" : G.muted }}>{esFav ? "Guardada" : "Guardar"}</span>
                   </button>
                 </div>
 
