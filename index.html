@@ -1267,14 +1267,21 @@
 
           async function handleActivarNotificaciones() {
             if (pushStatus === 'granted' || pushStatus === 'requesting') return;
+            if (typeof Notification === 'undefined') {
+              setPushStatus('unsupported');
+              return;
+            }
             setPushStatus('requesting');
             try {
-              if (window.__initPush) {
-                await window.__initPush();
-              }
-              var perm = (typeof Notification !== 'undefined') ? Notification.permission : 'denied';
-              setPushStatus(perm === 'granted' ? 'granted' : 'denied');
+              // iOS exige que requestPermission sea la primera llamada síncrona
+              // del handler del gesto — no puede haber ningún await antes
+              const perm = await Notification.requestPermission();
+              if (perm !== 'granted') { setPushStatus('denied'); return; }
+              setPushStatus('granted');
+              // El resto (token FCM + guardado) lo hace el módulo Firebase
+              if (window.__initPush) window.__initPush();
             } catch(e) {
+              console.warn('[Gonnie Push] Error en botón:', e);
               setPushStatus('denied');
             }
           }
@@ -1466,14 +1473,13 @@
     const app = initializeApp(firebaseConfig);
     const messaging = getMessaging(app);
 
+    // initPush() se llama DESPUÉS de que el botón ya obtuvo el permiso.
+    // No vuelve a pedir permiso — solo registra el token FCM.
     async function initPush() {
       try {
-        // 1. Pedir permiso — esto lanza el popup nativo
-        const permission = await Notification.requestPermission();
-        console.log('[Gonnie Push] Permiso:', permission);
-        if (permission !== 'granted') return;
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-        // 2. Esperar al SW registrado (navigator.serviceWorker.ready nunca devuelve undefined)
+        // Esperar el SW
         const swReg = await navigator.serviceWorker.ready;
         console.log('[Gonnie Push] SW listo:', swReg.scope);
 
@@ -1485,7 +1491,7 @@
         console.log('[Gonnie Push] Token FCM:', token);
         if (!token) { console.warn('[Gonnie Push] Token vacío'); return; }
 
-        // 4. Leer email desde sesión Supabase (no localStorage)
+        // 4. Email desde sesión Supabase
         const { data: { session } } = await supabaseClient.auth.getSession();
         const email = session && session.user && session.user.email;
         console.log('[Gonnie Push] Email sesión:', email);
