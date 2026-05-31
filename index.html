@@ -811,7 +811,18 @@
           useEffect(function() {
             setLoading(true);
             dbGet('appointments', '?date=eq.' + selectedDate + '&order=time.asc&select=*,barberos(name),servicios(name,price)')
-              .then(function(data) { setCitas(Array.isArray(data) ? data : []); setLoading(false); })
+              .then(function(data) {
+                var citas = Array.isArray(data) ? data : [];
+                var emails = [...new Set(citas.map(function(c){ return c.client_email; }).filter(Boolean))];
+                if (emails.length === 0) { setCitas(citas); setLoading(false); return; }
+                var query = '?id=in.(' + emails.map(encodeURIComponent).join(',') + ')&select=id,full_name';
+                dbGet('profiles', query).then(function(perfiles) {
+                  var mapa = {};
+                  (perfiles || []).forEach(function(p){ if (p.full_name) mapa[p.id] = p.full_name; });
+                  setCitas(citas.map(function(c){ return Object.assign({}, c, { _nombre: mapa[c.client_email] || null }); }));
+                  setLoading(false);
+                }).catch(function(){ setCitas(citas); setLoading(false); });
+              })
               .catch(function() { setLoading(false); });
           }, [selectedDate]);
 
@@ -841,7 +852,7 @@
               <div style={{ padding: '20px 18px 0' }}>
                 <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 4px', color: G.text }}>Agenda del día</h2>
                 <input type="date" value={selectedDate} onChange={function(e){ setSelectedDate(e.target.value); }}
-                  style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '10px 14px', borderRadius: 12, color: G.text, fontSize: 14, marginTop: 12, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                  style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '10px 14px', borderRadius: 12, color: G.text, fontSize: 14, fontWeight: 700, marginTop: 12, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit' }} />
 
                 {/* Stats */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 20 }}>
@@ -881,7 +892,7 @@
                       <div style={{ width: 2, height: 44, background: estado.color, borderRadius: 2, flexShrink: 0, opacity: 0.7 }} />
                       {/* Info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.client_email ? c.client_email.split('@')[0] : 'Cliente'}</p>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c._nombre || (c.client_email ? c.client_email.split('@')[0] : 'Cliente')}</p>
                         <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{(c.servicios && c.servicios.name) || 'Servicio'} · {(c.barberos && c.barberos.name) || 'Barbero'}</p>
                       </div>
                       {/* Estado + precio */}
