@@ -603,7 +603,7 @@
 
               <div style={{ padding: "16px 18px" }}>
                 <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{barberia.name}</h2>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                   <p style={{ fontSize: 12, color: "#1C1C1E", margin: 0 }}>📍 {barberia.city} • {barberia.hours}</p>
                   <button onClick={function(){
                     var addr = encodeURIComponent("Gonnie Barbershop, C. Gabriel y Galán, 11, 06700 Villanueva de la Serena, Badajoz");
@@ -612,6 +612,16 @@
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     Cómo llegar
                   </button>
+                </div>
+                <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+                  <a href="tel:662528459" style={{ display: "flex", alignItems: "center", gap: 6, background: G.card, border: "1px solid " + G.bdr, borderRadius: 10, padding: "7px 12px", fontSize: 12, fontWeight: 600, color: G.text, textDecoration: "none", flex: 1 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                    662 528 459
+                  </a>
+                  <a href="https://instagram.com/gonniebarbershop" target="_blank" style={{ display: "flex", alignItems: "center", gap: 6, background: G.card, border: "1px solid " + G.bdr, borderRadius: 10, padding: "7px 12px", fontSize: 12, fontWeight: 600, color: G.text, textDecoration: "none", flex: 1 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill={G.brand}/></svg>
+                    @gonniebarbershop
+                  </a>
                 </div>
 
                 <div style={{ display: "flex", background: G.card2, borderRadius: 12, padding: 3, marginBottom: 18 }}>
@@ -1478,16 +1488,7 @@
                   }}>
                   {pushLabel[pushStatus] || 'Activar notificaciones'}
                 </button>
-                {pushStatus === 'granted' && (
-                  <button onClick={async function() {
-                    setPushLog('Reintentando...');
-                    window.__gonniePushLog = function(msg) { setPushLog(msg); };
-                    if (window.__initPush) await window.__initPush();
-                    else setPushLog('❌ __initPush no definido');
-                  }} style={{ width: '100%', border: '1px solid ' + G.bdr, borderRadius: 12, padding: '8px', fontSize: 12, fontWeight: 600, color: G.muted, background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', marginTop: 8 }}>
-                    Reintentar guardado
-                  </button>
-                )}
+
                 {pushLog ? <p style={{ fontSize: 11, color: G.muted, margin: '8px 0 0', wordBreak: 'break-all', fontFamily: 'monospace', lineHeight: 1.5 }}>{pushLog}</p> : null}
               </div>
 
