@@ -294,6 +294,12 @@
           const [cancelling, setCancelling] = useState(false);
           const [confirmCancel, setConfirmCancel] = useState(false);
           const [cancelDone, setCancelDone] = useState(false);
+          const [showReschedule, setShowReschedule] = useState(false);
+          const [rescheduleDate, setRescheduleDate] = useState('');
+          const [rescheduleSlot, setRescheduleSlot] = useState('');
+          const [rescheduling, setRescheduling] = useState(false);
+          const [rescheduleDone, setRescheduleDone] = useState(false);
+          const slots = ['09:00','09:40','10:20','11:00','11:40','16:00','16:40','17:20'];
 
           useEffect(function() {
             var email = user && user.email;
@@ -371,31 +377,86 @@
                       
                     </div>
                     <div style={{ marginTop: 10 }}>
-                      {!confirmCancel ? (
-                        <button onClick={function(){ setConfirmCancel(true); }} style={{ width: "100%", background: "transparent", border: "1px solid " + G.red + "40", borderRadius: 10, padding: "9px", fontSize: 12, color: G.red, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                          Cancelar cita
-                        </button>
-                      ) : (
-                        <div style={{ background: G.red + "10", border: "1px solid " + G.red + "30", borderRadius: 10, padding: "12px" }}>
-                          <p style={{ fontSize: 12, color: G.red, textAlign: "center", marginBottom: 10, fontWeight: 600 }}>¿Seguro que quieres cancelar?</p>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <button onClick={function(){ setConfirmCancel(false); }} style={{ flex: 1, background: "transparent", border: "1px solid " + G.bdr, borderRadius: 8, padding: "8px", fontSize: 12, color: G.muted, cursor: "pointer", fontFamily: "inherit" }}>
-                              No
-                            </button>
+                      {/* Botones principales */}
+                      {!confirmCancel && !showReschedule && (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={function(){ setShowReschedule(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.brand + '50', borderRadius: 10, padding: '9px', fontSize: 12, color: G.brand, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            Cambiar fecha
+                          </button>
+                          <button onClick={function(){ setConfirmCancel(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 10, padding: '9px', fontSize: 12, color: G.red, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            Cancelar cita
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Confirmar cancelación */}
+                      {confirmCancel && (
+                        <div style={{ background: G.red + '10', border: '1px solid ' + G.red + '30', borderRadius: 10, padding: '12px' }}>
+                          <p style={{ fontSize: 12, color: G.red, textAlign: 'center', marginBottom: 10, fontWeight: 600 }}>¿Seguro que quieres cancelar?</p>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button onClick={function(){ setConfirmCancel(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 8, padding: '8px', fontSize: 12, color: G.muted, cursor: 'pointer', fontFamily: 'inherit' }}>No</button>
                             <button onClick={function(){
                               setCancelling(true);
                               cancelBooking(nextAppt.id, nextAppt, user && user.email, user && user.user_metadata && user.user_metadata.full_name)
-                                .then(function(){
-                              setCancelling(false); setConfirmCancel(false);
-                              setCancelDone(true);
-                              setTimeout(function(){ setNextAppt(null); setCancelDone(false); }, 2000);
-                            })
+                                .then(function(){ setCancelling(false); setConfirmCancel(false); setCancelDone(true); setTimeout(function(){ setNextAppt(null); setCancelDone(false); }, 2000); })
                                 .catch(function(){ setCancelling(false); });
-                            }} style={{ flex: 1, background: G.red, border: "none", borderRadius: 8, padding: "8px", fontSize: 12, color: "#fff", cursor: cancelling ? "not-allowed" : "pointer", fontFamily: "inherit", fontWeight: 700 }}>
-                              {cancelling ? "Cancelando..." : "Sí, cancelar"}
+                            }} style={{ flex: 1, background: G.red, border: 'none', borderRadius: 8, padding: '8px', fontSize: 12, color: '#fff', cursor: cancelling ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
+                              {cancelling ? 'Cancelando...' : 'Sí, cancelar'}
                             </button>
                           </div>
                         </div>
+                      )}
+
+                      {/* Panel de reagendado */}
+                      {showReschedule && (
+                        <div style={{ background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '14px' }}>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 10 }}>Selecciona nueva fecha y hora</p>
+                          <input type="date" value={rescheduleDate} onChange={function(e){ setRescheduleDate(e.target.value); }}
+                            style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '9px 12px', borderRadius: 10, color: G.text, fontSize: 13, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 700 }} />
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 12 }}>
+                            {slots.map(function(s) {
+                              return (
+                                <button key={s} onClick={function(){ setRescheduleSlot(s); }}
+                                  style={{ background: rescheduleSlot === s ? G.brand : G.card, color: rescheduleSlot === s ? '#fff' : G.text, border: '1px solid ' + G.bdr, padding: '8px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>
+                                  {s}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button onClick={function(){ setShowReschedule(false); setRescheduleDate(''); setRescheduleSlot(''); }}
+                              style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 8, padding: '8px', fontSize: 12, color: G.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+                              Cancelar
+                            </button>
+                            <button disabled={!rescheduleDate || !rescheduleSlot || rescheduling} onClick={async function(){
+                              if (!rescheduleDate || !rescheduleSlot) return;
+                              setRescheduling(true);
+                              try {
+                                await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/appointments?id=eq.' + nextAppt.id, {
+                                  method: 'PATCH',
+                                  headers: {
+                                    'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
+                                    'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
+                                    'Content-Type': 'application/json',
+                                    'Prefer': 'return=minimal'
+                                  },
+                                  body: JSON.stringify({ date: rescheduleDate, time: rescheduleSlot })
+                                });
+                                setNextAppt(Object.assign({}, nextAppt, { date: rescheduleDate, time: rescheduleSlot }));
+                                setShowReschedule(false); setRescheduleDate(''); setRescheduleSlot('');
+                                setRescheduleDone(true);
+                                setTimeout(function(){ setRescheduleDone(false); }, 2500);
+                              } catch(e) {} finally { setRescheduling(false); }
+                            }} style={{ flex: 1, background: (!rescheduleDate || !rescheduleSlot) ? G.bdr : G.brand, border: 'none', borderRadius: 8, padding: '8px', fontSize: 12, color: '#fff', cursor: (!rescheduleDate || !rescheduleSlot || rescheduling) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
+                              {rescheduling ? 'Guardando...' : 'Confirmar'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Confirmación de reagendado */}
+                      {rescheduleDone && (
+                        <p style={{ fontSize: 12, color: G.green, textAlign: 'center', marginTop: 8, fontWeight: 700 }}>✓ Cita reagendada correctamente</p>
                       )}
                     </div>
                   </div>
