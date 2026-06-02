@@ -1087,8 +1087,24 @@
                 </div>
 
                 {/* Paso 1 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#f7f7f7', borderRadius: 14, padding: '12px 14px', marginBottom: 10 }}>
-                  {/* Icono compartir de Apple */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#f7f7f7', borderRadius: 14, padding: '12px 14px', marginBottom: 8 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" stroke="none">
+                      <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: '#000', margin: '0 0 2px' }}>Toca los tres puntos <b>···</b></p>
+                    <p style={{ fontSize: 11, color: '#888', margin: 0 }}>En la barra inferior de Safari</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '2px 0' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                </div>
+
+                {/* Paso 2 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#f7f7f7', borderRadius: 14, padding: '12px 14px', marginBottom: 8 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: '#007AFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 2v13M7 7l5-5 5 5"/>
@@ -1097,24 +1113,19 @@
                   </div>
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#000', margin: '0 0 2px' }}>Toca Compartir</p>
-                    <p style={{ fontSize: 11, color: '#888', margin: 0 }}>El icono de la barra inferior de Safari</p>
+                    <p style={{ fontSize: 11, color: '#888', margin: 0 }}>El icono de la cajita con flecha</p>
                   </div>
                 </div>
 
-                {/* Flecha conectora */}
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '2px 0' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 5v14M5 12l7 7 7-7"/>
-                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
                 </div>
 
-                {/* Paso 2 */}
+                {/* Paso 3 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#f7f7f7', borderRadius: 14, padding: '12px 14px', marginBottom: 20 }}>
-                  {/* Icono añadir a pantalla de inicio de Apple */}
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: '#34C759', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="3"/>
-                      <path d="M12 8v8M8 12h8"/>
+                      <rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/>
                     </svg>
                   </div>
                   <div>
