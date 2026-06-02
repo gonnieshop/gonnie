@@ -1063,10 +1063,9 @@
 
         function InstallBanner() {
           const [visible, setVisible] = useState(function() {
-            var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
             var isStandalone = window.navigator.standalone === true;
             var dismissed = localStorage.getItem('gonnie_install_dismissed');
-            return isIOS && !isStandalone && !dismissed;
+            return !isStandalone && !dismissed; // temporal: sin filtro iOS para probar
           });
 
           if (!visible) return null;
