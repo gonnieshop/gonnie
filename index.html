@@ -830,17 +830,50 @@
 
 
         // ─── VISTA 6: HISTORIAL DE CITAS (APPOINTMENTS) ───────────────────────
-        function AppointmentsScreen() {
+        function AppointmentsScreen({ user }) {
+          const [citas, setCitas] = useState([]);
+          const [loading, setLoading] = useState(true);
+
+          useEffect(function() {
+            if (!user || !user.email) { setLoading(false); return; }
+            dbGet('appointments', '?client_email=eq.' + encodeURIComponent(user.email) + '&order=date.desc,time.desc&select=*,barberos(name),servicios(name,price)')
+              .then(function(data) {
+                var now = new Date();
+                // Filtrar: solo las que ya han pasado (completadas)
+                var pasadas = (Array.isArray(data) ? data : []).filter(function(c) {
+                  if (c.status === 'cancelled') return false;
+                  var dt = new Date(c.date + 'T' + (c.time || '00:00'));
+                  return dt < now;
+                });
+                setCitas(pasadas);
+                setLoading(false);
+              })
+              .catch(function() { setLoading(false); });
+          }, [user]);
+
           return (
-            <div style={{ flex: 1, padding: 18 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 14 }}>Mis Reservas</h2>
-              <div style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 14, padding: 14, marginBottom: 12 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: G.text }}>Corte de pelo Degradado</p>
-                  <Pill bg={`${G.green}20`} color={G.green}>Completado</Pill>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16, color: G.text }}>Mis Reservas</h2>
+              {loading && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 40 }}>Cargando...</p>}
+              {!loading && citas.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                  <p style={{ fontSize: 32, margin: '0 0 10px' }}>✂️</p>
+                  <p style={{ fontSize: 14, color: G.muted }}>Todavía no tienes citas completadas</p>
                 </div>
-                <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>💈 BarberKing • 📅 12 Mayo • 💰 15€</p>
-              </div>
+              )}
+              {!loading && citas.map(function(c, i) {
+                return (
+                  <div key={c.id || i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: G.text }}>{c.servicios && c.servicios.name || 'Servicio'}</p>
+                      <Pill bg={G.green + '20'} color={G.green}>Completada</Pill>
+                    </div>
+                    <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>
+                      ✂️ {c.barberos && c.barberos.name || '—'} · 📅 {c.date} · ⏰ {c.time ? c.time.slice(0,5) : '—'} · 💰 {c.servicios && c.servicios.price ? c.servicios.price + '€' : '—'}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           );
         }
@@ -1111,7 +1144,7 @@
                       {view === "detail" && <DetailScreen barberia={barberia} nav={setView} setBooking={setBooking} />}
                       {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} setPuntos={setPuntos} user={user} />}
                       {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
-                      {view === "appointments" && <AppointmentsScreen />}
+                      {view === "appointments" && <AppointmentsScreen user={user} />}
                       {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
                       {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} nav={setView} />}
                       {view === "settings" && <SettingsScreen nav={setView} user={user} />}
