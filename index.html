@@ -819,9 +819,9 @@
               <h2 style={{ fontSize: 22, fontWeight: 900, marginBottom: 8 }}>¡Reserva confirmada!</h2>
               <p style={{ fontSize: 13, color: G.muted, marginBottom: 24 }}>Te esperamos en GonnieBarbershop</p>
               <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "left", marginBottom: 24, border: "1px solid " + G.bdr }}>
-                <p style={{ fontSize: 13, margin: "6px 0" }}>📅 <b>Fecha:</b> {(appt && appt.date) || "Hoy"}</p>
-                <p style={{ fontSize: 13, margin: "6px 0" }}>⏰ <b>Hora:</b> {(appt && appt.time) || "—"}</p>
-                <p style={{ fontSize: 13, margin: "6px 0" }}>💰 <b>Importe:</b> {(appt && appt.price) || 0}€</p>
+                <p style={{ fontSize: 13, margin: "6px 0", color: G.text }}>📅 <b>Fecha:</b> {(appt && appt.date) || "Hoy"}</p>
+                <p style={{ fontSize: 13, margin: "6px 0", color: G.text }}>⏰ <b>Hora:</b> {(appt && appt.time) || "—"}</p>
+                <p style={{ fontSize: 13, margin: "6px 0", color: G.text }}>💰 <b>Importe:</b> {(appt && appt.price) || 0}€</p>
               </div>
               <PrimaryBtn onClick={function(){ nav("home"); }}>Volver al inicio</PrimaryBtn>
             </div>
