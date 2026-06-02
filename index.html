@@ -23,6 +23,8 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
     <style>
+      @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
         body { 
             background-color: #F2F2F7; 
             color: #EEF2F7;
@@ -1059,6 +1061,49 @@
         }
 
 
+        function InstallBanner() {
+          const [visible, setVisible] = useState(function() {
+            var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            var isStandalone = window.navigator.standalone === true;
+            var dismissed = localStorage.getItem('gonnie_install_dismissed');
+            return isIOS && !isStandalone && !dismissed;
+          });
+
+          if (!visible) return null;
+
+          return (
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, padding: '0 12px 12px', animation: 'slideUp 0.4s ease' }}>
+              <div style={{ background: '#fff', borderRadius: 20, boxShadow: '0 -2px 30px rgba(0,0,0,0.15)', padding: '16px 18px', border: '1px solid ' + G.bdr }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <img src="https://i.imgur.com/W5os6Ue.jpeg" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover' }} alt="Gonnie" />
+                    <div>
+                      <p style={{ fontSize: 14, fontWeight: 800, color: G.text, margin: 0 }}>Instala Gonnie</p>
+                      <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Accede más rápido desde tu pantalla de inicio</p>
+                    </div>
+                  </div>
+                  <button onClick={function(){ localStorage.setItem('gonnie_install_dismissed','1'); setVisible(false); }}
+                    style={{ background: 'none', border: 'none', fontSize: 18, color: G.muted, cursor: 'pointer', padding: '0 0 0 8px', lineHeight: 1 }}>✕</button>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: G.card, borderRadius: 12, padding: '10px 14px' }}>
+                  <span style={{ fontSize: 22 }}>1️⃣</span>
+                  <p style={{ fontSize: 12, color: G.text, margin: 0 }}>Toca el botón <b>Compartir</b> <span style={{ fontSize: 14 }}>⎋</span> en la barra de Safari</p>
+                </div>
+                <div style={{ width: 2, height: 8, background: G.bdr, margin: '4px auto' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: G.card, borderRadius: 12, padding: '10px 14px' }}>
+                  <span style={{ fontSize: 22 }}>2️⃣</span>
+                  <p style={{ fontSize: 12, color: G.text, margin: 0 }}>Selecciona <b>"Añadir a pantalla de inicio"</b></p>
+                </div>
+                <div style={{ textAlign: 'center', marginTop: 6 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'bounce 1.2s infinite' }}>
+                    <path d="M12 5v14M5 12l7 7 7-7"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
         function GonnieApp() {
           const [user, setUser] = useState(null);
           const [authLoading, setAuthLoading] = useState(true);
@@ -1133,6 +1178,7 @@
 
           return (
             <div className="flex justify-center bg-black min-h-screen">
+              <InstallBanner />
               <div style={{ width: "100%", maxWidth: 420, background: G.bg, minHeight: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
                 <div style={{ flex: 1, overflowY: "auto" }}>
                   {mode === "business" ? (
