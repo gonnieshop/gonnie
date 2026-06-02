@@ -952,9 +952,11 @@
                 </div>
 
               </div>
-              <GhostBtn onClick={function(){ setMode(mode === 'customer' ? 'business' : 'customer'); }}>
-                {mode === 'customer' ? '🔄 Cambiar a Modo Negocio' : '🔄 Cambiar a Modo Cliente'}
-              </GhostBtn>
+              {user && user.email === 'reservasgonnie@gmail.com' && (
+                <GhostBtn onClick={function(){ setMode(mode === 'customer' ? 'business' : 'customer'); }}>
+                  {mode === 'customer' ? '🔄 Cambiar a Modo Negocio' : '🔄 Cambiar a Modo Cliente'}
+                </GhostBtn>
+              )}
               <button onClick={signOut} style={{ marginTop: 12, width: '100%', background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 14, padding: '12px', fontSize: 13, color: G.red, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
                 Cerrar sesión
               </button>
