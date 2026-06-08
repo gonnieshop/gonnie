@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="apple-touch-icon" href="/icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -342,7 +342,7 @@
 
          const nombre = user?.user_metadata?.full_name?.split(" ")[0] || "tú";
           return (
-            <div style={{ flex: 1, overflowY: "auto", paddingBottom: 110 }}>
+            <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
               <div style={{ padding: "16px 18px 12px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2 }}>
                   <GonnieLogo size={22} />
@@ -611,7 +611,7 @@
           );
 
           return (
-            <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", paddingBottom: 110 }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", paddingBottom: 80 }}>
               <h2 style={{ fontSize: 22, fontWeight: 900, color: G.text, marginBottom: 14 }}>Explorar locales</h2>
 
               <div style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 14, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -881,7 +881,7 @@
           }, [user]);
 
           return (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 110 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16, color: G.text }}>Mis Reservas</h2>
               {loading && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 40 }}>Cargando...</p>}
               {!loading && citas.length === 0 && (
@@ -914,7 +914,7 @@
           ];
 
           return (
-            <div style={{ flex: 1, padding: 18, paddingBottom: 110 }}>
+            <div style={{ flex: 1, padding: 18, paddingBottom: 80 }}>
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Gonnie Rewards Club</h2>
               <p style={{ fontSize: 12, color: G.muted, marginBottom: 18 }}>Canjea tus puntos acumulados por servicios gratis</p>
 
@@ -981,7 +981,7 @@
           }
 
           return (
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 110 }}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
               {/* Header */}
               <div style={{ padding: '20px 18px 0' }}>
                 <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 4px', color: G.text }}>Agenda del día</h2>
@@ -1268,7 +1268,7 @@
                   )}
                 </div>
                 {view !== "confirmed" && (
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "#FFFFFF", borderTop: `1px solid ${G.bdr}`, boxShadow: "0 -1px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", zIndex: 50, paddingBottom: window.navigator.standalone ? 'env(safe-area-inset-bottom)' : '20px', paddingTop: '8px', minHeight: 60 }}>
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 68, background: "#FFFFFF", borderTop: `1px solid ${G.bdr}`, boxShadow: "0 -1px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", zIndex: 50 }}>
                     {[
                       { id: "home", l: "Inicio", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" /><path d="M9 21V12h6v9"/></svg>' },
                       { id: "explore", l: "Explorar", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>' },
@@ -1637,7 +1637,7 @@
           }
 
           return (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 110 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
               <Back onBack={function(){ nav('settings'); }} />
               <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 4px' }}>Ayuda y soporte</h2>
               <p style={{ fontSize: 12, color: G.muted, margin: '0 0 24px' }}>Cuéntanos en qué podemos ayudarte</p>
@@ -1724,7 +1724,7 @@
           }
 
           return (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 110 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
               <Back onBack={function(){ nav('settings'); }} />
               <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 4px' }}>Privacidad</h2>
               <p style={{ fontSize: 12, color: G.muted, margin: '0 0 20px' }}>Cómo Gonnie gestiona tu información</p>
@@ -1829,7 +1829,7 @@
           var pushColor = { unknown: G.brand, requesting: G.brand, granted: G.green, denied: G.red };
 
           return (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 110 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
               <Back onBack={function(){ nav('profile'); }} />
               <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 20px' }}>Ajustes</h2>
                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '24px 16px', marginBottom: 24 }}>
