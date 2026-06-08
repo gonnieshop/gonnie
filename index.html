@@ -1626,7 +1626,9 @@
           if (enviado) {
             return (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
-                <p style={{ fontSize: 52, margin: '0 0 16px' }}>✅</p>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: G.green + '18', border: '2px solid ' + G.green, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={G.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
                 <p style={{ fontSize: 18, fontWeight: 800, color: G.text, margin: '0 0 8px' }}>Mensaje enviado</p>
                 <p style={{ fontSize: 13, color: G.muted, margin: '0 0 28px', lineHeight: 1.6 }}>Te responderemos en menos de 24h en el email con el que iniciaste sesión.</p>
                 <button onClick={function(){ nav('settings'); }} style={{ background: G.brand, border: 'none', borderRadius: 14, padding: '13px 28px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>Volver</button>
@@ -1656,7 +1658,7 @@
               {/* Mensaje */}
               <p style={{ fontSize: 12, fontWeight: 700, color: G.text, margin: '0 0 10px' }}>Describe tu problema</p>
               <textarea value={mensaje} onChange={function(e){ setMensaje(e.target.value); }} placeholder="Escribe aquí tu mensaje..."
-                style={{ width: '100%', minHeight: 120, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '12px 14px', fontSize: 13, color: G.text, fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', outline: 'none', lineHeight: 1.6 }} />
+                style={{ width: '100%', minHeight: 120, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '12px 14px', fontSize: 16, color: G.text, fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', outline: 'none', lineHeight: 1.6 }} />
 
               <button onClick={handleEnviar} disabled={!tipo || !mensaje.trim() || enviando}
                 style={{ width: '100%', marginTop: 16, background: (!tipo || !mensaje.trim()) ? G.bdr : G.brand, border: 'none', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: (!tipo || !mensaje.trim() || enviando) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', transition: 'background 0.2s' }}>
