@@ -342,7 +342,7 @@
 
          const nombre = user?.user_metadata?.full_name?.split(" ")[0] || "tú";
           return (
-            <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
+            <div style={{ flex: 1, overflowY: "auto", paddingBottom: 110 }}>
               <div style={{ padding: "16px 18px 12px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2 }}>
                   <GonnieLogo size={22} />
@@ -611,7 +611,7 @@
           );
 
           return (
-            <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", paddingBottom: 80 }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", paddingBottom: 110 }}>
               <h2 style={{ fontSize: 22, fontWeight: 900, color: G.text, marginBottom: 14 }}>Explorar locales</h2>
 
               <div style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 14, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -881,7 +881,7 @@
           }, [user]);
 
           return (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 110 }}>
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16, color: G.text }}>Mis Reservas</h2>
               {loading && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 40 }}>Cargando...</p>}
               {!loading && citas.length === 0 && (
@@ -914,7 +914,7 @@
           ];
 
           return (
-            <div style={{ flex: 1, padding: 18, paddingBottom: 80 }}>
+            <div style={{ flex: 1, padding: 18, paddingBottom: 110 }}>
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Gonnie Rewards Club</h2>
               <p style={{ fontSize: 12, color: G.muted, marginBottom: 18 }}>Canjea tus puntos acumulados por servicios gratis</p>
 
@@ -981,7 +981,7 @@
           }
 
           return (
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 110 }}>
               {/* Header */}
               <div style={{ padding: '20px 18px 0' }}>
                 <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 4px', color: G.text }}>Agenda del día</h2>
@@ -1637,7 +1637,7 @@
           }
 
           return (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 110 }}>
               <Back onBack={function(){ nav('settings'); }} />
               <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 4px' }}>Ayuda y soporte</h2>
               <p style={{ fontSize: 12, color: G.muted, margin: '0 0 24px' }}>Cuéntanos en qué podemos ayudarte</p>
@@ -1724,7 +1724,7 @@
           }
 
           return (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 110 }}>
               <Back onBack={function(){ nav('settings'); }} />
               <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 4px' }}>Privacidad</h2>
               <p style={{ fontSize: 12, color: G.muted, margin: '0 0 20px' }}>Cómo Gonnie gestiona tu información</p>
@@ -1829,7 +1829,7 @@
           var pushColor = { unknown: G.brand, requesting: G.brand, granted: G.green, denied: G.red };
 
           return (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 110 }}>
               <Back onBack={function(){ nav('profile'); }} />
               <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 20px' }}>Ajustes</h2>
                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '24px 16px', marginBottom: 24 }}>
