@@ -1260,6 +1260,7 @@
                       {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
                       {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} nav={setView} />}
                       {view === "settings" && <SettingsScreen nav={setView} user={user} />}
+                      {view === "privacy" && <PrivacyScreen nav={setView} user={user} />}
                       {view === "editprofile" && <EditProfileScreen nav={setView} user={user} />}
                       {view === "review" && <ReviewScreen barberia={barberia} nav={setView} user={user} />}
                     </>
@@ -1594,6 +1595,99 @@
         }
 
         // ─── AJUSTES: PANTALLA PRINCIPAL ─────────────────────────────────────────
+        function PrivacyScreen({ nav, user }) {
+          const [showDelete, setShowDelete] = useState(false);
+          const [deleting, setDeleting] = useState(false);
+          const [deleted, setDeleted] = useState(false);
+
+          async function handleDeleteAccount() {
+            setDeleting(true);
+            try {
+              const email = user && user.email;
+              if (email) {
+                await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/appointments?client_email=eq.' + encodeURIComponent(email), {
+                  method: 'DELETE', headers: { 'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-', 'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-' }
+                });
+                await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
+                  method: 'DELETE', headers: { 'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-', 'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-' }
+                });
+              }
+              await supabaseClient.auth.signOut();
+              setDeleted(true);
+            } catch(e) { setDeleting(false); }
+          }
+
+          var secciones = [
+            {
+              titulo: '📋 Datos que recogemos',
+              texto: 'Email y nombre (a través de Google), historial de citas, puntos acumulados y preferencias guardadas en el dispositivo (favoritos).'
+            },
+            {
+              titulo: '🎯 Para qué los usamos',
+              texto: 'Gestionar tus reservas, calcular tus puntos de fidelización y enviarte notificaciones sobre tus citas si las activas.'
+            },
+            {
+              titulo: '🤝 Con quién se comparten',
+              texto: 'Supabase (base de datos segura), Firebase (notificaciones push) y Google (inicio de sesión). Nunca vendemos tus datos a terceros.'
+            },
+            {
+              titulo: '📱 Almacenamiento local',
+              texto: 'Guardamos en tu dispositivo tus barberías favoritas y si ya has visto el mensaje de instalación. Puedes borrarlos limpiando los datos del sitio en Safari.'
+            },
+            {
+              titulo: '✉️ Contacto',
+              texto: 'Para cualquier consulta sobre tus datos escríbenos a reservasgonnie@gmail.com y te respondemos en menos de 48h.'
+            },
+          ];
+
+          if (deleted) {
+            return (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
+                <p style={{ fontSize: 48, margin: '0 0 16px' }}>👋</p>
+                <p style={{ fontSize: 18, fontWeight: 800, color: G.text, margin: '0 0 8px' }}>Cuenta eliminada</p>
+                <p style={{ fontSize: 13, color: G.muted }}>Todos tus datos han sido borrados.</p>
+              </div>
+            );
+          }
+
+          return (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
+              <Back onBack={function(){ nav('settings'); }} />
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 4px' }}>Privacidad</h2>
+              <p style={{ fontSize: 12, color: G.muted, margin: '0 0 20px' }}>Cómo Gonnie gestiona tu información</p>
+
+              {secciones.map(function(s, i) {
+                return (
+                  <div key={i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: '0 0 6px' }}>{s.titulo}</p>
+                    <p style={{ fontSize: 12, color: G.muted, margin: 0, lineHeight: 1.6 }}>{s.texto}</p>
+                  </div>
+                );
+              })}
+
+              {/* Eliminar cuenta */}
+              <div style={{ marginTop: 24 }}>
+                {!showDelete ? (
+                  <button onClick={function(){ setShowDelete(true); }} style={{ width: '100%', background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 14, padding: '13px', fontSize: 13, color: G.red, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Eliminar mi cuenta
+                  </button>
+                ) : (
+                  <div style={{ background: G.red + '08', border: '1px solid ' + G.red + '30', borderRadius: 14, padding: '16px' }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: G.red, textAlign: 'center', margin: '0 0 6px' }}>¿Eliminar cuenta?</p>
+                    <p style={{ fontSize: 11, color: G.muted, textAlign: 'center', margin: '0 0 14px', lineHeight: 1.5 }}>Se borrarán todas tus citas, puntos y datos. Esta acción no se puede deshacer.</p>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={function(){ setShowDelete(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px', fontSize: 13, color: G.muted, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+                      <button onClick={handleDeleteAccount} disabled={deleting} style={{ flex: 1, background: G.red, border: 'none', borderRadius: 10, padding: '10px', fontSize: 13, color: '#fff', fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                        {deleting ? 'Eliminando...' : 'Sí, eliminar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
         function SettingsScreen({ nav, user }) {
           var email = (user && user.email) || '';
           var googleAvatar = (user && user.user_metadata && user.user_metadata.avatar_url) || null;
@@ -1653,7 +1747,7 @@
           var opciones = [
             { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>', label: 'Perfil', desc: 'Foto, nombre, teléfono, fecha de nacimiento', action: function(){ nav('editprofile'); } },
 
-            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>', label: 'Privacidad', desc: 'Gestiona tus datos', action: function(){ alert('Próximamente'); } },
+            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>', label: 'Privacidad', desc: 'Gestiona tus datos', action: function(){ nav('privacy'); } },
             { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>', label: 'Ayuda y soporte', desc: 'Contacta con Gonnie', action: function(){ alert('Próximamente'); } },
           ];
 
