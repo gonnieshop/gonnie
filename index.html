@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="apple-touch-icon" href="/icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -1268,7 +1268,7 @@
                   )}
                 </div>
                 {view !== "confirmed" && (
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 68, background: "#FFFFFF", borderTop: `1px solid ${G.bdr}`, boxShadow: "0 -1px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", zIndex: 50 }}>
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 68, paddingBottom: 'env(safe-area-inset-bottom)', background: "#FFFFFF", borderTop: `1px solid ${G.bdr}`, boxShadow: "0 -1px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", zIndex: 50 }}>
                     {[
                       { id: "home", l: "Inicio", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" /><path d="M9 21V12h6v9"/></svg>' },
                       { id: "explore", l: "Explorar", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>' },
