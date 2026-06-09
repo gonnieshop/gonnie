@@ -315,6 +315,61 @@
         }
 
         // ─── VISTA 1: HOME SCREEN ─────────────────────────────────────────────
+        function ShopScreen({ nav }) {
+          const [selected, setSelected] = useState(null);
+          const productos = [{"id": 1, "nombre": "Gel de afeitado Flame", "precio": 11, "descripcion": "Gel transparente para un afeitado suave y sin irritaciones. Para todo tipo de piel.", "img": "https://i.imgur.com/b7bZITf.png"}, {"id": 2, "nombre": "Pasta de acabado mate", "precio": 11, "descripcion": "Acabado mate de fijación media. Perfecto para estilos naturales con textura.", "img": "https://i.imgur.com/R8tuKXh.png"}, {"id": 3, "nombre": "Polvos de peinado", "precio": 12, "descripcion": "Polvo de styling con acabado mate y volumen. Fijación ligera y natural.", "img": "https://i.imgur.com/AmzCvJo.png"}, {"id": 4, "nombre": "Spray de sal texturizante", "precio": 14, "descripcion": "Spray texturizante con sal marina para un look playero con volumen y movimiento.", "img": "https://i.imgur.com/950QjBn.png"}];
+
+          if (selected) {
+            return (
+              <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
+                <div style={{ position: 'relative', height: 280, background: '#f7f7f7', overflow: 'hidden' }}>
+                  <img src={selected.img} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 20, boxSizing: 'border-box' }} alt={selected.nombre} />
+                  <div style={{ position: 'absolute', top: 16, left: 16 }}>
+                    <Back onBack={function(){ setSelected(null); }} />
+                  </div>
+                </div>
+                <div style={{ padding: '20px 18px' }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: G.brand, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>Level 3</p>
+                  <h2 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: '0 0 8px' }}>{selected.nombre}</h2>
+                  <p style={{ fontSize: 26, fontWeight: 900, color: G.text, margin: '0 0 16px' }}>{selected.precio}€</p>
+                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px 16px', marginBottom: 24 }}>
+                    <p style={{ fontSize: 13, color: G.muted, margin: 0, lineHeight: 1.7 }}>{selected.descripcion}</p>
+                  </div>
+                  <button onClick={function(){ window.open('https://wa.me/34663528459?text=' + encodeURIComponent('Hola, me interesa el producto: ' + selected.nombre + ' (' + selected.precio + '€)'), '_blank'); }}
+                    style={{ width: '100%', background: '#25D366', border: 'none', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.534 5.856L.057 23.625a.75.75 0 00.918.918l5.769-1.477A11.944 11.944 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.505-5.2-1.387l-.373-.214-3.865.99.99-3.865-.214-.373A9.956 9.956 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                    Pedir por WhatsApp
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
+              <div style={{ padding: '20px 18px 12px' }}>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '0 0 4px' }}>Tienda</h2>
+                <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>Productos Level 3 disponibles en Gonnie</p>
+              </div>
+              <div style={{ padding: '0 18px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {productos.map(function(p) {
+                  return (
+                    <div key={p.id} onClick={function(){ setSelected(p); }} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, overflow: 'hidden', cursor: 'pointer' }}>
+                      <div style={{ background: '#f7f7f7', height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }}>
+                        <img src={p.img} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt={p.nombre} />
+                      </div>
+                      <div style={{ padding: '10px 12px 12px' }}>
+                        <p style={{ fontSize: 12, fontWeight: 700, color: G.text, margin: '0 0 4px', lineHeight: 1.3 }}>{p.nombre}</p>
+                        <p style={{ fontSize: 14, fontWeight: 900, color: G.brand, margin: 0 }}>{p.precio}€</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
         function HomeScreen({ nav, user, puntos = 0 }) {
           const nivel = getNivel(puntos);
           const progreso = getProgreso(puntos);
@@ -1252,6 +1307,7 @@
                   ) : (
                     <>
                       {view === "home" && <HomeScreen nav={setView} user={user} puntos={puntos} />}
+                      {view === "shop" && <ShopScreen nav={setView} />}
                       {view === "explore" && <ExploreScreen nav={setView} setBarberia={setBarberia} />}
                       {view === "detail" && <DetailScreen barberia={barberia} nav={setView} setBooking={setBooking} />}
                       {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} setPuntos={setPuntos} user={user} />}
