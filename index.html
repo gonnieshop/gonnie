@@ -1075,9 +1075,11 @@
           const [citas, setCitas] = useState([]);
           const [loading, setLoading] = useState(true);
           const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+          const [ingresosMes, setIngresosMes] = useState(0);
 
           useEffect(function() {
             setLoading(true);
+            // Citas del día seleccionado
             dbGet('appointments', '?date=eq.' + selectedDate + '&order=time.asc&select=*,barberos(name),servicios(name,price)')
               .then(function(data) {
                 var citas = Array.isArray(data) ? data : [];
@@ -1092,6 +1094,16 @@
                 }).catch(function(){ setCitas(citas); setLoading(false); });
               })
               .catch(function() { setLoading(false); });
+
+            // Ingresos del mes completo
+            var d = new Date(selectedDate);
+            var primerDia = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-01';
+            var ultimoDia = new Date(d.getFullYear(), d.getMonth()+1, 0).toISOString().split('T')[0];
+            dbGet('appointments', '?date=gte.' + primerDia + '&date=lte.' + ultimoDia + '&status=eq.confirmed&select=servicios(price)')
+              .then(function(data) {
+                var total = (Array.isArray(data) ? data : []).reduce(function(s,c){ return s + ((c.servicios && c.servicios.price) || 0); }, 0);
+                setIngresosMes(total);
+              }).catch(function(){});
           }, [selectedDate]);
 
           function formatHora(t) { return t ? t.slice(0,5) : ''; }
@@ -1125,9 +1137,9 @@
                 {/* Stats */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 20 }}>
                   {[
-                    { label: 'Citas', value: confirmadas.length },
+                    { label: 'Citas hoy', value: confirmadas.length },
                     { label: 'Canceladas', value: canceladas.length },
-                    { label: 'Ingresos', value: ingresos.toFixed(0) + '€' },
+                    { label: 'Ingresos mes', value: ingresosMes.toFixed(0) + '€' },
                   ].map(function(s) {
                     return (
                       <div key={s.label} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '12px 10px', textAlign: 'center' }}>
@@ -1975,32 +1987,6 @@
                  <p style={{ fontSize: 16, fontWeight: 700, color: G.text, margin: '0 0 4px', textAlign: 'center' }}>{displayName}</p>
                  <p style={{ fontSize: 12, color: G.muted, margin: 0, textAlign: 'center' }}>{email}</p>
                </div>
-
-              {/* ── Tarjeta de Notificaciones ── */}
-              <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                    dangerouslySetInnerHTML={{ __html: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + G.brand + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>' }} />
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: G.text, margin: '0 0 2px' }}>Notificaciones push</p>
-                    <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>Avisos de citas y promociones</p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleActivarNotificaciones}
-                  disabled={pushStatus === 'granted' || pushStatus === 'requesting' || pushStatus === 'denied' || pushStatus === 'unsupported'}
-                  style={{
-                    width: '100%', border: 'none', borderRadius: 12, padding: '12px',
-                    fontSize: 13, fontWeight: 700, cursor: (pushStatus === 'unknown') ? 'pointer' : 'default',
-                    background: (pushColor[pushStatus] || G.brand) + (pushStatus === 'unknown' ? '' : '22'),
-                    color: pushStatus === 'unknown' ? '#fff' : (pushColor[pushStatus] || G.brand),
-                    fontFamily: 'inherit', transition: 'all 0.2s',
-                  }}>
-                  {pushLabel[pushStatus] || 'Activar notificaciones'}
-                </button>
-
-                {pushLog ? <p style={{ fontSize: 11, color: G.muted, margin: '8px 0 0', wordBreak: 'break-all', fontFamily: 'monospace', lineHeight: 1.5 }}>{pushLog}</p> : null}
-              </div>
 
               <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, overflow: 'hidden' }}>
                 {opciones.map(function(op, i) {
