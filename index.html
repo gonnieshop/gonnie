@@ -949,23 +949,50 @@
         function AppointmentsScreen({ user }) {
           const [citas, setCitas] = useState([]);
           const [loading, setLoading] = useState(true);
+          const [mesesAbiertos, setMesesAbiertos] = useState({});
+
+          var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
           useEffect(function() {
             if (!user || !user.email) { setLoading(false); return; }
             dbGet('appointments', '?client_email=eq.' + encodeURIComponent(user.email) + '&order=date.desc,time.desc&select=*,barberos(name),servicios(name,price)')
               .then(function(data) {
                 var now = new Date();
-                // Filtrar: solo las que ya han pasado (completadas)
                 var pasadas = (Array.isArray(data) ? data : []).filter(function(c) {
                   if (c.status === 'cancelled') return false;
                   var dt = new Date(c.date + 'T' + (c.time || '00:00'));
                   return dt < now;
                 });
                 setCitas(pasadas);
+                // Abrir el mes más reciente por defecto
+                if (pasadas.length > 0) {
+                  var d = new Date(pasadas[0].date);
+                  var key = d.getFullYear() + '-' + d.getMonth();
+                  setMesesAbiertos({ [key]: true });
+                }
                 setLoading(false);
               })
               .catch(function() { setLoading(false); });
           }, [user]);
+
+          // Agrupar por mes
+          var grupos = [];
+          citas.forEach(function(c) {
+            var d = new Date(c.date);
+            var key = d.getFullYear() + '-' + d.getMonth();
+            var label = meses[d.getMonth()] + ' ' + d.getFullYear();
+            var g = grupos.find(function(x){ return x.key === key; });
+            if (!g) { g = { key: key, label: label, citas: [] }; grupos.push(g); }
+            g.citas.push(c);
+          });
+
+          function toggleMes(key) {
+            setMesesAbiertos(function(prev) {
+              var n = Object.assign({}, prev);
+              n[key] = !n[key];
+              return n;
+            });
+          }
 
           return (
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
@@ -977,16 +1004,36 @@
                   <p style={{ fontSize: 14, color: G.muted }}>Todavía no tienes citas completadas</p>
                 </div>
               )}
-              {!loading && citas.map(function(c, i) {
+              {!loading && grupos.map(function(g) {
+                var abierto = mesesAbiertos[g.key];
                 return (
-                  <div key={c.id || i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                      <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: G.text }}>{c.servicios && c.servicios.name || 'Servicio'}</p>
-                      <Pill bg={G.green + '20'} color={G.green}>Completada</Pill>
-                    </div>
-                    <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>
-                      ✂️ {c.barberos && c.barberos.name || '—'} · 📅 {c.date} · ⏰ {c.time ? c.time.slice(0,5) : '—'} · 💰 {c.servicios && c.servicios.price ? c.servicios.price + '€' : '—'}
-                    </p>
+                  <div key={g.key} style={{ marginBottom: 12 }}>
+                    {/* Cabecera del mes */}
+                    <button onClick={function(){ toggleMes(g.key); }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: G.card, border: '1px solid ' + G.bdr, borderRadius: abierto ? '14px 14px 0 0' : 14, padding: '12px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 14, fontWeight: 800, color: G.text }}>{g.label}</span>
+                        <span style={{ fontSize: 11, color: G.muted, background: G.card2, borderRadius: 20, padding: '2px 8px' }}>{g.citas.length} {g.citas.length === 1 ? 'cita' : 'citas'}</span>
+                      </div>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        style={{ transform: abierto ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+                        <path d="M6 9l6 6 6-6"/>
+                      </svg>
+                    </button>
+                    {/* Citas del mes */}
+                    {abierto && g.citas.map(function(c, i) {
+                      return (
+                        <div key={c.id || i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderTop: 'none', borderRadius: i === g.citas.length - 1 ? '0 0 14px 14px' : 0, padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                            <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: G.text }}>{c.servicios && c.servicios.name || 'Servicio'}</p>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{c.servicios && c.servicios.price ? c.servicios.price + '€' : '—'}</span>
+                          </div>
+                          <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>
+                            ✂️ {c.barberos && c.barberos.name || '—'} · {c.date} · {c.time ? c.time.slice(0,5) : '—'}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}
