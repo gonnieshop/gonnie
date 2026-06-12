@@ -1253,7 +1253,10 @@
                 {/* Panel nueva cita */}
                 {showNuevaCita && (
                   <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 16 }}>
-                    <p style={{ fontSize: 14, fontWeight: 800, color: G.text, margin: '0 0 14px' }}>Nueva cita manual</p>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                      <p style={{ fontSize: 14, fontWeight: 800, color: G.text, margin: 0 }}>Nueva cita manual</p>
+                      <button onClick={function(){ setShowNuevaCita(false); }} style={{ background: G.card2, border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 14, color: G.muted }}>✕</button>
+                    </div>
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>NOMBRE DEL CLIENTE</p>
                     <input value={ncNombre} onChange={function(e){ setNcNombre(e.target.value); }} placeholder="Nombre y apellidos"
