@@ -71,6 +71,7 @@
     .anim-cross  { animation: crossPop  0.5s cubic-bezier(.36,.07,.19,.97) forwards; }
     .anim-fadein { animation: fadeSlideUp 0.4s ease forwards; }
 </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div id="root"></div>
@@ -1076,6 +1077,39 @@
           const [loading, setLoading] = useState(true);
           const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
           const [ingresosMes, setIngresosMes] = useState(0);
+          const [citasMes, setCitasMes] = useState([]);
+          const [showNuevaCita, setShowNuevaCita] = useState(false);
+          const [barberos, setBarberos] = useState([]);
+          const [servicios, setServicios] = useState([]);
+          const [ncNombre, setNcNombre] = useState('');
+          const [ncBarbero, setNcBarbero] = useState('');
+          const [ncServicio, setNcServicio] = useState('');
+          const [ncFecha, setNcFecha] = useState(new Date().toISOString().split('T')[0]);
+          const [ncHora, setNcHora] = useState('');
+          const [ncGuardando, setNcGuardando] = useState(false);
+          const [ncDone, setNcDone] = useState(false);
+          const slots = ['09:00','09:40','10:20','11:00','11:40','16:00','16:40','17:20'];
+
+          useEffect(function() {
+            dbGet('barberos', '?select=*').then(function(d){ setBarberos(Array.isArray(d) ? d : []); }).catch(function(){});
+            dbGet('servicios', '?select=*').then(function(d){ setServicios(Array.isArray(d) ? d : []); }).catch(function(){});
+          }, []);
+
+          async function crearCita() {
+            if (!ncNombre || !ncBarbero || !ncServicio || !ncFecha || !ncHora) return;
+            setNcGuardando(true);
+            var serv = servicios.find(function(s){ return s.id == ncServicio; });
+            try {
+              await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/appointments', {
+                method: 'POST',
+                headers: { 'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-', 'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-', 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ client_email: 'manual@gonnie.app', cliente: ncNombre, barbero_id: ncBarbero, servicio_id: ncServicio, date: ncFecha, time: ncHora, status: 'confirmed', precio: serv ? serv.price : 0, barberia: 'Gonnie Barbershop' })
+              });
+              setNcDone(true);
+              setNcNombre(''); setNcBarbero(''); setNcServicio(''); setNcHora('');
+              setTimeout(function(){ setNcDone(false); setShowNuevaCita(false); }, 1500);
+            } catch(e) {} finally { setNcGuardando(false); }
+          }
 
           useEffect(function() {
             setLoading(true);
@@ -1099,10 +1133,12 @@
             var d = new Date(selectedDate);
             var primerDia = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-01';
             var ultimoDia = new Date(d.getFullYear(), d.getMonth()+1, 0).toISOString().split('T')[0];
-            dbGet('appointments', '?date=gte.' + primerDia + '&date=lte.' + ultimoDia + '&status=eq.confirmed&select=servicios(price)')
+            dbGet('appointments', '?date=gte.' + primerDia + '&date=lte.' + ultimoDia + '&status=eq.confirmed&order=date.asc,time.asc&select=*,barberos(name),servicios(name,price)')
               .then(function(data) {
-                var total = (Array.isArray(data) ? data : []).reduce(function(s,c){ return s + ((c.servicios && c.servicios.price) || 0); }, 0);
+                var arr = Array.isArray(data) ? data : [];
+                var total = arr.reduce(function(s,c){ return s + ((c.servicios && c.servicios.price) || 0); }, 0);
                 setIngresosMes(total);
+                setCitasMes(arr);
               }).catch(function(){});
           }, [selectedDate]);
 
@@ -1126,13 +1162,138 @@
             return { label: 'Confirmada', color: G.brand };
           }
 
+          var mesesNombre = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+          async function exportarPDF() {
+            var d = new Date(selectedDate);
+            var mesNombre = mesesNombre[d.getMonth()] + ' ' + d.getFullYear();
+            var { jsPDF } = window.jspdf;
+            var doc = new jsPDF({ unit: 'mm', format: 'a4' });
+            var margin = 20;
+            var y = 20;
+            var pageW = 210;
+
+            // Cabecera
+            doc.setFillColor(26, 26, 26);
+            doc.rect(0, 0, pageW, 38, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Gonnie Barbershop', margin, 18);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Informe de facturación — ' + mesNombre, margin, 28);
+            doc.text('C. Gabriel y Galán, 11 · Villanueva de la Serena', margin, 34);
+            y = 52;
+
+            // Resumen
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Resumen del mes', margin, y); y += 8;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.text('Total citas: ' + citasMes.length, margin, y); y += 6;
+            doc.text('Ingresos totales: ' + ingresosMes.toFixed(2) + ' €', margin, y); y += 12;
+
+            // Tabla cabecera
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margin, y - 5, pageW - margin * 2, 8, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.text('Fecha', margin + 2, y);
+            doc.text('Hora', margin + 28, y);
+            doc.text('Cliente', margin + 44, y);
+            doc.text('Servicio', margin + 90, y);
+            doc.text('Barbero', margin + 138, y);
+            doc.text('€', pageW - margin - 2, y, { align: 'right' });
+            y += 7;
+
+            doc.setFont('helvetica', 'normal');
+            citasMes.forEach(function(c, i) {
+              if (y > 270) { doc.addPage(); y = 20; }
+              if (i % 2 === 0) { doc.setFillColor(250, 250, 250); doc.rect(margin, y - 4, pageW - margin * 2, 7, 'F'); }
+              doc.setFontSize(9);
+              doc.text(c.date || '', margin + 2, y);
+              doc.text(c.time ? c.time.slice(0,5) : '', margin + 28, y);
+              var cliente = c.cliente || (c.client_email ? c.client_email.split('@')[0] : 'Cliente');
+              doc.text(cliente.slice(0,18), margin + 44, y);
+              doc.text((c.servicios && c.servicios.name ? c.servicios.name.slice(0,20) : '—'), margin + 90, y);
+              doc.text((c.barberos && c.barberos.name ? c.barberos.name.slice(0,14) : '—'), margin + 138, y);
+              doc.text((c.servicios && c.servicios.price ? c.servicios.price + '€' : '—'), pageW - margin - 2, y, { align: 'right' });
+              y += 7;
+            });
+
+            // Total
+            y += 4;
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, y, pageW - margin, y); y += 6;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.text('TOTAL', margin, y);
+            doc.text(ingresosMes.toFixed(2) + ' €', pageW - margin - 2, y, { align: 'right' });
+
+            doc.save('Gonnie_' + mesNombre.replace(' ', '_') + '.pdf');
+          }
+
           return (
             <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
               {/* Header */}
               <div style={{ padding: '20px 18px 0' }}>
-                <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 4px', color: G.text }}>Agenda del día</h2>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 4px' }}>
+                  <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: G.text }}>Agenda del día</h2>
+                  <button onClick={function(){ setShowNuevaCita(!showNuevaCita); setNcDone(false); }}
+                    style={{ background: G.brand, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Nueva cita
+                  </button>
+                </div>
                 <input type="date" value={selectedDate} onChange={function(e){ setSelectedDate(e.target.value); }}
                   style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '10px 14px', borderRadius: 12, color: G.text, fontSize: 14, fontWeight: 700, marginTop: 12, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+
+                {/* Panel nueva cita */}
+                {showNuevaCita && (
+                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 16 }}>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: G.text, margin: '0 0 14px' }}>Nueva cita manual</p>
+
+                    <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>NOMBRE DEL CLIENTE</p>
+                    <input value={ncNombre} onChange={function(e){ setNcNombre(e.target.value); }} placeholder="Nombre y apellidos"
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }} />
+
+                    <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>BARBERO</p>
+                    <select value={ncBarbero} onChange={function(e){ setNcBarbero(e.target.value); }}
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }}>
+                      <option value="">Selecciona barbero</option>
+                      {barberos.map(function(b){ return <option key={b.id} value={b.id}>{b.name}</option>; })}
+                    </select>
+
+                    <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>SERVICIO</p>
+                    <select value={ncServicio} onChange={function(e){ setNcServicio(e.target.value); }}
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }}>
+                      <option value="">Selecciona servicio</option>
+                      {servicios.map(function(s){ return <option key={s.id} value={s.id}>{s.name} — {s.price}€</option>; })}
+                    </select>
+
+                    <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>FECHA</p>
+                    <input type="date" value={ncFecha} onChange={function(e){ setNcFecha(e.target.value); }}
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, fontWeight: 700, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }} />
+
+                    <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 8px' }}>HORA</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 16 }}>
+                      {slots.map(function(s){ return (
+                        <button key={s} onClick={function(){ setNcHora(s); }}
+                          style={{ background: ncHora === s ? G.brand : G.card2, color: ncHora === s ? '#fff' : G.text, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '8px 4px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          {s}
+                        </button>
+                      ); })}
+                    </div>
+
+                    {ncDone && <p style={{ fontSize: 12, color: G.green, fontWeight: 700, textAlign: 'center', margin: '0 0 10px' }}>✓ Cita creada</p>}
+                    <button onClick={crearCita} disabled={!ncNombre || !ncBarbero || !ncServicio || !ncFecha || !ncHora || ncGuardando}
+                      style={{ width: '100%', background: (!ncNombre || !ncBarbero || !ncServicio || !ncFecha || !ncHora) ? G.bdr : G.brand, border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {ncGuardando ? 'Guardando...' : 'Crear cita'}
+                    </button>
+                  </div>
+                )}
 
                 {/* Stats */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 20 }}>
@@ -1149,6 +1310,10 @@
                     );
                   })}
                 </div>
+                <button onClick={exportarPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '11px', fontSize: 13, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                  Exportar PDF del mes
+                </button>
               </div>
 
               {/* Lista de citas */}
