@@ -111,13 +111,17 @@
         async function signInWithGoogle() {
           await supabaseClient.auth.signInWithOAuth({
             provider: "google",
-            options: { queryParams: { prompt: 'select_account' } },
+            options: {
+              queryParams: { prompt: 'select_account', access_type: 'online' },
+              redirectTo: window.location.origin,
+            },
             options: { redirectTo: "https://www.gonnie.app" }
           });
         }
 
         async function signOut() {
-          await supabaseClient.auth.signOut();
+          await supabaseClient.auth.signOut({ scope: 'local' });
+          window.__gonnieEmail = null;
         }
 
         // ─── EMAIL DE CONFIRMACIÓN VÍA SUPABASE EDGE FUNCTION ──────────────────
