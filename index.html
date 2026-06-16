@@ -1251,8 +1251,69 @@
                     <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Nueva cita
                   </button>
                 </div>
-                <input type="date" value={selectedDate} onChange={function(e){ setSelectedDate(e.target.value); }}
-                  style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '10px 14px', borderRadius: 12, color: G.text, fontSize: 14, fontWeight: 700, marginTop: 12, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                {/* Navegación semanal */}
+                {(function() {
+                  var diasSemana = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+                  var hoy = new Date();
+                  var sel = new Date(selectedDate + 'T12:00:00');
+                  // Lunes de la semana actual del día seleccionado
+                  var diaSemana = sel.getDay();
+                  var lunes = new Date(sel);
+                  lunes.setDate(sel.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1));
+
+                  var dias = [];
+                  for (var i = 0; i < 7; i++) {
+                    var d = new Date(lunes);
+                    d.setDate(lunes.getDate() + i);
+                    dias.push(d);
+                  }
+
+                  function fmtDate(d) {
+                    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+                  }
+
+                  function semanaAnterior() {
+                    var d = new Date(sel);
+                    d.setDate(d.getDate() - 7);
+                    return fmtDate(d);
+                  }
+                  function semanaSiguiente() {
+                    var d = new Date(sel);
+                    d.setDate(d.getDate() + 7);
+                    return fmtDate(d);
+                  }
+
+                  var mesAnio = sel.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+
+                  return (
+                    <div style={{ marginTop: 12, marginBottom: 16 }}>
+                      {/* Mes y flechas */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                        <button onClick={function(){ setSelectedDate(semanaAnterior()); }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: G.muted, fontSize: 18, padding: '0 8px' }}>‹</button>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{mesAnio}</span>
+                        <button onClick={function(){ setSelectedDate(semanaSiguiente()); }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: G.muted, fontSize: 18, padding: '0 8px' }}>›</button>
+                      </div>
+                      {/* Días */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+                        {dias.map(function(d, i) {
+                          var fd = fmtDate(d);
+                          var esSeleccionado = fd === selectedDate;
+                          var esHoyDia = fd === fmtDate(hoy);
+                          return (
+                            <button key={i} onClick={function(){ setSelectedDate(fd); }}
+                              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '6px 2px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                                background: esSeleccionado ? G.text : esHoyDia ? G.brand + '15' : 'transparent' }}>
+                              <span style={{ fontSize: 9, fontWeight: 600, color: esSeleccionado ? '#fff' : G.muted, marginBottom: 2 }}>{diasSemana[d.getDay()]}</span>
+                              <span style={{ fontSize: 15, fontWeight: 800, color: esSeleccionado ? '#fff' : esHoyDia ? G.brand : G.text }}>{d.getDate()}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Panel nueva cita */}
                 {showNuevaCita && (
@@ -1323,38 +1384,56 @@
                 </button>
               </div>
 
-              {/* Lista de citas */}
-              <div style={{ padding: '0 18px' }}>
+              {/* Timeline agenda */}
+              <div style={{ padding: '0 18px', position: 'relative' }}>
                 {loading && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
-                {!loading && citas.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                    <p style={{ fontSize: 32, margin: '0 0 8px' }}>📅</p>
-                    <p style={{ fontSize: 14, color: G.muted }}>No hay citas para este día</p>
-                  </div>
-                )}
-                {!loading && citas.map(function(c, i) {
-                  var estado = estadoCita(c);
+                {!loading && (function() {
+                  var horas = [9,10,11,12,13,14,15,16,17,18,19,20,21];
+                  var ROW = 64; // px por hora
+                  var citasMap = {};
+                  citas.forEach(function(c) {
+                    if (!c.time) return;
+                    var parts = c.time.split(':');
+                    var key = parseInt(parts[0]) + ':' + parts[1];
+                    citasMap[key] = c;
+                  });
                   return (
-                    <div key={c.id || i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 14 }}>
-                      {/* Hora */}
-                      <div style={{ textAlign: 'center', minWidth: 44, flexShrink: 0 }}>
-                        <p style={{ fontSize: 16, fontWeight: 800, color: G.text, margin: 0 }}>{formatHora(c.time)}</p>
-                      </div>
-                      {/* Separador */}
-                      <div style={{ width: 2, height: 44, background: estado.color, borderRadius: 2, flexShrink: 0, opacity: 0.7 }} />
-                      {/* Info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c._nombre || (c.client_email ? c.client_email.split('@')[0] : 'Cliente')}</p>
-                        <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{(c.servicios && c.servicios.name) || 'Servicio'} · {(c.barberos && c.barberos.name) || 'Barbero'}</p>
-                      </div>
-                      {/* Estado + precio */}
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <p style={{ fontSize: 10, fontWeight: 700, color: estado.color, background: estado.color + '18', borderRadius: 20, padding: '3px 8px', margin: '0 0 4px' }}>{estado.label}</p>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: 0 }}>{c.servicios && c.servicios.price ? c.servicios.price + '€' : ''}</p>
-                      </div>
+                    <div style={{ position: 'relative', marginBottom: 20 }}>
+                      {horas.map(function(h) {
+                        var citaKey = h + ':00';
+                        var cita = citasMap[h + ':00'] || citasMap[h + ':40'] || citasMap[(h-1) + ':40'];
+                        var citaExacta = citasMap[h + ':00'];
+                        var estado = citaExacta ? estadoCita(citaExacta) : null;
+                        var esAhora = esHoy && now.getHours() === h;
+                        return (
+                          <div key={h} style={{ display: 'flex', minHeight: ROW, borderTop: '1px solid ' + G.bdr }}>
+                            {/* Hora */}
+                            <div style={{ width: 44, flexShrink: 0, paddingTop: 8 }}>
+                              <span style={{ fontSize: 11, color: esAhora ? G.brand : G.muted, fontWeight: esAhora ? 800 : 400 }}>{h}:00</span>
+                            </div>
+                            {/* Bloque de cita */}
+                            <div style={{ flex: 1, paddingTop: 6, paddingBottom: 6 }}>
+                              {citaExacta && (
+                                <div style={{ background: estado.color + '18', border: '1.5px solid ' + estado.color + '60', borderRadius: 10, padding: '8px 12px', minHeight: 48 }}>
+                                  <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {citaExacta._nombre || (citaExacta.client_email && citaExacta.client_email !== 'manual@gonnie.app' ? citaExacta.client_email.split('@')[0] : citaExacta.cliente || 'Cliente')}
+                                  </p>
+                                  <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>
+                                    {citaExacta.time ? citaExacta.time.slice(0,5) : ''} · {(citaExacta.servicios && citaExacta.servicios.name) || 'Servicio'}
+                                    {citaExacta.servicios && citaExacta.servicios.price ? ' · ' + citaExacta.servicios.price + '€' : ''}
+                                  </p>
+                                </div>
+                              )}
+                              {esAhora && !citaExacta && (
+                                <div style={{ height: 2, background: G.brand, borderRadius: 2, margin: '6px 0', opacity: 0.6 }} />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   );
-                })}
+                })()}
               </div>
             </div>
           );
