@@ -2491,17 +2491,17 @@
         root.render(<GonnieApp />);
     </script>
   <script>
+    /* Service worker temporalmente desactivado
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/service-worker.js');
       });
     }
+    */
   </script>
 
   <!-- Firebase Push Notifications -->
   <script type="module">
-  (async function() {
-    try {
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
 
@@ -2568,11 +2568,7 @@
 
     // initPush() se llama manualmente desde la app (botón en Ajustes > Notificaciones)
     window.__initPush = initPush;
-      } catch(e) {
-      console.warn('[Gonnie] Firebase no disponible:', e.message);
-    }
-  })();
-</script>
+  </script>
 
 </body>
 </html>
