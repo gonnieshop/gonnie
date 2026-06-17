@@ -75,10 +75,12 @@
 </head>
 <body>
     <div id="root"></div>
-
-    <script type="text/babel" data-type="module">
-        const { useState, useEffect, useCallback } = React;
-        const { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } = Recharts;
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+   <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+    const { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } = Recharts;
+    const { Shield, ShieldAlert, CheckCircle, AlertTriangle, Clock, Search, RefreshCw, ChevronRight, ChevronDown, Download, Filter, Sliders, Calendar, DollarSign, User, FileText, ArrowUpRight, ArrowDownRight, Activity, Percent } = lucide;
 
         // ─── CONFIGURACIÓN DE SUPABASE ──────────────────────────────────────────
         const SUPABASE_URL = "https://fnjqzcnufkhrfzxfallj.supabase.co";
