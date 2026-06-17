@@ -32,3 +32,5 @@ self.addEventListener('notificationclick', function(e) {
 
 self.addEventListener('install',  function() { self.skipWaiting(); });
 self.addEventListener('activate', function(e) { e.waitUntil(clients.claim()); });
+
+// Updated: 2026-06-17
