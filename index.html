@@ -1264,4 +1264,1088 @@
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>BARBERO</p>
                     <select value={ncBarbero} onChange={function(e){ setNcBarbero(e.target.value); }}
-                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, color: G.text, fontFamily: 'inherit', boxSizing: 'bord
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }}>
+                      <option value="">Selecciona barbero</option>
+                      {barberos.map(function(b){ return <option key={b.id} value={b.id}>{b.name}</option>; })}
+                    </select>
+
+                    <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>SERVICIO</p>
+                    <select value={ncServicio} onChange={function(e){ setNcServicio(e.target.value); }}
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }}>
+                      <option value="">Selecciona servicio</option>
+                      {servicios.map(function(s){ return <option key={s.id} value={s.id}>{s.name} — {s.price}€</option>; })}
+                    </select>
+
+                    <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>FECHA</p>
+                    <input type="date" value={ncFecha} onChange={function(e){ setNcFecha(e.target.value); }}
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, fontWeight: 700, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }} />
+
+                    <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 8px' }}>HORA</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 16 }}>
+                      {slots.map(function(s){ return (
+                        <button key={s} onClick={function(){ setNcHora(s); }}
+                          style={{ background: ncHora === s ? G.brand : G.card2, color: ncHora === s ? '#fff' : G.text, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '8px 4px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          {s}
+                        </button>
+                      ); })}
+                    </div>
+
+                    {ncDone && <p style={{ fontSize: 12, color: G.green, fontWeight: 700, textAlign: 'center', margin: '0 0 10px' }}>✓ Cita creada</p>}
+                    <button onClick={crearCita} disabled={!ncNombre || !ncBarbero || !ncServicio || !ncFecha || !ncHora || ncGuardando}
+                      style={{ width: '100%', background: (!ncNombre || !ncBarbero || !ncServicio || !ncFecha || !ncHora) ? G.bdr : G.brand, border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {ncGuardando ? 'Guardando...' : 'Crear cita'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Stats */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 20 }}>
+                  {[
+                    { label: 'Citas hoy', value: confirmadas.length },
+                    { label: 'Canceladas', value: canceladas.length },
+                    { label: 'Ingresos mes', value: ingresosMes.toFixed(0) + '€' },
+                  ].map(function(s) {
+                    return (
+                      <div key={s.label} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '12px 10px', textAlign: 'center' }}>
+                        <p style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '0 0 2px' }}>{s.value}</p>
+                        <p style={{ fontSize: 10, color: G.muted, margin: 0 }}>{s.label}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button onClick={exportarPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '11px', fontSize: 13, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                  Exportar PDF del mes
+                </button>
+              </div>
+
+              {/* Lista de citas */}
+              <div style={{ padding: '0 18px' }}>
+                {loading && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
+                {!loading && citas.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <p style={{ fontSize: 32, margin: '0 0 8px' }}>📅</p>
+                    <p style={{ fontSize: 14, color: G.muted }}>No hay citas para este día</p>
+                  </div>
+                )}
+                {!loading && citas.map(function(c, i) {
+                  var estado = estadoCita(c);
+                  return (
+                    <div key={c.id || i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 14 }}>
+                      {/* Hora */}
+                      <div style={{ textAlign: 'center', minWidth: 44, flexShrink: 0 }}>
+                        <p style={{ fontSize: 16, fontWeight: 800, color: G.text, margin: 0 }}>{formatHora(c.time)}</p>
+                      </div>
+                      {/* Separador */}
+                      <div style={{ width: 2, height: 44, background: estado.color, borderRadius: 2, flexShrink: 0, opacity: 0.7 }} />
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c._nombre || (c.client_email ? c.client_email.split('@')[0] : 'Cliente')}</p>
+                        <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{(c.servicios && c.servicios.name) || 'Servicio'} · {(c.barberos && c.barberos.name) || 'Barbero'}</p>
+                      </div>
+                      {/* Estado + precio */}
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <p style={{ fontSize: 10, fontWeight: 700, color: estado.color, background: estado.color + '18', borderRadius: 20, padding: '3px 8px', margin: '0 0 4px' }}>{estado.label}</p>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: 0 }}>{c.servicios && c.servicios.price ? c.servicios.price + '€' : ''}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        // ─── VISTA 10: PERFIL DE USUARIO ──────────────────────────────────────
+        function ProfileScreen({ setMode, mode, user, nav }) {
+          var email = (user && user.email) || '';
+          var googleAvatar = (user && user.user_metadata && user.user_metadata.avatar_url) || null;
+          var googleName = (user && user.user_metadata && user.user_metadata.full_name) || email || 'Usuario';
+          const [photoUrl, setPhotoUrl] = useState(googleAvatar);
+          const [nombre, setNombre] = useState(googleName);
+          useEffect(function() {
+            if (!email) return;
+            dbGet('profiles', '?id=eq.' + encodeURIComponent(email) + '&select=photo_url,full_name')
+              .then(function(d) {
+                if (Array.isArray(d) && d.length > 0) {
+                  if (d[0].photo_url) setPhotoUrl(d[0].photo_url);
+                  if (d[0].full_name) setNombre(d[0].full_name);
+                }
+              }).catch(function(){});
+          }, [email]);
+          var iniciales = nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
+          return (
+            <div style={{ flex: 1, padding: 18, paddingTop: 140 }}>
+              {photoUrl
+                ? <img src={photoUrl} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid ' + G.brand, display: 'block', margin: '0 auto 12px' }} />
+                : <div style={{ width: 80, height: 80, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, color: '#fff', fontWeight: 700, margin: '0 auto 12px' }}>{iniciales}</div>
+              }
+              <p style={{ fontSize: 12, marginTop: 10, marginBottom: 12, textAlign: 'center', color: '#8E8E93' }}>{email}</p>
+              <div style={{ background: G.card, borderRadius: 14, border: '1px solid ' + G.bdr, marginBottom: 18, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: '1px solid ' + G.bdr, cursor: 'pointer' }} onClick={function(){ nav('settings'); }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + G.brand + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' }} />
+                  <p style={{ fontSize: 14, fontWeight: 500, color: G.text, flex: 1, margin: 0 }}>Ajustes de Cuenta</p>
+                  <span style={{ color: G.muted }}>›</span>
+                </div>
+
+              </div>
+              {user && user.email === 'reservasgonnie@gmail.com' && (
+                <GhostBtn onClick={function(){ setMode(mode === 'customer' ? 'business' : 'customer'); }}>
+                  {mode === 'customer' ? '🔄 Cambiar a Modo Negocio' : '🔄 Cambiar a Modo Cliente'}
+                </GhostBtn>
+              )}
+              <button onClick={signOut} style={{ marginTop: 12, width: '100%', background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 14, padding: '12px', fontSize: 13, color: G.red, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                Cerrar sesión
+              </button>
+            </div>
+          );
+        }
+
+
+        function InstallBanner() {
+          const [visible, setVisible] = useState(function() {
+            var isStandalone = window.navigator.standalone === true;
+            var dismissed = localStorage.getItem('gonnie_install_dismissed');
+            return !isStandalone && !dismissed; // temporal: sin filtro iOS para probar
+          });
+
+          if (!visible) return null;
+
+          return (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+              <div style={{ background: '#fff', borderRadius: 24, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', padding: '24px 20px', width: '100%', maxWidth: 340, animation: 'slideUp 0.35s ease' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <img src="https://i.imgur.com/W5os6Ue.jpeg" style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover' }} alt="Gonnie" />
+                    <div>
+                      <p style={{ fontSize: 15, fontWeight: 800, color: '#000', margin: 0 }}>Instala Gonnie</p>
+                      <p style={{ fontSize: 11, color: '#888', margin: 0 }}>Gratis · Sin App Store</p>
+                    </div>
+                  </div>
+                  <button onClick={function(){ localStorage.setItem('gonnie_install_dismissed','1'); setVisible(false); }}
+                    style={{ background: '#f2f2f2', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 14, color: '#666' }}>✕</button>
+                </div>
+
+                {/* Paso 1 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#f7f7f7', borderRadius: 14, padding: '12px 14px', marginBottom: 8 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" stroke="none">
+                      <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: '#000', margin: '0 0 2px' }}>Toca los tres puntos <b>···</b></p>
+                    <p style={{ fontSize: 11, color: '#888', margin: 0 }}>En la barra inferior de Safari</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '2px 0' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                </div>
+
+                {/* Paso 2 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#f7f7f7', borderRadius: 14, padding: '12px 14px', marginBottom: 8 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#007AFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2v13M7 7l5-5 5 5"/>
+                      <path d="M20 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1v-5"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: '#000', margin: '0 0 2px' }}>Toca Compartir</p>
+                    <p style={{ fontSize: 11, color: '#888', margin: 0 }}>El icono de la cajita con flecha</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '2px 0' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                </div>
+
+                {/* Paso 3 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#f7f7f7', borderRadius: 14, padding: '12px 14px', marginBottom: 20 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#34C759', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: '#000', margin: '0 0 2px' }}>Añadir a pantalla de inicio</p>
+                    <p style={{ fontSize: 11, color: '#888', margin: 0 }}>Toca este botón en el menú</p>
+                  </div>
+                </div>
+
+                <button onClick={function(){ localStorage.setItem('gonnie_install_dismissed','1'); setVisible(false); }}
+                  style={{ width: '100%', background: G.brand, border: 'none', borderRadius: 14, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  Entendido
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        function GonnieApp() {
+          const [user, setUser] = useState(null);
+          const [authLoading, setAuthLoading] = useState(true);
+          const [splash, setSplash] = useState(true);
+          const [view, setView] = useState("home");
+          const [mode, setMode] = useState("customer");
+          const [barberia, setBarberia] = useState(null);
+          const [booking, setBooking] = useState(null);
+          const [confirmedAppt, setConfirmedAppt] = useState(null);
+          const [puntos, setPuntos] = useState(0);
+
+          // Cargar puntos reales del usuario desde Supabase
+          const cargarPuntos = async (email) => {
+            try {
+              const data = await dbGet("appointments", `?client_email=eq.${encodeURIComponent(email)}&select=points_earned`);
+              if (Array.isArray(data)) {
+                const total = data.reduce((sum, a) => sum + (a.points_earned || 0), 0);
+                setPuntos(total);
+              }
+            } catch(e) { console.warn("No se pudieron cargar los puntos:", e.message); }
+          };
+
+          useEffect(() => {
+            // Comprobar sesión existente (cuando Google redirige de vuelta)
+            supabaseClient.auth.getSession().then(({ data: { session } }) => {
+              setUser(session?.user || null);
+              setAuthLoading(false);
+              if (session?.user) {
+                setSplash(false);
+                cargarPuntos(session.user.email);
+              }
+            });
+            // Escuchar cambios de sesión en tiempo real
+            const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+              setUser(session?.user || null);
+              if (session?.user) {
+                window.__gonnieEmail = session.user.email;
+                setSplash(false);
+                cargarPuntos(session.user.email);
+              }
+            });
+            return () => subscription.unsubscribe();
+          }, []);
+
+          // Pantalla de carga mientras comprueba sesión
+          if (authLoading) return (
+            <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#FFFFFF" }}>
+              <div style={{ textAlign: "center" }}>
+                <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: 80, width: "auto", marginBottom: 16, marginLeft: "auto", marginRight: "auto", display: "block" }} alt="Gonnie" />
+                <p style={{ color: G.muted, fontSize: 13 }}>Cargando Gonnie...</p>
+              </div>
+            </div>
+          );
+
+          // Sin sesión → pantalla de login
+          if (!user) return (
+            <div className="flex justify-center bg-black min-h-screen">
+              <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
+                <LoginScreen />
+              </div>
+            </div>
+          );
+
+          // Con sesión → splash o app
+          if (splash) return (
+            <div className="flex justify-center bg-black min-h-screen">
+              <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
+                <SplashScreen onDone={() => setSplash(false)} />
+              </div>
+            </div>
+          );
+
+          return (
+            <div className="flex justify-center bg-black min-h-screen">
+              <InstallBanner />
+              <div style={{ width: "100%", maxWidth: 420, background: G.bg, minHeight: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
+                <div style={{ flex: 1, overflowY: "auto" }}>
+                  {mode === "business" ? (
+                    <BusinessScreen />
+                  ) : (
+                    <>
+                      {view === "home" && <HomeScreen nav={setView} user={user} puntos={puntos} />}
+                      {view === "shop" && <ShopScreen nav={setView} />}
+                      {view === "explore" && <ExploreScreen nav={setView} setBarberia={setBarberia} />}
+                      {view === "detail" && <DetailScreen barberia={barberia} nav={setView} setBooking={setBooking} />}
+                      {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} setPuntos={setPuntos} user={user} />}
+                      {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
+                      {view === "appointments" && <AppointmentsScreen user={user} />}
+                      {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
+                      {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} nav={setView} />}
+                      {view === "settings" && <SettingsScreen nav={setView} user={user} />}
+                      {view === "privacy" && <PrivacyScreen nav={setView} user={user} />}
+                      {view === "help" && <HelpScreen nav={setView} />}
+                      {view === "editprofile" && <EditProfileScreen nav={setView} user={user} />}
+                      {view === "review" && <ReviewScreen barberia={barberia} nav={setView} user={user} />}
+                    </>
+                  )}
+                </div>
+                {view !== "confirmed" && (
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 68, background: "#FFFFFF", borderTop: `1px solid ${G.bdr}`, boxShadow: "0 -1px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", zIndex: 50 }}>
+                    {[
+                      { id: "home", l: "Inicio", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" /><path d="M9 21V12h6v9"/></svg>' },
+                      { id: "explore", l: "Explorar", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>' },
+                      { id: "appointments", l: "Citas", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="8" cy="14" r="0.5" fill="FILL"/><circle cx="12" cy="14" r="0.5" fill="FILL"/><circle cx="8" cy="18" r="0.5" fill="FILL"/></svg>' },
+                      { id: "loyalty", l: "Club", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' },
+                      { id: "profile", l: "Perfil", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>' },
+                    ].map(n => {
+                      const active = view === n.id && mode === "customer";
+                      const col = active ? G.brand : "#00A1C9";
+                      const svgHtml = n.svg.replace(/FILL/g, col).replace(/<svg /, '<svg stroke="' + col + '" ');
+                      return (
+                        <button key={n.id} onClick={() => { if(mode === "business") setMode("customer"); setView(n.id); }} style={{ flex: 1, background: "transparent", border: "none", fontSize: 10, fontWeight: active ? 700 : 500, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", padding: "6px 0", color: col }}>
+                          <span dangerouslySetInnerHTML={{ __html: svgHtml }} />
+                          <span>{n.l}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+
+        // ─── RESEÑAS: LISTA ──────────────────────────────────────────────────────
+        function ResenasList({ barberiaId, barberiaName, navReview }) {
+          const [resenas, setResenas] = useState([]);
+          const [loading, setLoading] = useState(true);
+
+          useEffect(function() {
+            if (!barberiaId) { setLoading(false); return; }
+            dbGet("resenas", "?barberia_id=eq." + barberiaId + "&select=*&order=created_at.desc&limit=20")
+              .then(function(d) { setResenas(Array.isArray(d) ? d : []); setLoading(false); })
+              .catch(function() { setLoading(false); });
+          }, [barberiaId]);
+
+          var avg = resenas.length ? (resenas.reduce(function(s,r){ return s + r.stars; }, 0) / resenas.length).toFixed(1) : null;
+
+          return (
+            <div style={{ paddingBottom: 20 }}>
+              {avg && (
+                <div style={{ background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: "14px 16px", marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                    <div style={{ textAlign: "center" }}>
+                      <p style={{ fontSize: 36, fontWeight: 900, color: G.text, lineHeight: 1, margin: 0 }}>{avg}</p>
+                      <p style={{ fontSize: 11, color: G.muted, marginTop: 4, marginBottom: 0 }}>de 5 ⭐</p>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      {[5,4,3,2,1].map(function(s) {
+                        var count = resenas.filter(function(r){ return r.stars === s; }).length;
+                        var pct = resenas.length ? (count/resenas.length*100) : 0;
+                        return (
+                          <div key={s} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                            <span style={{ fontSize: 10, color: G.muted, width: 8 }}>{s}</span>
+                            <div style={{ flex: 1, height: 5, background: G.card2, borderRadius: 3, overflow: "hidden" }}>
+                              <div style={{ width: pct + "%", height: "100%", background: G.brand, borderRadius: 3 }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <button onClick={navReview} style={{ width: "100%", background: G.brand, color: "#fff", border: "none", borderRadius: 12, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 16, fontFamily: "inherit" }}>
+                ✏️ Escribir reseña
+              </button>
+
+              {loading && <div style={{ textAlign: "center", padding: 20, color: G.muted }}>Cargando...</div>}
+
+              {!loading && resenas.length === 0 && (
+                <div style={{ textAlign: "center", padding: "30px 0" }}>
+                  <p style={{ fontSize: 32, margin: "0 0 8px" }}>⭐</p>
+                  <p style={{ fontSize: 14, color: G.muted }}>Sé el primero en dejar una reseña</p>
+                </div>
+              )}
+
+              {resenas.map(function(r, i) {
+                return (
+                  <div key={i} style={{ background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: 14, marginBottom: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: 0 }}>{r.client_name}</p>
+                      <p style={{ fontSize: 13, margin: 0 }}>{"⭐".repeat(r.stars)}</p>
+                    </div>
+                    {r.comment ? <p style={{ fontSize: 13, color: G.text, lineHeight: 1.5, margin: "0 0 6px" }}>{r.comment}</p> : null}
+                    <p style={{ fontSize: 10, color: G.muted, margin: 0 }}>{new Date(r.created_at).toLocaleDateString("es-ES")}</p>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        }
+
+        // ─── RESEÑAS: FORMULARIO ─────────────────────────────────────────────────
+        function ReviewScreen({ barberia, nav, user }) {
+          var barberiaName = (barberia && barberia.name) || "GonnieBarbershop";
+          var barberiaId = barberia && barberia.id;
+          var clientName = (user && user.user_metadata && user.user_metadata.full_name) || "Cliente";
+          var clientEmail = (user && user.email) || "";
+
+          const [stars, setStars] = useState(0);
+          const [hover, setHover] = useState(0);
+          const [comment, setComment] = useState("");
+          const [saving, setSaving] = useState(false);
+          const [done, setDone] = useState(false);
+
+          function submit() {
+            if (stars === 0) { alert("Selecciona una valoración"); return; }
+            setSaving(true);
+            dbInsert("resenas", {
+              barberia_id: barberiaId,
+              barberia_name: barberiaName,
+              client_name: clientName,
+              client_email: clientEmail,
+              stars: stars,
+              comment: comment,
+            }).then(function() {
+              setDone(true);
+              setSaving(false);
+            }).catch(function() {
+              alert("Error al guardar la reseña");
+              setSaving(false);
+            });
+          }
+
+          var labels = ["","Muy mejorable 😕","Podría mejorar 😐","Bien 🙂","Muy bien 😊","Excelente 🤩"];
+
+          if (done) return (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", textAlign: "center" }}>
+              <div style={{ fontSize: 64, marginBottom: 16 }}>⭐</div>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: G.text, marginBottom: 8 }}>¡Gracias por tu reseña!</h2>
+              <p style={{ fontSize: 14, color: G.muted, marginBottom: 32 }}>Tu opinión ayuda a otros clientes.</p>
+              <PrimaryBtn onClick={function(){ nav("explore"); }}>Volver</PrimaryBtn>
+            </div>
+          );
+
+          return (
+            <div style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
+              <Back onBack={function(){ nav("explore"); }} />
+              <div style={{ textAlign: "center", margin: "20px 0 28px" }}>
+                <div style={{ fontSize: 40, marginBottom: 10 }}>💈</div>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, marginBottom: 4 }}>{barberiaName}</h2>
+                <p style={{ fontSize: 13, color: G.muted }}>¿Cómo fue tu experiencia?</p>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 16 }}>
+                {[1,2,3,4,5].map(function(s) {
+                  var active = (hover || stars) >= s;
+                  return (
+                    <span key={s} onClick={function(){ setStars(s); }} onMouseEnter={function(){ setHover(s); }} onMouseLeave={function(){ setHover(0); }}
+                      style={{ fontSize: 40, cursor: "pointer", opacity: active ? 1 : 0.3, transition: "opacity 0.1s" }}>⭐</span>
+                  );
+                })}
+              </div>
+
+              {stars > 0 && (
+                <p style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: G.brand, marginBottom: 20 }}>{labels[stars]}</p>
+              )}
+
+              <p style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 8 }}>Comentario (opcional)</p>
+              <textarea value={comment} onChange={function(e){ setComment(e.target.value); }}
+                placeholder="Cuéntanos tu experiencia..."
+                rows={4}
+                style={{ width: "100%", background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: "12px 14px", fontSize: 14, color: G.text, resize: "none", outline: "none", fontFamily: "inherit", boxSizing: "border-box", marginBottom: 20 }}
+              />
+
+              <PrimaryBtn onClick={submit} disabled={stars === 0 || saving}>
+                {saving ? "Enviando..." : "Publicar reseña"}
+              </PrimaryBtn>
+            </div>
+          );
+        }
+
+
+        // ─── SUBIR FOTO A SUPABASE STORAGE ───────────────────────────────────────
+        async function uploadProfilePhoto(file, userEmail) {
+          var ext = file.name.split('.').pop() || 'jpg';
+          var filename = userEmail.replace(/[@.]/g, '_') + '_' + Date.now() + '.' + ext;
+          var bucketName = 'avatars';
+          var url = SUPABASE_URL + '/storage/v1/object/' + bucketName + '/' + filename;
+
+          var res = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY,
+              'Content-Type': file.type || 'image/jpeg',
+              'x-upsert': 'true',
+            },
+            body: file
+          });
+
+          if (!res.ok) {
+            var err = await res.text();
+            throw new Error('Upload error: ' + err);
+          }
+
+          return SUPABASE_URL + '/storage/v1/object/public/' + bucketName + '/' + filename;
+        }
+
+        // ─── GUARDAR PERFIL EN SUPABASE ───────────────────────────────────────────
+        async function saveProfile(email, data) {
+          var existing = await dbGet('profiles', '?id=eq.' + encodeURIComponent(email) + '&select=id');
+          if (Array.isArray(existing) && existing.length > 0) {
+            await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
+              method: 'PATCH',
+              headers: { ...DB_HEADERS },
+              body: JSON.stringify(data)
+            });
+          } else {
+            await dbInsert('profiles', { ...data, id: email });
+          }
+        }
+
+        // ─── AJUSTES: EDITAR PERFIL ───────────────────────────────────────────────
+        function EditProfileScreen({ nav, user }) {
+          var currentEmail = (user && user.email) || '';
+          var currentName = (user && user.user_metadata && user.user_metadata.full_name) || '';
+          var googlePhoto = (user && user.user_metadata && user.user_metadata.avatar_url) || '';
+
+          const [name, setName] = useState(currentName);
+          const [phone, setPhone] = useState('');
+          const [birthdate, setBirthdate] = useState('');
+          const [photoUrl, setPhotoUrl] = useState(googlePhoto);
+          const [uploading, setUploading] = useState(false);
+          const [saving, setSaving] = useState(false);
+          const [saved, setSaved] = useState(false);
+          const [error, setError] = useState('');
+
+          useEffect(function() {
+            if (!currentEmail) return;
+            dbGet('profiles', '?id=eq.' + encodeURIComponent(currentEmail) + '&select=*')
+              .then(function(d) {
+                if (Array.isArray(d) && d.length > 0) {
+                  if (d[0].full_name) setName(d[0].full_name);
+                  if (d[0].phone) setPhone(d[0].phone);
+                  if (d[0].birthdate) setBirthdate(d[0].birthdate);
+                  if (d[0].photo_url) setPhotoUrl(d[0].photo_url);
+                }
+              }).catch(function(){});
+          }, [currentEmail]);
+
+          function handlePhotoChange(e) {
+            var file = e.target.files && e.target.files[0];
+            if (!file) return;
+            setUploading(true);
+            setError('');
+            uploadProfilePhoto(file, currentEmail)
+              .then(function(url) { setPhotoUrl(url); setUploading(false); })
+              .catch(function(err) { setError('Error al subir la foto'); setUploading(false); });
+          }
+
+          function handleSave() {
+            setSaving(true); setError('');
+            saveProfile(currentEmail, {
+              full_name: name,
+              phone: phone,
+              birthdate: birthdate || null,
+              photo_url: photoUrl,
+              updated_at: new Date().toISOString()
+            }).then(function() {
+              setSaving(false); setSaved(true);
+              setTimeout(function(){ setSaved(false); }, 2500);
+            }).catch(function() {
+              setError('Error al guardar'); setSaving(false);
+            });
+          }
+
+          return (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 40 }}>
+              <Back onBack={function(){ nav('settings'); }} />
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 24px' }}>Perfil</h2>
+
+              {/* Foto */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 28 }}>
+                <div style={{ position: 'relative', marginBottom: 12 }}>
+                  {photoUrl
+                    ? <img src={photoUrl} style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: '3px solid ' + G.brand }} alt="foto" />
+                    : <div style={{ width: 96, height: 96, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, color: '#fff', fontWeight: 700 }}>
+                        {name ? name.charAt(0).toUpperCase() : '?'}
+                      </div>
+                  }
+                  <label htmlFor="photoInput" style={{ position: 'absolute', bottom: 0, right: 0, width: 30, height: 30, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px solid #fff' }}>
+                    <span style={{ fontSize: 14, color: '#fff' }}>📷</span>
+                  </label>
+                  <input id="photoInput" type="file" accept="image/*" onChange={handlePhotoChange} style={{ display: 'none' }} />
+                </div>
+                {uploading && <p style={{ fontSize: 12, color: G.brand }}>Subiendo foto...</p>}
+                {!uploading && <p style={{ fontSize: 12, color: G.muted }}>Toca 📷 para cambiar tu foto</p>}
+              </div>
+
+              {/* Campos */}
+              {[
+                { label: 'Nombre completo', value: name, setter: setName, type: 'text', placeholder: 'Tu nombre completo' },
+                { label: 'Teléfono', value: phone, setter: setPhone, type: 'tel', placeholder: '+34 600 000 000' },
+                { label: 'Email', value: currentEmail, setter: function(){}, type: 'email', disabled: true },
+                { label: 'Fecha de nacimiento', value: birthdate, setter: setBirthdate, type: 'date' },
+              ].map(function(field, i) {
+                return (
+                  <div key={i} style={{ marginBottom: 16 }}>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: G.text, marginBottom: 6 }}>{field.label}</p>
+                    <input
+                      type={field.type}
+                      value={field.value}
+                      onChange={function(e){ if (!field.disabled) field.setter(e.target.value); }}
+                      placeholder={field.placeholder || ''}
+                      disabled={field.disabled || false}
+                      style={{ width: '100%', background: field.disabled ? G.card2 : G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: field.disabled ? G.muted : G.text, outline: 'none', fontFamily: 'inherit', opacity: field.disabled ? 0.6 : 1, boxSizing: 'border-box' }}
+                    />
+                    {field.disabled && <p style={{ fontSize: 10, color: G.muted, marginTop: 4 }}>No se puede cambiar</p>}
+                  </div>
+                );
+              })}
+
+              {error && <p style={{ fontSize: 12, color: G.red, marginBottom: 10 }}>{error}</p>}
+              {saved && <p style={{ fontSize: 12, color: G.brand, marginBottom: 10, textAlign: 'center' }}>✓ Perfil guardado correctamente</p>}
+
+              <PrimaryBtn onClick={handleSave} disabled={saving || uploading}>
+                {saving ? 'Guardando...' : 'Guardar cambios'}
+              </PrimaryBtn>
+            </div>
+          );
+        }
+
+        // ─── AJUSTES: PANTALLA PRINCIPAL ─────────────────────────────────────────
+        function HelpScreen({ nav }) {
+          const [tipo, setTipo] = useState('');
+          const [mensaje, setMensaje] = useState('');
+          const [enviado, setEnviado] = useState(false);
+          const [enviando, setEnviando] = useState(false);
+
+          var temas = ['Problema con una reserva', 'Problema con mis puntos', 'No puedo iniciar sesión', 'Sugerencia', 'Otro'];
+
+          async function handleEnviar() {
+            if (!tipo || !mensaje.trim()) return;
+            setEnviando(true);
+            try {
+              await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/soporte', {
+                method: 'POST',
+                headers: {
+                  'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
+                  'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
+                  'Content-Type': 'application/json',
+                  'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ tipo: tipo, mensaje: mensaje, created_at: new Date().toISOString() })
+              });
+              setEnviado(true);
+            } catch(e) { setEnviado(true); } // mostrar éxito igualmente
+            setEnviando(false);
+          }
+
+          if (enviado) {
+            return (
+              <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center', background: G.bg }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: G.green + '18', border: '2px solid ' + G.green, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={G.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <p style={{ fontSize: 18, fontWeight: 800, color: G.text, margin: '0 0 8px' }}>Mensaje enviado</p>
+                <p style={{ fontSize: 13, color: G.muted, margin: '0 0 28px', lineHeight: 1.6 }}>Te responderemos en menos de 24h en el email con el que iniciaste sesión.</p>
+                <button onClick={function(){ nav('settings'); }} style={{ background: G.brand, border: 'none', borderRadius: 14, padding: '13px 28px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>Volver</button>
+              </div>
+            );
+          }
+
+          return (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
+              <Back onBack={function(){ nav('settings'); }} />
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 4px' }}>Ayuda y soporte</h2>
+              <p style={{ fontSize: 12, color: G.muted, margin: '0 0 24px' }}>Cuéntanos en qué podemos ayudarte</p>
+
+              {/* Selector de tema */}
+              <p style={{ fontSize: 12, fontWeight: 700, color: G.text, margin: '0 0 10px' }}>Motivo de contacto</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                {temas.map(function(t) {
+                  return (
+                    <button key={t} onClick={function(){ setTipo(t); }}
+                      style={{ background: tipo === t ? G.brand : G.card, border: '1px solid ' + (tipo === t ? G.brand : G.bdr), borderRadius: 12, padding: '12px 16px', fontSize: 13, fontWeight: tipo === t ? 700 : 500, color: tipo === t ? '#fff' : G.text, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                      {t}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Mensaje */}
+              <p style={{ fontSize: 12, fontWeight: 700, color: G.text, margin: '0 0 10px' }}>Describe tu problema</p>
+              <textarea value={mensaje} onChange={function(e){ setMensaje(e.target.value); }} placeholder="Escribe aquí tu mensaje..."
+                style={{ width: '100%', minHeight: 120, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '12px 14px', fontSize: 16, color: G.text, fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', outline: 'none', lineHeight: 1.6 }} />
+
+              <button onClick={handleEnviar} disabled={!tipo || !mensaje.trim() || enviando}
+                style={{ width: '100%', marginTop: 16, background: (!tipo || !mensaje.trim()) ? G.bdr : G.brand, border: 'none', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: (!tipo || !mensaje.trim() || enviando) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', transition: 'background 0.2s' }}>
+                {enviando ? 'Enviando...' : 'Enviar mensaje'}
+              </button>
+            </div>
+          );
+        }
+
+        function PrivacyScreen({ nav, user }) {
+          const [showDelete, setShowDelete] = useState(false);
+          const [deleting, setDeleting] = useState(false);
+          const [deleted, setDeleted] = useState(false);
+
+          async function handleDeleteAccount() {
+            setDeleting(true);
+            try {
+              const email = user && user.email;
+              if (email) {
+                await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/appointments?client_email=eq.' + encodeURIComponent(email), {
+                  method: 'DELETE', headers: { 'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-', 'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-' }
+                });
+                await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
+                  method: 'DELETE', headers: { 'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-', 'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-' }
+                });
+              }
+              await supabaseClient.auth.signOut();
+              setDeleted(true);
+            } catch(e) { setDeleting(false); }
+          }
+
+          var secciones = [
+            {
+              titulo: '📋 Datos que recogemos',
+              texto: 'Email y nombre (a través de Google), historial de citas, puntos acumulados y preferencias guardadas en el dispositivo (favoritos).'
+            },
+            {
+              titulo: '🎯 Para qué los usamos',
+              texto: 'Gestionar tus reservas, calcular tus puntos de fidelización y enviarte notificaciones sobre tus citas si las activas.'
+            },
+            {
+              titulo: '🤝 Con quién se comparten',
+              texto: 'Supabase (base de datos segura), Firebase (notificaciones push) y Google (inicio de sesión). Nunca vendemos tus datos a terceros.'
+            },
+            {
+              titulo: '📱 Almacenamiento local',
+              texto: 'Guardamos en tu dispositivo tus barberías favoritas y si ya has visto el mensaje de instalación. Puedes borrarlos limpiando los datos del sitio en Safari.'
+            },
+            {
+              titulo: '✉️ Contacto',
+              texto: 'Para cualquier consulta sobre tus datos escríbenos a reservasgonnie@gmail.com y te respondemos en menos de 48h.'
+            },
+          ];
+
+          if (deleted) {
+            return (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
+                <p style={{ fontSize: 48, margin: '0 0 16px' }}>👋</p>
+                <p style={{ fontSize: 18, fontWeight: 800, color: G.text, margin: '0 0 8px' }}>Cuenta eliminada</p>
+                <p style={{ fontSize: 13, color: G.muted }}>Todos tus datos han sido borrados.</p>
+              </div>
+            );
+          }
+
+          return (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
+              <Back onBack={function(){ nav('settings'); }} />
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 4px' }}>Privacidad</h2>
+              <p style={{ fontSize: 12, color: G.muted, margin: '0 0 20px' }}>Cómo Gonnie gestiona tu información</p>
+
+              {secciones.map(function(s, i) {
+                return (
+                  <div key={i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: '0 0 6px' }}>{s.titulo}</p>
+                    <p style={{ fontSize: 12, color: G.muted, margin: 0, lineHeight: 1.6 }}>{s.texto}</p>
+                  </div>
+                );
+              })}
+
+              {/* Eliminar cuenta */}
+              <div style={{ marginTop: 24 }}>
+                {!showDelete ? (
+                  <button onClick={function(){ setShowDelete(true); }} style={{ width: '100%', background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 14, padding: '13px', fontSize: 13, color: G.red, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Eliminar mi cuenta
+                  </button>
+                ) : (
+                  <div style={{ background: G.red + '08', border: '1px solid ' + G.red + '30', borderRadius: 14, padding: '16px' }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: G.red, textAlign: 'center', margin: '0 0 6px' }}>¿Eliminar cuenta?</p>
+                    <p style={{ fontSize: 11, color: G.muted, textAlign: 'center', margin: '0 0 14px', lineHeight: 1.5 }}>Se borrarán todas tus citas, puntos y datos. Esta acción no se puede deshacer.</p>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={function(){ setShowDelete(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px', fontSize: 13, color: G.muted, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+                      <button onClick={handleDeleteAccount} disabled={deleting} style={{ flex: 1, background: G.red, border: 'none', borderRadius: 10, padding: '10px', fontSize: 13, color: '#fff', fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                        {deleting ? 'Eliminando...' : 'Sí, eliminar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        function SettingsScreen({ nav, user }) {
+          var email = (user && user.email) || '';
+          var googleAvatar = (user && user.user_metadata && user.user_metadata.avatar_url) || null;
+          var googleName = (user && user.user_metadata && user.user_metadata.full_name) || 'Usuario';
+          const [photo, setPhoto] = useState(googleAvatar);
+          const [displayName, setDisplayName] = useState(googleName);
+
+          // ── Estado del botón de notificaciones ──
+          // 'unknown' | 'requesting' | 'granted' | 'denied'
+          const [pushStatus, setPushStatus] = useState(function() {
+            if (typeof Notification === 'undefined') return 'unsupported';
+            if (Notification.permission === 'granted') return 'granted';
+            if (Notification.permission === 'denied')  return 'denied';
+            return 'unknown';
+          });
+          const [pushLog, setPushLog] = useState('');
+
+          useEffect(function() {
+            if (!email) return;
+            dbGet('profiles', '?id=eq.' + encodeURIComponent(email) + '&select=photo_url,full_name')
+              .then(function(d) {
+                if (Array.isArray(d) && d.length > 0) {
+                  if (d[0].photo_url) setPhoto(d[0].photo_url);
+                  if (d[0].full_name) setDisplayName(d[0].full_name);
+                }
+              }).catch(function(){});
+          }, [email]);
+
+          async function handleActivarNotificaciones() {
+            if (pushStatus === 'granted' || pushStatus === 'requesting') return;
+            if (typeof Notification === 'undefined') {
+              setPushStatus('unsupported');
+              setPushLog('❌ Notification API no disponible en este contexto');
+              return;
+            }
+            setPushStatus('requesting');
+            setPushLog('Pidiendo permiso...');
+            try {
+              const perm = await Notification.requestPermission();
+              setPushLog('Permiso: ' + perm);
+              if (perm !== 'granted') { setPushStatus('denied'); return; }
+              setPushStatus('granted');
+              setPushLog('Permiso OK — obteniendo token FCM...');
+              if (window.__initPush) {
+                window.__gonniePushLog = function(msg) { setPushLog(msg); };
+                await window.__initPush();
+              } else {
+                setPushLog('❌ __initPush no está definido todavía');
+              }
+            } catch(e) {
+              setPushLog('❌ Error: ' + e.message);
+              setPushStatus('denied');
+            }
+          }
+
+          var iniciales = displayName.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
+          var opciones = [
+            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>', label: 'Perfil', desc: 'Foto, nombre, teléfono, fecha de nacimiento', action: function(){ nav('editprofile'); } },
+
+            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>', label: 'Privacidad', desc: 'Gestiona tus datos', action: function(){ nav('privacy'); } },
+            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>', label: 'Ayuda y soporte', desc: 'Contacta con Gonnie', action: function(){ nav('help'); } },
+          ];
+
+          // Etiqueta y color del botón de notificaciones según estado
+          var pushLabel = { unknown: 'Activar notificaciones', requesting: 'Activando…', granted: '✓ Notificaciones activas', denied: 'Permiso denegado — actívalas en Ajustes del sistema' };
+          var pushColor = { unknown: G.brand, requesting: G.brand, granted: G.green, denied: G.red };
+
+          return (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
+              <Back onBack={function(){ nav('profile'); }} />
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 20px' }}>Ajustes</h2>
+               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '24px 16px', marginBottom: 24 }}>
+                 {photo
+                   ? <img src={photo} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid ' + G.brand, marginBottom: 12 }} alt="avatar" />
+                   : <div style={{ width: 80, height: 80, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, color: '#fff', fontWeight: 700, marginBottom: 12 }}>{iniciales}</div>
+                 }
+                 <p style={{ fontSize: 16, fontWeight: 700, color: G.text, margin: '0 0 4px', textAlign: 'center' }}>{displayName}</p>
+                 <p style={{ fontSize: 12, color: G.muted, margin: 0, textAlign: 'center' }}>{email}</p>
+               </div>
+
+              <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, overflow: 'hidden' }}>
+                {opciones.map(function(op, i) {
+                  return (
+                    <div key={i} onClick={op.action} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderBottom: i < opciones.length - 1 ? '1px solid ' + G.bdr : 'none', cursor: 'pointer' }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: (op.svg || '').replace(/COL/g, G.brand) }} />
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: G.text, margin: '0 0 2px' }}>{op.label}</p>
+                        <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{op.desc}</p>
+                      </div>
+                      <span style={{ color: G.muted, fontSize: 16 }}>›</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
+
+        // ─── CANCELAR RESERVA ─────────────────────────────────────────────────────
+        async function cancelBooking(apptId, apptData, userEmail, userName) {
+          // 1. Marcar como cancelada en Supabase
+          var res = await fetch(SUPABASE_URL + '/rest/v1/appointments?id=eq.' + apptId, {
+            method: 'PATCH',
+            headers: DB_HEADERS,
+            body: JSON.stringify({ status: 'cancelled' })
+          });
+          if (!res.ok) throw new Error('Error al cancelar: ' + await res.text());
+
+          // 2. Enviar email de cancelación
+          try {
+            await fetch(SUPABASE_URL + '/functions/v1/rapid-processor', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+              body: JSON.stringify({
+                barberia: (apptData && apptData.barberias && apptData.barberias.name) || 'GonnieBarbershop',
+                barbero:  (apptData && apptData.barberos  && apptData.barberos.name)  || 'Barbero',
+                servicio: (apptData && apptData.servicios && apptData.servicios.name) || 'Servicio',
+                fecha:    (apptData && apptData.date)  || '',
+                hora:     (apptData && apptData.time)  || '',
+                precio:   (apptData && apptData.price) || 0,
+                cliente:  userName  || 'Cliente',
+                email_cliente: userEmail || '',
+                tipo: 'cancelacion',
+              })
+            });
+          } catch(e) { console.warn('Email cancelación no enviado:', e); }
+        }
+
+
+        // ─── CONFETTI COMPONENT ───────────────────────────────────────────────────
+        function Confetti() {
+          const colors = ['#00A1C9','#FFD700','#FF6B6B','#4ADE80','#C084FC','#FB923C'];
+          const pieces = Array.from({ length: 60 }, function(_, i) {
+            return {
+              id: i,
+              color: colors[i % colors.length],
+              left: Math.random() * 100,
+              delay: Math.random() * 1.5,
+              duration: 2 + Math.random() * 2,
+              size: 6 + Math.random() * 10,
+              rotate: Math.random() * 360,
+            };
+          });
+          return (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999, overflow: 'hidden' }}>
+              {pieces.map(function(p) {
+                return (
+                  <div key={p.id} className="confetti-piece" style={{
+                    left: p.left + '%',
+                    background: p.color,
+                    width: p.size,
+                    height: p.size,
+                    animationDelay: p.delay + 's',
+                    animationDuration: p.duration + 's',
+                    transform: 'rotate(' + p.rotate + 'deg)',
+                    borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+                  }} />
+                );
+              })}
+            </div>
+          );
+        }
+
+        // ─── CHECK ANIMATION COMPONENT ────────────────────────────────────────────
+        function AnimCheck({ type }) {
+          var isCheck = type === 'check';
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <div className={isCheck ? 'anim-check' : 'anim-cross'} style={{
+                width: 80, height: 80, borderRadius: '50%',
+                background: isCheck ? '#34C75920' : '#FF3B3020',
+                border: '3px solid ' + (isCheck ? '#34C759' : '#FF3B30'),
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {isCheck ? (
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                ) : (
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<GonnieApp />);
+    </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js');
+      });
+    }
+  </script>
+
+  <!-- Firebase Push Notifications -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBau5bPYB4QHXnckeesmr7V4-EwnPxlFhQ",
+      authDomain: "gonnie-26d43.firebaseapp.com",
+      projectId: "gonnie-26d43",
+      storageBucket: "gonnie-26d43.firebasestorage.app",
+      messagingSenderId: "964100080332",
+      appId: "1:964100080332:web:f869a37a5b070d2b47f869"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    // initPush() se llama DESPUÉS de que el botón ya obtuvo el permiso.
+    // No vuelve a pedir permiso — solo registra el token FCM.
+    async function initPush() {
+      const log = window.__gonniePushLog || function(){};
+      try {
+        if (!('Notification' in window) || Notification.permission !== 'granted') {
+          log('❌ Sin permiso de notificación');
+          return;
+        }
+
+        log('Esperando SW...');
+        const swReg = await navigator.serviceWorker.ready;
+        log('SW listo: ' + swReg.scope);
+
+        log('Obteniendo token FCM...');
+        const token = await getToken(messaging, {
+          vapidKey: 'BM8WAmPdL5MLA7xOBgFMw-j3CbWGOREtBROEA4-ORv3Gc8KOSUHC3FfNuVI_N11uCcg6sr21cbf4wPbEhVDOOF8',
+          serviceWorkerRegistration: swReg
+        });
+        if (!token) { log('❌ Token FCM vacío'); return; }
+        log('Token: ' + token.slice(0,20) + '...');
+
+        const email = window.__gonnieEmail;
+        log('Email: ' + (email || '❌ vacío'));
+
+        if (email) {
+          const res = await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
+            method: 'PATCH',
+            headers: {
+              'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
+              'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ fcm_token: token })
+          });
+          log(res.ok ? '✓ Token guardado en Supabase' : '❌ Error Supabase: ' + res.status);
+        } else {
+          log('❌ Email vacío — inicia sesión primero');
+        }
+      } catch(e) { log('❌ Excepción: ' + e.message); }
+    }
+
+    onMessage(messaging, function(payload) {
+      const title = (payload.notification && payload.notification.title) || 'Gonnie';
+      const body  = (payload.notification && payload.notification.body)  || '';
+      if (title) new Notification(title, { body, icon: '/icon.png' });
+    });
+
+    // initPush() se llama manualmente desde la app (botón en Ajustes > Notificaciones)
+    window.__initPush = initPush;
+  </script>
+
+</body>
+</html>
