@@ -2278,74 +2278,7 @@
   </script>
 
   <!-- Firebase Push Notifications -->
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBau5bPYB4QHXnckeesmr7V4-EwnPxlFhQ",
-      authDomain: "gonnie-26d43.firebaseapp.com",
-      projectId: "gonnie-26d43",
-      storageBucket: "gonnie-26d43.firebasestorage.app",
-      messagingSenderId: "964100080332",
-      appId: "1:964100080332:web:f869a37a5b070d2b47f869"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const messaging = getMessaging(app);
-
-    // initPush() se llama DESPUÉS de que el botón ya obtuvo el permiso.
-    // No vuelve a pedir permiso — solo registra el token FCM.
-    async function initPush() {
-      const log = window.__gonniePushLog || function(){};
-      try {
-        if (!('Notification' in window) || Notification.permission !== 'granted') {
-          log('❌ Sin permiso de notificación');
-          return;
-        }
-
-        log('Esperando SW...');
-        const swReg = await navigator.serviceWorker.ready;
-        log('SW listo: ' + swReg.scope);
-
-        log('Obteniendo token FCM...');
-        const token = await getToken(messaging, {
-          vapidKey: 'BM8WAmPdL5MLA7xOBgFMw-j3CbWGOREtBROEA4-ORv3Gc8KOSUHC3FfNuVI_N11uCcg6sr21cbf4wPbEhVDOOF8',
-          serviceWorkerRegistration: swReg
-        });
-        if (!token) { log('❌ Token FCM vacío'); return; }
-        log('Token: ' + token.slice(0,20) + '...');
-
-        const email = window.__gonnieEmail;
-        log('Email: ' + (email || '❌ vacío'));
-
-        if (email) {
-          const res = await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
-            method: 'PATCH',
-            headers: {
-              'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
-              'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
-              'Content-Type': 'application/json',
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ fcm_token: token })
-          });
-          log(res.ok ? '✓ Token guardado en Supabase' : '❌ Error Supabase: ' + res.status);
-        } else {
-          log('❌ Email vacío — inicia sesión primero');
-        }
-      } catch(e) { log('❌ Excepción: ' + e.message); }
-    }
-
-    onMessage(messaging, function(payload) {
-      const title = (payload.notification && payload.notification.title) || 'Gonnie';
-      const body  = (payload.notification && payload.notification.body)  || '';
-      if (title) new Notification(title, { body, icon: '/icon.png' });
-    });
-
-    // initPush() se llama manualmente desde la app (botón en Ajustes > Notificaciones)
-    window.__initPush = initPush;
-  </script>
+  
 
 </body>
 </html>
