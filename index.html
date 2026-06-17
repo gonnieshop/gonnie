@@ -13,14 +13,14 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js" crossorigin></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-is/18.2.0/umd/react-is.development.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/recharts@2.8.0/umd/Recharts.js"></script>
+    <script src="https://unpkg.com/react-is@18/umd/react-is.development.js"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
     <style>
       @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -2500,6 +2500,8 @@
 
   <!-- Firebase Push Notifications -->
   <script type="module">
+  (async function() {
+    try {
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
 
@@ -2566,7 +2568,11 @@
 
     // initPush() se llama manualmente desde la app (botón en Ajustes > Notificaciones)
     window.__initPush = initPush;
-  </script>
+      } catch(e) {
+      console.warn('[Gonnie] Firebase no disponible:', e.message);
+    }
+  })();
+</script>
 
 </body>
 </html>
