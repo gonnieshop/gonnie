@@ -1076,6 +1076,83 @@
        
 
         // ─── VISTA 9: PANEL DE CONTROL DE NEGOCIO (BUSINESS MODE / RECHARTS) ──
+        function ClientesTab({ clientes, loadingClientes }) {
+          const [clienteSel, setClienteSel] = useState(null);
+
+          if (clienteSel) {
+            return (
+              <div style={{ padding: '0 18px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+                  <button onClick={function(){ setClienteSel(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: G.brand, fontSize: 22, lineHeight: 1 }}>‹</button>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: G.text, margin: 0 }}>{clienteSel.nombre}</h3>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>{clienteSel.nombre.slice(0,2).toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{clienteSel.nombre}</p>
+                    <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{clienteSel.phone || clienteSel.email}</p>
+                  </div>
+                </div>
+                <div style={{ background: G.text, borderRadius: 16, padding: '18px', marginBottom: 12, textAlign: 'center' }}>
+                  <p style={{ fontSize: 13, color: '#ffffff80', margin: '0 0 4px' }}>Total de citas</p>
+                  <p style={{ fontSize: 40, fontWeight: 900, color: '#fff', margin: 0 }}>{clienteSel.citas + clienteSel.canceladas + clienteSel.inasistencias}</p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                  {[
+                    { label: 'Completadas', value: clienteSel.citas },
+                    { label: 'Canceladas', value: clienteSel.canceladas },
+                    { label: 'Inasistencias', value: clienteSel.inasistencias },
+                  ].map(function(s) {
+                    return (
+                      <div key={s.label} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px', textAlign: 'center' }}>
+                        <p style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: '0 0 4px' }}>{s.value}</p>
+                        <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{s.label}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                {clienteSel.phone && (
+                  <a href={'tel:' + clienteSel.phone} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: G.brand, borderRadius: 14, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', textDecoration: 'none', marginTop: 8 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                    Llamar
+                  </a>
+                )}
+              </div>
+            );
+          }
+
+          return (
+            <div style={{ padding: '0 18px' }}>
+              <div style={{ marginBottom: 14 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: G.muted }}>{clientes.length} CLIENTES</span>
+              </div>
+              {loadingClientes && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
+              {!loadingClientes && clientes.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <p style={{ fontSize: 14, color: G.muted }}>Aún no hay clientes</p>
+                </div>
+              )}
+              {!loadingClientes && clientes.map(function(c, i) {
+                return (
+                  <div key={i} onClick={function(){ setClienteSel(c); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, marginBottom: 8, cursor: 'pointer' }}>
+                    <div style={{ width: 42, height: 42, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{c.nombre.slice(0,2).toUpperCase()}</span>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nombre}</p>
+                      <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{c.phone || c.email}</p>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        }
+
         function BusinessScreen() {
           const [citas, setCitas] = useState([]);
           const [loading, setLoading] = useState(true);
@@ -1457,82 +1534,7 @@
               )}
 
               {/* PESTAÑA AGENDA — Lista compacta de citas */}
-              {tab === 'clientes' && (function() {
-                const [clienteSel, setClienteSel] = useState(null);
-
-                if (clienteSel) {
-                  return (
-                    <div style={{ padding: '0 18px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                        <button onClick={function(){ setClienteSel(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: G.brand, fontSize: 22, lineHeight: 1 }}>‹</button>
-                        <h3 style={{ fontSize: 16, fontWeight: 800, color: G.text, margin: 0 }}>{clienteSel.nombre}</h3>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
-                        <div style={{ width: 56, height: 56, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <span style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>{clienteSel.nombre.slice(0,2).toUpperCase()}</span>
-                        </div>
-                        <div>
-                          <p style={{ fontSize: 15, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{clienteSel.nombre}</p>
-                          <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{clienteSel.phone || clienteSel.email}</p>
-                        </div>
-                      </div>
-                      <div style={{ background: G.text, borderRadius: 16, padding: '18px', marginBottom: 12, textAlign: 'center' }}>
-                        <p style={{ fontSize: 13, color: '#ffffff80', margin: '0 0 4px' }}>Total de citas</p>
-                        <p style={{ fontSize: 40, fontWeight: 900, color: '#fff', margin: 0 }}>{clienteSel.citas + clienteSel.canceladas + clienteSel.inasistencias}</p>
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-                        {[
-                          { label: 'Completadas', value: clienteSel.citas },
-                          { label: 'Canceladas', value: clienteSel.canceladas },
-                          { label: 'Inasistencias', value: clienteSel.inasistencias },
-                        ].map(function(s) {
-                          return (
-                            <div key={s.label} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px', textAlign: 'center' }}>
-                              <p style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: '0 0 4px' }}>{s.value}</p>
-                              <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{s.label}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {clienteSel.phone && (
-                        <a href={'tel:' + clienteSel.phone} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: G.brand, borderRadius: 14, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', textDecoration: 'none', marginTop: 8 }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                          Llamar
-                        </a>
-                      )}
-                    </div>
-                  );
-                }
-
-                return (
-                  <div style={{ padding: '0 18px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: G.muted }}>{clientes.length} CLIENTES</span>
-                    </div>
-                    {loadingClientes && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
-                    {!loadingClientes && clientes.length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                        <p style={{ fontSize: 14, color: G.muted }}>Aún no hay clientes</p>
-                      </div>
-                    )}
-                    {!loadingClientes && clientes.map(function(c, i) {
-                      return (
-                        <div key={i} onClick={function(){ setClienteSel(c); }}
-                          style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, marginBottom: 8, cursor: 'pointer' }}>
-                          <div style={{ width: 42, height: 42, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{c.nombre.slice(0,2).toUpperCase()}</span>
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nombre}</p>
-                            <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{c.phone || c.email}</p>
-                          </div>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
+              {tab === 'clientes' && <ClientesTab clientes={clientes} loadingClientes={loadingClientes} />}
 
               {tab === 'agenda' && (
               <div style={{ padding: '0 18px' }}>
