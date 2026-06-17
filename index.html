@@ -431,7 +431,7 @@
               }).catch(function(){});
           }, [user && user.email]);
 
-         const nombre = (user && user.user_metadata && user.user_metadata.full_name && user.user_metadata.full_name.split(' ')[0]) || 'tú';
+         const nombre = user?.user_metadata?.full_name?.split(" ")[0] || "tú";
           return (
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
               <div style={{ padding: "16px 18px 12px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -755,7 +755,7 @@
           const [totalResenas, setTotalResenas] = useState(null);
 
           useEffect(() => {
-            if (!barberia || !barberia.id) return;
+            if (!barberia?.id) return;
             setLoading(true);
             Promise.all([
               dbGet("barberos", `?barberia_id=eq.${barberia.id}&select=*`),
@@ -827,7 +827,7 @@
                 {loading && <Skeleton h={80} />}
 
                 {tab === "barberos" && !loading && barberos.map((br, idx) => (
-                  <div key={br.id} onClick={() => setSelB(br)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: (selB && selB.id === br.id) ? `${G.brand}10` : G.card, border: `0.5px solid ${(selB && selB.id === br.id) ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
+                  <div key={br.id} onClick={() => setSelB(br)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: selB?.id === br.id ? `${G.brand}10` : G.card, border: `0.5px solid ${selB?.id === br.id ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
                     {br.photo_url
                       ? <img src={br.photo_url} style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} alt={br.name} />
                       : <Av txt={br.initials || br.name.slice(0,2).toUpperCase()} bg={BARBER_COLORS[idx % 4].bg} color={BARBER_COLORS[idx % 4].color} />
@@ -838,7 +838,7 @@
                 ))}
 
                 {tab === "servicios" && !loading && servicios.map(sv => (
-                  <div key={sv.id} onClick={() => setSelS(sv)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: (selS && selS.id === sv.id) ? `${G.brand}10` : G.card, border: `0.5px solid ${(selS && selS.id === sv.id) ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
+                  <div key={sv.id} onClick={() => setSelS(sv)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: selS?.id === sv.id ? `${G.brand}10` : G.card, border: `0.5px solid ${selS?.id === sv.id ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
                     <span dangerouslySetInnerHTML={{ __html: getSvgIcon(sv.icon || "✂️", selS && selS.id === sv.id ? G.brand : "#1C1C1E") }} />
                     <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 600, color: "#1C1C1E", margin: 0 }}>{sv.name}</p><p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>⏱ {sv.duration_min} min</p></div>
                     <p style={{ fontSize: 16, fontWeight: 800, color: "#1C1C1E" }}>{sv.price}€</p>
@@ -876,8 +876,8 @@
   barberia_id: booking.barberia.id,
   barbero_id: booking.bar.id,
   servicio_id: booking.svc.id,
-  client_name: (user && user.user_metadata && user.user_metadata.full_name) || 'Cliente',
-  client_email: (user && user.email) || '',
+  client_name: user?.user_metadata?.full_name || "Cliente",
+  client_email: user?.email || "",
   date,
   time: slot,
   price: booking.svc.price,
@@ -888,16 +888,16 @@
               setConfirmedAppt(payload);
               // Enviar emails de confirmación
               await sendConfirmationEmail({
-                barberia: (booking.barberia && booking.barberia.name) || 'GonnieBarbershop',
-                barbero: (booking.bar && booking.bar.name) || 'Barbero',
-                servicio: (booking.svc && booking.svc.name) || 'Servicio',
+                barberia: booking.barberia?.name || "GonnieBarbershop",
+                barbero: booking.bar?.name || "Barbero",
+                servicio: booking.svc?.name || "Servicio",
                 fecha: date,
                 hora: slot,
-                precio: (booking.svc && booking.svc.price) || 0,
-                cliente: (user && user.user_metadata && user.user_metadata.full_name) || (user && user.email) || 'Cliente',
-                email_cliente: (user && user.email) || '',
+                precio: booking.svc?.price || 0,
+                cliente: user?.user_metadata?.full_name || user?.email || "Cliente",
+                email_cliente: user?.email || "",
               });
-              setPuntos(prev => prev + Math.floor(((booking.svc && booking.svc.price) || 0) * 2));
+              setPuntos(prev => prev + Math.floor((booking.svc?.price || 0) * 2));
               nav("confirmed");
             } catch (e) {
               // Si falla la tabla simulada, igual avanza para experiencia fluida
@@ -1078,7 +1078,6 @@
         // ─── VISTA 9: PANEL DE CONTROL DE NEGOCIO (BUSINESS MODE / RECHARTS) ──
         function ClientesTab({ clientes, loadingClientes }) {
           const [clienteSel, setClienteSel] = useState(null);
-
           if (clienteSel) {
             return (
               <div style={{ padding: '0 18px' }}>
@@ -1122,7 +1121,6 @@
               </div>
             );
           }
-
           return (
             <div style={{ padding: '0 18px' }}>
               <div style={{ marginBottom: 14 }}>
@@ -1732,17 +1730,17 @@
           useEffect(() => {
             // Comprobar sesión existente (cuando Google redirige de vuelta)
             supabaseClient.auth.getSession().then(({ data: { session } }) => {
-              setUser((session && session.user) || null);
+              setUser(session?.user || null);
               setAuthLoading(false);
-              if (session && session.user) {
+              if (session?.user) {
                 setSplash(false);
                 cargarPuntos(session.user.email);
               }
             });
             // Escuchar cambios de sesión en tiempo real
             const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-              setUser((session && session.user) || null);
-              if (session && session.user) {
+              setUser(session?.user || null);
+              if (session?.user) {
                 window.__gonnieEmail = session.user.email;
                 setSplash(false);
                 cargarPuntos(session.user.email);
