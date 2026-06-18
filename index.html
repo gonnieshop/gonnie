@@ -1176,7 +1176,7 @@
 
           // Rango horario de la agenda (10–14 y 17–21). Construimos las filas hora a hora.
           var HORA_INI = 10, HORA_FIN = 21; // 21:00 incluido como línea final
-          var PX_POR_HORA = 80;
+          var PX_POR_HORA = 52;
           var horasTimeline = [];
           for (var hh = HORA_INI; hh <= HORA_FIN; hh++) horasTimeline.push(hh);
 
@@ -1401,10 +1401,10 @@
                           <span style={{ position: 'absolute', left: 0, top: -7, fontSize: 12, fontWeight: 700, color: G.text, width: 42 }}>{String(h).padStart(2,'0')}:00</span>
                           {/* Línea */}
                           <div style={{ position: 'absolute', left: 48, right: 0, top: 0, borderTop: '1px solid ' + G.bdr }} />
-                          {/* Marcas de 15/30/45 */}
-                          {idx < horasTimeline.length - 1 && [15,30,45].map(function(min){
-                            return <div key={min} style={{ position: 'absolute', left: 48, right: 0, top: min * (PX_POR_HORA/60), borderTop: '1px dotted ' + G.bdr, opacity: 0.5 }} />;
-                          })}
+                          {/* Marca de media hora */}
+                          {idx < horasTimeline.length - 1 && (
+                            <div style={{ position: 'absolute', left: 48, right: 0, top: 30 * (PX_POR_HORA/60), borderTop: '1px dotted ' + G.bdr, opacity: 0.5 }} />
+                          )}
                           {/* Zona de descanso rayada */}
                           {esDescanso && idx < horasTimeline.length - 1 && (
                             <div style={{ position: 'absolute', left: 48, right: 0, top: 1, height: PX_POR_HORA - 1, background: 'repeating-linear-gradient(45deg, #F2F2F7, #F2F2F7 6px, #E9E9EE 6px, #E9E9EE 12px)' }} />
