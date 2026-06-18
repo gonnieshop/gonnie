@@ -1279,9 +1279,9 @@
           }
 
           return (
-            <div style={{ paddingBottom: 90 }}>
-              {/* Header */}
-              <div style={{ padding: '20px 18px 0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+              {/* Header FIJO */}
+              <div style={{ padding: '20px 18px 0', flexShrink: 0 }}>
                 {/* Fila título + fecha navegable */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 2px' }}>
                   <button onClick={function(){ cambiarSemana(-1); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, color: G.text, fontSize: 20, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
@@ -1309,18 +1309,21 @@
                   })}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '14px 0 4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '14px 0 12px' }}>
                   <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: G.text }}>Agenda</h2>
                   <button onClick={function(){ setShowNuevaCita(!showNuevaCita); setNcDone(false); }}
                     style={{ background: G.brand, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Nueva cita
                   </button>
                 </div>
+              </div>
 
+              {/* ZONA SCROLLEABLE: panel nueva cita + stats + PDF + timeline */}
+              <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
 
                 {/* Panel nueva cita */}
                 {showNuevaCita && (
-                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 16 }}>
+                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 16, marginTop: 4 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                       <p style={{ fontSize: 14, fontWeight: 800, color: G.text, margin: 0 }}>Nueva cita manual</p>
                       <button onClick={function(){ setShowNuevaCita(false); }} style={{ background: G.card2, border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 14, color: G.muted }}>✕</button>
@@ -1385,11 +1388,10 @@
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                   Exportar PDF del mes
                 </button>
-              </div>
 
-              {/* Timeline */}
-              <div style={{ padding: '0 18px' }}>
-                {loading && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
+                {/* Timeline */}
+                <div>
+                  {loading && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
                 {!loading && (
                   <div style={{ position: 'relative', marginTop: 4 }}>
                     {/* Filas de horas (fondo) */}
@@ -1658,8 +1660,8 @@
           return (
             <div className="flex justify-center bg-black min-h-screen">
               <InstallBanner />
-              <div style={{ width: "100%", maxWidth: 420, background: G.bg, minHeight: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
-                <div style={{ flex: 1, overflowY: "auto" }}>
+              <div style={{ width: "100%", maxWidth: 420, background: G.bg, height: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
+                <div style={{ flex: 1, minHeight: 0, overflowY: mode === "business" ? "hidden" : "auto" }}>
                   {mode === "business" ? (
                     <BusinessScreen />
                   ) : (
