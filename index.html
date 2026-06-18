@@ -1112,7 +1112,7 @@
           useEffect(function() {
             setLoading(true);
             // Citas del día seleccionado
-            dbGet('appointments', '?date=eq.' + selectedDate + '&order=time.asc&select=*,barberos(name),servicios(name,price)')
+            dbGet('appointments', '?date=eq.' + selectedDate + '&order=time.asc&select=*,barberos(name),servicios(name,price,duration_min)')
               .then(function(data) {
                 var citas = Array.isArray(data) ? data : [];
                 var emails = [...new Set(citas.map(function(c){ return c.client_email; }).filter(Boolean))];
@@ -1141,6 +1141,50 @@
           }, [selectedDate]);
 
           function formatHora(t) { return t ? t.slice(0,5) : ''; }
+
+          // ─── Helpers para la vista timeline ───
+          var DIAS_SEMANA = ['lun','mar','mié','jue','vie','sáb','dom'];
+          var MESES_CORTO = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+
+          function parseFecha(str) {
+            var p = str.split('-');
+            return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+          }
+          function fechaAStr(d) {
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+          }
+          // Lunes de la semana de la fecha seleccionada
+          function lunesDeSemana(d) {
+            var copia = new Date(d);
+            var dow = (copia.getDay() + 6) % 7; // 0 = lunes
+            copia.setDate(copia.getDate() - dow);
+            return copia;
+          }
+
+          var fechaSel = parseFecha(selectedDate);
+          var lunes = lunesDeSemana(fechaSel);
+          var diasSemana = DIAS_SEMANA.map(function(_, i) {
+            var d = new Date(lunes);
+            d.setDate(lunes.getDate() + i);
+            return d;
+          });
+          function cambiarSemana(delta) {
+            var nueva = new Date(fechaSel);
+            nueva.setDate(nueva.getDate() + delta * 7);
+            setSelectedDate(fechaAStr(nueva));
+          }
+
+          // Rango horario de la agenda (10–14 y 17–21). Construimos las filas hora a hora.
+          var HORA_INI = 10, HORA_FIN = 21; // 21:00 incluido como línea final
+          var PX_POR_HORA = 80;
+          var horasTimeline = [];
+          for (var hh = HORA_INI; hh <= HORA_FIN; hh++) horasTimeline.push(hh);
+
+          // Posición vertical en px de una hora:minuto dentro del timeline
+          function topDeHora(h, m) { return ((h - HORA_INI) * 60 + m) * (PX_POR_HORA / 60); }
+
+          function colorEstado(c) { return estadoCita(c).color; }
+
 
           var confirmadas = citas.filter(function(c){ return c.status === 'confirmed'; });
           var canceladas  = citas.filter(function(c){ return c.status === 'cancelled'; });
@@ -1238,15 +1282,41 @@
             <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
               {/* Header */}
               <div style={{ padding: '20px 18px 0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 4px' }}>
-                  <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: G.text }}>Agenda del día</h2>
+                {/* Fila título + fecha navegable */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 2px' }}>
+                  <button onClick={function(){ cambiarSemana(-1); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, color: G.text, fontSize: 20, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
+                  <div style={{ textAlign: 'center', flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 17, fontWeight: 800, color: G.text, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {fechaSel.getDate()} {MESES_CORTO[fechaSel.getMonth()]} {String(fechaSel.getFullYear()).slice(2)}
+                    </p>
+                    <p style={{ fontSize: 12, color: G.muted, margin: '1px 0 0', fontWeight: 600 }}>10:00–14:00 · 17:00–21:00</p>
+                  </div>
+                  <button onClick={function(){ cambiarSemana(1); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, color: G.text, fontSize: 20, lineHeight: 1, fontFamily: 'inherit' }}>›</button>
+                </div>
+
+                {/* Fila de días de la semana */}
+                <div style={{ display: 'flex', gap: 4, margin: '12px 0 4px' }}>
+                  {diasSemana.map(function(d, i) {
+                    var str = fechaAStr(d);
+                    var activo = str === selectedDate;
+                    return (
+                      <button key={i} onClick={function(){ setSelectedDate(str); }}
+                        style={{ flex: 1, background: activo ? '#1C1C1E' : 'transparent', border: activo ? 'none' : '1px solid ' + G.bdr, borderRadius: 14, padding: '8px 0', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: activo ? 'rgba(255,255,255,0.7)' : G.muted }}>{DIAS_SEMANA[i]}</span>
+                        <span style={{ fontSize: 15, fontWeight: 800, color: activo ? '#fff' : G.text }}>{d.getDate()}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '14px 0 4px' }}>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: G.text }}>Agenda</h2>
                   <button onClick={function(){ setShowNuevaCita(!showNuevaCita); setNcDone(false); }}
                     style={{ background: G.brand, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Nueva cita
                   </button>
                 </div>
-                <input type="date" value={selectedDate} onChange={function(e){ setSelectedDate(e.target.value); }}
-                  style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '10px 14px', borderRadius: 12, color: G.text, fontSize: 14, fontWeight: 700, marginTop: 12, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+
 
                 {/* Panel nueva cita */}
                 {showNuevaCita && (
@@ -1317,38 +1387,66 @@
                 </button>
               </div>
 
-              {/* Lista de citas */}
+              {/* Timeline */}
               <div style={{ padding: '0 18px' }}>
                 {loading && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
-                {!loading && citas.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                    <p style={{ fontSize: 32, margin: '0 0 8px' }}>📅</p>
-                    <p style={{ fontSize: 14, color: G.muted }}>No hay citas para este día</p>
+                {!loading && (
+                  <div style={{ position: 'relative', marginTop: 4 }}>
+                    {/* Filas de horas (fondo) */}
+                    {horasTimeline.map(function(h, idx) {
+                      var esDescanso = h >= 14 && h < 17; // franja cerrada 14–17
+                      return (
+                        <div key={h} style={{ position: 'relative', height: idx === horasTimeline.length - 1 ? 0 : PX_POR_HORA }}>
+                          {/* Etiqueta de hora */}
+                          <span style={{ position: 'absolute', left: 0, top: -7, fontSize: 12, fontWeight: 700, color: G.text, width: 42 }}>{String(h).padStart(2,'0')}:00</span>
+                          {/* Línea */}
+                          <div style={{ position: 'absolute', left: 48, right: 0, top: 0, borderTop: '1px solid ' + G.bdr }} />
+                          {/* Marcas de 15/30/45 */}
+                          {idx < horasTimeline.length - 1 && [15,30,45].map(function(min){
+                            return <div key={min} style={{ position: 'absolute', left: 48, right: 0, top: min * (PX_POR_HORA/60), borderTop: '1px dotted ' + G.bdr, opacity: 0.5 }} />;
+                          })}
+                          {/* Zona de descanso rayada */}
+                          {esDescanso && idx < horasTimeline.length - 1 && (
+                            <div style={{ position: 'absolute', left: 48, right: 0, top: 1, height: PX_POR_HORA - 1, background: 'repeating-linear-gradient(45deg, #F2F2F7, #F2F2F7 6px, #E9E9EE 6px, #E9E9EE 12px)' }} />
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Bloques de citas */}
+                    {citas.map(function(c, i) {
+                      if (!c.time) return null;
+                      var parts = c.time.split(':');
+                      var ch = Number(parts[0]), cm = Number(parts[1]);
+                      if (ch < HORA_INI || ch >= HORA_FIN) return null;
+                      var dur = (c.servicios && c.servicios.duration_min) || 30;
+                      var top = topDeHora(ch, cm);
+                      var alto = Math.max(dur * (PX_POR_HORA/60) - 4, 34);
+                      var col = colorEstado(c);
+                      var horaFin = (function(){
+                        var totalMin = ch * 60 + cm + dur;
+                        return String(Math.floor(totalMin/60)).padStart(2,'0') + ':' + String(totalMin%60).padStart(2,'0');
+                      })();
+                      var nombre = c._nombre || c.cliente || (c.client_email ? c.client_email.split('@')[0] : 'Cliente');
+                      var cancelada = c.status === 'cancelled';
+                      return (
+                        <div key={c.id || i} style={{ position: 'absolute', left: 52, right: 0, top: top, height: alto, background: cancelada ? '#FFEBEA' : col + '20', borderLeft: '3px solid ' + col, borderRadius: 8, padding: '5px 10px', boxSizing: 'border-box', overflow: 'hidden', opacity: cancelada ? 0.7 : 1 }}>
+                          <p style={{ fontSize: 11, fontWeight: 700, color: G.text, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {formatHora(c.time)}–{horaFin} · {nombre}
+                          </p>
+                          {alto > 38 && (
+                            <p style={{ fontSize: 11, color: G.muted, margin: '1px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {(c.servicios && c.servicios.name) || 'Servicio'}{cancelada ? ' · Cancelada' : ''}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
-                {!loading && citas.map(function(c, i) {
-                  var estado = estadoCita(c);
-                  return (
-                    <div key={c.id || i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '14px 16px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 14 }}>
-                      {/* Hora */}
-                      <div style={{ textAlign: 'center', minWidth: 44, flexShrink: 0 }}>
-                        <p style={{ fontSize: 16, fontWeight: 800, color: G.text, margin: 0 }}>{formatHora(c.time)}</p>
-                      </div>
-                      {/* Separador */}
-                      <div style={{ width: 2, height: 44, background: estado.color, borderRadius: 2, flexShrink: 0, opacity: 0.7 }} />
-                      {/* Info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c._nombre || (c.client_email ? c.client_email.split('@')[0] : 'Cliente')}</p>
-                        <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{(c.servicios && c.servicios.name) || 'Servicio'} · {(c.barberos && c.barberos.name) || 'Barbero'}</p>
-                      </div>
-                      {/* Estado + precio */}
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <p style={{ fontSize: 10, fontWeight: 700, color: estado.color, background: estado.color + '18', borderRadius: 20, padding: '3px 8px', margin: '0 0 4px' }}>{estado.label}</p>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: 0 }}>{c.servicios && c.servicios.price ? c.servicios.price + '€' : ''}</p>
-                      </div>
-                    </div>
-                  );
-                })}
+                {!loading && citas.length === 0 && (
+                  <p style={{ fontSize: 13, color: G.muted, textAlign: 'center', marginTop: 16 }}>No hay citas para este día</p>
+                )}
               </div>
             </div>
           );
@@ -1389,7 +1487,10 @@
               </div>
               {user && user.email === 'reservasgonnie@gmail.com' && (
                 <GhostBtn onClick={function(){ setMode(mode === 'customer' ? 'business' : 'customer'); }}>
-                  {mode === 'customer' ? '🔄 Cambiar a Modo Negocio' : '🔄 Cambiar a Modo Cliente'}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                    <span dangerouslySetInnerHTML={{ __html: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + G.muted + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9"/><path d="M3 9h18"/><path d="M9 22V12h6v10"/></svg>' }} />
+                    {mode === 'customer' ? 'Cambiar a Modo Negocio' : 'Cambiar a Modo Cliente'}
+                  </span>
                 </GhostBtn>
               )}
               <button onClick={signOut} style={{ marginTop: 12, width: '100%', background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 14, padding: '12px', fontSize: 13, color: G.red, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
