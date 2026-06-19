@@ -1077,6 +1077,8 @@
           const [clientes, setClientes] = useState([]);
           const [loadingClientes, setLoadingClientes] = useState(false);
           const [showDesglose, setShowDesglose] = useState(false);
+          const [citaSel, setCitaSel] = useState(null);
+          const [guardandoPago, setGuardandoPago] = useState(false);
           const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
           const [ingresosMes, setIngresosMes] = useState(0);
           const [citasMes, setCitasMes] = useState([]);
@@ -1181,6 +1183,22 @@
           }, [panel]);
 
           function formatHora(t) { return t ? t.slice(0,5) : ''; }
+
+          // Guardar método de pago de una cita
+          async function guardarPago(cita, metodo) {
+            setGuardandoPago(true);
+            try {
+              await fetch(SUPABASE_URL + '/rest/v1/appointments?id=eq.' + encodeURIComponent(cita.id), {
+                method: 'PATCH',
+                headers: { ...DB_HEADERS },
+                body: JSON.stringify({ payment_method: metodo })
+              });
+              // Reflejar al instante en la lista local
+              setCitas(function(prev){ return prev.map(function(c){ return c.id === cita.id ? Object.assign({}, c, { payment_method: metodo }) : c; }); });
+              setCitaSel(null);
+            } catch(e) {}
+            setGuardandoPago(false);
+          }
 
           // ─── Helpers para la vista timeline ───
           var DIAS_SEMANA = ['lun','mar','mié','jue','vie','sáb','dom'];
@@ -1409,14 +1427,15 @@
                       {[
                         { id: 'efectivo', label: 'Efectivo', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>' },
                         { id: 'tarjeta', label: 'Tarjeta', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>' },
-                        { id: 'bizum', label: 'Bizum', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M8 8l8 8M16 8l-8 8"/></svg>' },
+                        { id: 'bizum', label: 'Bizum', color: '#00CFB4', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M8 8l8 8M16 8l-8 8"/></svg>' },
                       ].map(function(m, i, arr) {
                         var monto = desglosePagos[m.id];
                         var pct = ingresosMes > 0 ? Math.round((monto / ingresosMes) * 100) : 0;
+                        var col = m.color || G.brand;
                         return (
                           <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < arr.length - 1 || desglosePagos.otro > 0 ? '1px solid ' + G.bdr : 'none' }}>
-                            <span style={{ display: 'inline-flex', width: 36, height: 36, borderRadius: 10, background: G.brand + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                              dangerouslySetInnerHTML={{ __html: m.svg.replace(/COL/g, G.brand) }} />
+                            <span style={{ display: 'inline-flex', width: 36, height: 36, borderRadius: 10, background: col + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                              dangerouslySetInnerHTML={{ __html: m.svg.replace(/COL/g, col) }} />
                             <span style={{ flex: 1 }}>
                               <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: G.text }}>{m.label}</span>
                               <span style={{ display: 'block', fontSize: 11, color: G.muted }}>{pct}% del total</span>
@@ -1611,10 +1630,17 @@
                       })();
                       var nombre = c._nombre || c.cliente || (c.client_email ? c.client_email.split('@')[0] : 'Cliente');
                       var cancelada = c.status === 'cancelled';
+                      var metodoPago = c.payment_method ? String(c.payment_method).toLowerCase() : null;
+                      var iconoPago = '';
+                      if (metodoPago) {
+                        if (metodoPago.indexOf('efect') >= 0 || metodoPago === 'cash') iconoPago = '💶';
+                        else if (metodoPago.indexOf('tarj') >= 0 || metodoPago === 'card') iconoPago = '💳';
+                        else if (metodoPago.indexOf('bizum') >= 0) iconoPago = '📲';
+                      }
                       return (
-                        <div key={c.id || i} style={{ position: 'absolute', left: 52, right: 0, top: top, height: alto, background: cancelada ? '#FFEBEA' : col + '20', borderLeft: '3px solid ' + col, borderRadius: 8, padding: '5px 10px', boxSizing: 'border-box', overflow: 'hidden', opacity: cancelada ? 0.7 : 1 }}>
+                        <div key={c.id || i} onClick={function(){ if (!cancelada) setCitaSel(c); }} style={{ position: 'absolute', left: 52, right: 0, top: top, height: alto, background: cancelada ? '#FFEBEA' : col + '20', borderLeft: '3px solid ' + col, borderRadius: 8, padding: '5px 10px', boxSizing: 'border-box', overflow: 'hidden', opacity: cancelada ? 0.7 : 1, cursor: cancelada ? 'default' : 'pointer' }}>
                           <p style={{ fontSize: 11, fontWeight: 700, color: G.text, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {formatHora(c.time)}–{horaFin} · {nombre}
+                            {iconoPago ? iconoPago + ' ' : ''}{formatHora(c.time)}–{horaFin} · {nombre}
                           </p>
                           {alto > 38 && (
                             <p style={{ fontSize: 11, color: G.muted, margin: '1px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -1630,6 +1656,43 @@
                   <p style={{ fontSize: 13, color: G.muted, textAlign: 'center', marginTop: 16 }}>No hay citas para este día</p>
                 )}
               </div>
+
+              {/* Modal método de pago */}
+              {citaSel && (
+                <div onClick={function(){ if(!guardandoPago) setCitaSel(null); }}
+                  style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', zIndex: 50 }}>
+                  <div onClick={function(e){ e.stopPropagation(); }}
+                    style={{ width: '100%', background: G.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '22px 18px 28px' }}>
+                    <div style={{ width: 40, height: 4, background: G.bdr, borderRadius: 2, margin: '0 auto 18px' }} />
+                    <p style={{ fontSize: 12, color: G.muted, margin: '0 0 2px' }}>{formatHora(citaSel.time)} · {(citaSel._nombre || (citaSel.client_email ? citaSel.client_email.split('@')[0] : 'Cliente'))}</p>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: G.text, margin: '0 0 4px' }}>Método de pago</h3>
+                    <p style={{ fontSize: 13, color: G.muted, margin: '0 0 18px' }}>{(citaSel.servicios && citaSel.servicios.name) || 'Servicio'} · {(citaSel.servicios && citaSel.servicios.price) || 0}€</p>
+                    {[
+                      { id: 'efectivo', label: 'Efectivo', color: G.brand, svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>' },
+                      { id: 'tarjeta', label: 'Tarjeta', color: G.brand, svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>' },
+                      { id: 'bizum', label: 'Bizum', color: '#00CFB4', svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M8 8l8 8M16 8l-8 8"/></svg>' },
+                    ].map(function(m) {
+                      var activo = citaSel.payment_method && String(citaSel.payment_method).toLowerCase().indexOf(m.id) >= 0;
+                      var col = m.color;
+                      return (
+                        <button key={m.id} onClick={function(){ guardarPago(citaSel, m.id); }} disabled={guardandoPago}
+                          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, background: activo ? col + '14' : G.card, border: '1px solid ' + (activo ? col : G.bdr), borderRadius: 16, padding: '15px 16px', marginBottom: 10, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                          <span style={{ display: 'inline-flex', width: 40, height: 40, borderRadius: 12, background: col + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                            dangerouslySetInnerHTML={{ __html: m.svg.replace(/COL/g, col) }} />
+                          <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: G.text }}>{m.label}</span>
+                          {activo && <span style={{ fontSize: 18, color: col, fontWeight: 800 }}>✓</span>}
+                        </button>
+                      );
+                    })}
+                    {citaSel.payment_method && (
+                      <button onClick={function(){ guardarPago(citaSel, null); }} disabled={guardandoPago}
+                        style={{ width: '100%', background: 'transparent', border: 'none', padding: '8px', fontSize: 13, color: G.muted, cursor: 'pointer', fontFamily: 'inherit', marginTop: 2 }}>
+                        Quitar método de pago
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
         }
