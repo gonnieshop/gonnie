@@ -790,9 +790,9 @@
                   </button>
                 </div>
                 <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
-                  <a href="tel:662528459" style={{ display: "flex", alignItems: "center", gap: 6, background: G.card, border: "1px solid " + G.bdr, borderRadius: 10, padding: "7px 12px", fontSize: 12, fontWeight: 600, color: G.text, textDecoration: "none", flex: 1 }}>
+                  <a href="tel:663528459" style={{ display: "flex", alignItems: "center", gap: 6, background: G.card, border: "1px solid " + G.bdr, borderRadius: 10, padding: "7px 12px", fontSize: 12, fontWeight: 600, color: G.text, textDecoration: "none", flex: 1 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                    662 528 459
+                    663 528 459
                   </a>
                   <a href="https://instagram.com/gonniebarbershop" target="_blank" style={{ display: "flex", alignItems: "center", gap: 6, background: G.card, border: "1px solid " + G.bdr, borderRadius: 10, padding: "7px 12px", fontSize: 12, fontWeight: 600, color: G.text, textDecoration: "none", flex: 1 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill={G.brand}/></svg>
@@ -1071,8 +1071,11 @@
 
         // ─── VISTA 9: PANEL DE CONTROL DE NEGOCIO (BUSINESS MODE / RECHARTS) ──
         function BusinessScreen() {
+          const [panel, setPanel] = useState('menu'); // menu | agenda | stats | clientes
           const [citas, setCitas] = useState([]);
           const [loading, setLoading] = useState(true);
+          const [clientes, setClientes] = useState([]);
+          const [loadingClientes, setLoadingClientes] = useState(false);
           const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
           const [ingresosMes, setIngresosMes] = useState(0);
           const [citasMes, setCitasMes] = useState([]);
@@ -1139,6 +1142,42 @@
                 setCitasMes(arr);
               }).catch(function(){});
           }, [selectedDate]);
+
+          // Cargar lista de clientes (al abrir el panel)
+          useEffect(function() {
+            if (panel !== 'clientes') return;
+            setLoadingClientes(true);
+            dbGet('appointments', '?order=date.desc&select=client_email,client_name,date,status,servicios(price)')
+              .then(function(data) {
+                var arr = Array.isArray(data) ? data : [];
+                var mapa = {};
+                arr.forEach(function(c) {
+                  var key = c.client_email || c.client_name;
+                  if (!key) return;
+                  if (!mapa[key]) {
+                    mapa[key] = { email: c.client_email, nombre: c.client_name || (c.client_email ? c.client_email.split('@')[0] : 'Cliente'), visitas: 0, gastado: 0, ultima: c.date };
+                  }
+                  if (c.status === 'confirmed') {
+                    mapa[key].visitas += 1;
+                    mapa[key].gastado += (c.servicios && c.servicios.price) || 0;
+                  }
+                  if (c.date > mapa[key].ultima) mapa[key].ultima = c.date;
+                });
+                // Completar nombres desde profiles
+                var emails = Object.keys(mapa).filter(function(k){ return mapa[k].email; }).map(function(k){ return mapa[k].email; });
+                var lista = Object.keys(mapa).map(function(k){ return mapa[k]; }).sort(function(a,b){ return b.visitas - a.visitas; });
+                if (emails.length === 0) { setClientes(lista); setLoadingClientes(false); return; }
+                dbGet('profiles', '?id=in.(' + emails.map(encodeURIComponent).join(',') + ')&select=id,full_name')
+                  .then(function(perfiles) {
+                    var pm = {};
+                    (perfiles || []).forEach(function(p){ if (p.full_name) pm[p.id] = p.full_name; });
+                    lista.forEach(function(cl){ if (cl.email && pm[cl.email]) cl.nombre = pm[cl.email]; });
+                    setClientes(lista);
+                    setLoadingClientes(false);
+                  }).catch(function(){ setClientes(lista); setLoadingClientes(false); });
+              })
+              .catch(function(){ setLoadingClientes(false); });
+          }, [panel]);
 
           function formatHora(t) { return t ? t.slice(0,5) : ''; }
 
@@ -1278,10 +1317,112 @@
             doc.save('Gonnie_' + mesNombre.replace(' ', '_') + '.pdf');
           }
 
+          // ─── MENÚ PRINCIPAL ───
+          if (panel === 'menu') {
+            var opciones = [
+              { id: 'agenda', label: 'Agenda', desc: 'Citas del día y semana', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
+              { id: 'stats', label: 'Estadísticas', desc: 'Ingresos y rendimiento', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>' },
+              { id: 'clientes', label: 'Clientes', desc: 'Tu base de clientes', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>' },
+            ];
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                <div style={{ padding: '28px 18px 0', flexShrink: 0 }}>
+                  <h1 style={{ fontSize: 26, fontWeight: 800, color: G.text, margin: '0 0 2px' }}>Panel de negocio</h1>
+                  <p style={{ fontSize: 14, color: G.muted, margin: 0 }}>Gestiona tu barbería</p>
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '22px 18px 90px' }}>
+                  {opciones.map(function(o) {
+                    return (
+                      <button key={o.id} onClick={function(){ setPanel(o.id); }}
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 16, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 18, padding: '18px 18px', marginBottom: 14, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                        <span style={{ display: 'inline-flex', width: 48, height: 48, borderRadius: 14, background: G.brand + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                          dangerouslySetInnerHTML={{ __html: o.svg.replace(/COL/g, G.brand) }} />
+                        <span style={{ flex: 1 }}>
+                          <span style={{ display: 'block', fontSize: 17, fontWeight: 800, color: G.text }}>{o.label}</span>
+                          <span style={{ display: 'block', fontSize: 12, color: G.muted, marginTop: 2 }}>{o.desc}</span>
+                        </span>
+                        <span style={{ fontSize: 22, color: G.muted }}>›</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+
+          // ─── PANEL ESTADÍSTICAS ───
+          if (panel === 'stats') {
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <button onClick={function(){ setPanel('menu'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
+                  <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>Estadísticas</h1>
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                    {[
+                      { label: 'Citas hoy', value: confirmadas.length },
+                      { label: 'Canceladas hoy', value: canceladas.length },
+                      { label: 'Ingresos hoy', value: ingresos.toFixed(0) + '€' },
+                      { label: 'Ingresos del mes', value: ingresosMes.toFixed(0) + '€' },
+                    ].map(function(s) {
+                      return (
+                        <div key={s.label} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '18px 14px', textAlign: 'center' }}>
+                          <p style={{ fontSize: 26, fontWeight: 800, color: G.text, margin: '0 0 4px' }}>{s.value}</p>
+                          <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{s.label}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 12 }}>
+                    <p style={{ fontSize: 12, color: G.muted, margin: '0 0 4px' }}>Citas confirmadas este mes</p>
+                    <p style={{ fontSize: 28, fontWeight: 800, color: G.text, margin: 0 }}>{citasMes.length}</p>
+                  </div>
+                  <button onClick={exportarPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: G.brand, border: 'none', borderRadius: 14, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    Exportar PDF del mes
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // ─── PANEL CLIENTES ───
+          if (panel === 'clientes') {
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <button onClick={function(){ setPanel('menu'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
+                  <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>Clientes</h1>
+                  {!loadingClientes && <span style={{ fontSize: 13, color: G.muted, marginLeft: 'auto' }}>{clientes.length}</span>}
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
+                  {loadingClientes && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
+                  {!loadingClientes && clientes.length === 0 && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Aún no hay clientes</p>}
+                  {!loadingClientes && clientes.map(function(cl, i) {
+                    var inicial = (cl.nombre || '?').charAt(0).toUpperCase();
+                    return (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '14px 16px', marginBottom: 10 }}>
+                        <span style={{ display: 'inline-flex', width: 42, height: 42, borderRadius: 21, background: G.brand + '18', color: G.brand, alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 800, flexShrink: 0 }}>{inicial}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cl.nombre}</p>
+                          <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{cl.visitas} {cl.visitas === 1 ? 'visita' : 'visitas'} · {cl.gastado}€ gastados</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+
+          // ─── PANEL AGENDA (por defecto) ───
           return (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
               {/* Header FIJO */}
               <div style={{ padding: '20px 18px 0', flexShrink: 0 }}>
+                {/* Fila botón volver */}
+                <button onClick={function(){ setPanel('menu'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '0 0 8px', color: G.muted, fontSize: 13, fontWeight: 600, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}>‹ Panel de negocio</button>
                 {/* Fila título + fecha navegable */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 2px' }}>
                   <button onClick={function(){ cambiarSemana(-1); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, color: G.text, fontSize: 20, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
@@ -1368,26 +1509,6 @@
                     </button>
                   </div>
                 )}
-
-                {/* Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 20 }}>
-                  {[
-                    { label: 'Citas hoy', value: confirmadas.length },
-                    { label: 'Canceladas', value: canceladas.length },
-                    { label: 'Ingresos mes', value: ingresosMes.toFixed(0) + '€' },
-                  ].map(function(s) {
-                    return (
-                      <div key={s.label} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '12px 10px', textAlign: 'center' }}>
-                        <p style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '0 0 2px' }}>{s.value}</p>
-                        <p style={{ fontSize: 10, color: G.muted, margin: 0 }}>{s.label}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-                <button onClick={exportarPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '11px', fontSize: 13, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                  Exportar PDF del mes
-                </button>
 
                 {/* Timeline */}
                 {loading && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
