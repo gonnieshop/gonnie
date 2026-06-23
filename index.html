@@ -407,7 +407,44 @@
           const [rescheduleSlot, setRescheduleSlot] = useState('');
           const [rescheduling, setRescheduling] = useState(false);
           const [rescheduleDone, setRescheduleDone] = useState(false);
+          const [showNotis, setShowNotis] = useState(false);
+          const [notis, setNotis] = useState([]);
           const slots = ['10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
+
+          // Construir avisos a partir de las citas del cliente
+          useEffect(function() {
+            var email = user && user.email;
+            if (!email) return;
+            var hoy = new Date(); hoy.setHours(0,0,0,0);
+            dbGet('appointments', '?client_email=eq.' + encodeURIComponent(email) + '&order=date.desc,time.desc&limit=20&select=*,servicios(name),barberos(name)')
+              .then(function(d) {
+                if (!Array.isArray(d)) { setNotis([]); return; }
+                var avisos = [];
+                d.forEach(function(c) {
+                  if (!c.date) return;
+                  var fechaCita = new Date(c.date + 'T00:00:00');
+                  var difDias = Math.round((fechaCita - hoy) / 86400000);
+                  var servicio = (c.servicios && c.servicios.name) || 'tu cita';
+                  var horaTxt = c.time ? c.time.slice(0,5) : '';
+                  if (c.status === 'cancelled') {
+                    avisos.push({ tipo: 'cancel', titulo: 'Cita cancelada', texto: servicio + ' del ' + c.date + ' fue cancelada', date: c.date });
+                  } else if (difDias === 0) {
+                    avisos.push({ tipo: 'hoy', titulo: '¡Tu cita es hoy!', texto: servicio + ' a las ' + horaTxt, date: c.date });
+                  } else if (difDias === 1) {
+                    avisos.push({ tipo: 'manana', titulo: 'Cita mañana', texto: servicio + ' a las ' + horaTxt, date: c.date });
+                  } else if (difDias > 1) {
+                    avisos.push({ tipo: 'futura', titulo: 'Cita confirmada', texto: servicio + ' el ' + c.date + ' a las ' + horaTxt, date: c.date });
+                  } else {
+                    avisos.push({ tipo: 'pasada', titulo: '¿Qué tal quedó?', texto: 'Esperamos que disfrutaras de ' + servicio, date: c.date });
+                  }
+                });
+                // Aviso de fidelización
+                if (ptsSiguiente > 0 && ptsSiguiente <= 60) {
+                  avisos.unshift({ tipo: 'puntos', titulo: 'Estás cerca del siguiente nivel', texto: 'Te faltan ' + ptsSiguiente + ' puntos para ' + getNivel(puntos + ptsSiguiente).nombre, date: '' });
+                }
+                setNotis(avisos);
+              }).catch(function(){ setNotis([]); });
+          }, [user && user.email, puntos]);
 
           useEffect(function() {
             var email = user && user.email;
@@ -427,14 +464,18 @@
                   <GonnieLogo size={22} />
                   <p style={{ fontSize: 11, color: "#1C1C1E", margin: 0, paddingLeft: 2 }}>Buenas 👋 {nombre}</p>
                 </div>
-                <div style={{ position: "relative" }}>
+                <div style={{ position: "relative", cursor: "pointer" }} onClick={function(){ setShowNotis(true); }}>
                   <div style={{ width: 38, height: 38, borderRadius: "50%", background: G.card, border: `0.5px solid ${G.bdr}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                       <path d="M13.73 21a2 2 0 01-3.46 0"/>
                     </svg>
                   </div>
-                  <div style={{ position: "absolute", top: 2, right: 2, width: 9, height: 9, borderRadius: "50%", background: G.brand, border: `2px solid ${G.bg}` }} />
+                  {notis.length > 0 && (
+                    <div style={{ position: "absolute", top: -2, right: -2, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, background: G.brand, border: `2px solid ${G.bg}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: "#fff" }}>{notis.length > 9 ? '9+' : notis.length}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -595,6 +636,41 @@
 
                
             </div>
+
+              {/* Panel de notificaciones */}
+              {showNotis && (
+                <div onClick={function(){ setShowNotis(false); }}
+                  style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "flex-start", justifyContent: "flex-end", zIndex: 200 }}>
+                  <div onClick={function(e){ e.stopPropagation(); }}
+                    style={{ width: "88%", maxWidth: 380, height: "100%", background: G.bg, boxShadow: "-4px 0 24px rgba(0,0,0,0.15)", display: "flex", flexDirection: "column" }}>
+                    <div style={{ padding: "20px 18px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid " + G.bdr }}>
+                      <h3 style={{ fontSize: 18, fontWeight: 800, color: G.text, margin: 0 }}>Notificaciones</h3>
+                      <button onClick={function(){ setShowNotis(false); }} style={{ background: "transparent", border: "none", fontSize: 22, color: G.muted, cursor: "pointer", lineHeight: 1, fontFamily: "inherit" }}>×</button>
+                    </div>
+                    <div style={{ flex: 1, overflowY: "auto", padding: "14px 18px 30px" }}>
+                      {notis.length === 0 && (
+                        <div style={{ textAlign: "center", padding: "60px 0", color: G.muted }}>
+                          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={G.bdr} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 auto 12px" }}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                          <p style={{ fontSize: 13, margin: 0 }}>No tienes notificaciones</p>
+                        </div>
+                      )}
+                      {notis.map(function(n, i) {
+                        var colores = { hoy: G.green, manana: G.brand, futura: G.brand, cancel: G.red, pasada: G.muted, puntos: G.gold };
+                        var col = colores[n.tipo] || G.brand;
+                        return (
+                          <div key={i} style={{ display: "flex", gap: 12, background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: "14px 14px", marginBottom: 10 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: 4, background: col, marginTop: 5, flexShrink: 0 }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: "0 0 3px" }}>{n.titulo}</p>
+                              <p style={{ fontSize: 12, color: G.muted, margin: 0, lineHeight: 1.5 }}>{n.texto}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
               </div>
           );
         }
@@ -913,7 +989,7 @@
           };
 
           return (
-            <div style={{ flex: 1, padding: 18 }}>
+            <div style={{ flex: 1, padding: 18, overflowY: 'auto', paddingBottom: 90 }}>
               <Back onBack={() => nav("detail")} />
               <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 14 }}>Programar Horario</h3>
               <p style={{ fontSize: 12, color: G.muted }}>{booking.svc.name} con {booking.bar.name}</p>
