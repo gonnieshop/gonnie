@@ -394,6 +394,49 @@
           );
         }
 
+        function NotiCard({ noti, col, onDismiss }) {
+          const [dx, setDx] = useState(0);
+          const [startX, setStartX] = useState(null);
+          const [saliendo, setSaliendo] = useState(false);
+
+          function onStart(e){ setStartX(e.touches ? e.touches[0].clientX : e.clientX); }
+          function onMove(e){
+            if (startX === null) return;
+            var x = e.touches ? e.touches[0].clientX : e.clientX;
+            var delta = x - startX;
+            if (delta < 0) setDx(delta); // solo permite arrastrar a la izquierda
+          }
+          function onEnd(){
+            if (startX === null) return;
+            if (dx < -90) {
+              setSaliendo(true);
+              setDx(-400);
+              setTimeout(function(){ onDismiss(noti.id); }, 180);
+            } else {
+              setDx(0);
+            }
+            setStartX(null);
+          }
+
+          return (
+            <div style={{ position: "relative", marginBottom: 10, overflow: "hidden", borderRadius: 14 }}>
+              <div style={{ position: "absolute", inset: 0, background: G.red, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 18 }}>
+                <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>Quitar</span>
+              </div>
+              <div
+                onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd}
+                onMouseDown={onStart} onMouseMove={function(e){ if(startX!==null) onMove(e); }} onMouseUp={onEnd} onMouseLeave={function(){ if(startX!==null) onEnd(); }}
+                style={{ position: "relative", display: "flex", gap: 12, background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: "14px 14px", transform: "translateX(" + dx + "px)", transition: (startX === null || saliendo) ? "transform 0.18s ease" : "none", cursor: "grab", touchAction: "pan-y" }}>
+                <div style={{ width: 8, height: 8, borderRadius: 4, background: col, marginTop: 5, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: "0 0 3px" }}>{noti.titulo}</p>
+                  <p style={{ fontSize: 12, color: G.muted, margin: 0, lineHeight: 1.5 }}>{noti.texto}</p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
         function HomeScreen({ nav, user, puntos = 0 }) {
           const nivel = getNivel(puntos);
           const progreso = getProgreso(puntos);
@@ -409,6 +452,9 @@
           const [rescheduleDone, setRescheduleDone] = useState(false);
           const [showNotis, setShowNotis] = useState(false);
           const [notis, setNotis] = useState([]);
+          const [descartadas, setDescartadas] = useState(function(){
+            try { return JSON.parse(localStorage.getItem('gonnie_notis_descartadas') || '[]'); } catch(e) { return []; }
+          });
           const slots = ['10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
 
           // Construir avisos a partir de las citas del cliente
@@ -426,21 +472,22 @@
                   var difDias = Math.round((fechaCita - hoy) / 86400000);
                   var servicio = (c.servicios && c.servicios.name) || 'tu cita';
                   var horaTxt = c.time ? c.time.slice(0,5) : '';
+                  var idBase = (c.id || c.date) + '_';
                   if (c.status === 'cancelled') {
-                    avisos.push({ tipo: 'cancel', titulo: 'Cita cancelada', texto: servicio + ' del ' + c.date + ' fue cancelada', date: c.date });
+                    avisos.push({ id: idBase + 'cancel', tipo: 'cancel', titulo: 'Cita cancelada', texto: servicio + ' del ' + c.date + ' fue cancelada', date: c.date });
                   } else if (difDias === 0) {
-                    avisos.push({ tipo: 'hoy', titulo: '¡Tu cita es hoy!', texto: servicio + ' a las ' + horaTxt, date: c.date });
+                    avisos.push({ id: idBase + 'hoy', tipo: 'hoy', titulo: '¡Tu cita es hoy!', texto: servicio + ' a las ' + horaTxt, date: c.date });
                   } else if (difDias === 1) {
-                    avisos.push({ tipo: 'manana', titulo: 'Cita mañana', texto: servicio + ' a las ' + horaTxt, date: c.date });
+                    avisos.push({ id: idBase + 'manana', tipo: 'manana', titulo: 'Cita mañana', texto: servicio + ' a las ' + horaTxt, date: c.date });
                   } else if (difDias > 1) {
-                    avisos.push({ tipo: 'futura', titulo: 'Cita confirmada', texto: servicio + ' el ' + c.date + ' a las ' + horaTxt, date: c.date });
+                    avisos.push({ id: idBase + 'futura', tipo: 'futura', titulo: 'Cita confirmada', texto: servicio + ' el ' + c.date + ' a las ' + horaTxt, date: c.date });
                   } else {
-                    avisos.push({ tipo: 'pasada', titulo: '¿Qué tal quedó?', texto: 'Esperamos que disfrutaras de ' + servicio, date: c.date });
+                    avisos.push({ id: idBase + 'pasada', tipo: 'pasada', titulo: '¿Qué tal quedó?', texto: 'Esperamos que disfrutaras de ' + servicio, date: c.date });
                   }
                 });
                 // Aviso de fidelización
                 if (ptsSiguiente > 0 && ptsSiguiente <= 60) {
-                  avisos.unshift({ tipo: 'puntos', titulo: 'Estás cerca del siguiente nivel', texto: 'Te faltan ' + ptsSiguiente + ' puntos para ' + getNivel(puntos + ptsSiguiente).nombre, date: '' });
+                  avisos.unshift({ id: 'puntos_' + getNivel(puntos + ptsSiguiente).nombre, tipo: 'puntos', titulo: 'Estás cerca del siguiente nivel', texto: 'Te faltan ' + ptsSiguiente + ' puntos para ' + getNivel(puntos + ptsSiguiente).nombre, date: '' });
                 }
                 setNotis(avisos);
               }).catch(function(){ setNotis([]); });
@@ -457,6 +504,15 @@
           }, [user && user.email]);
 
          const nombre = (user && user.user_metadata && user.user_metadata.full_name && user.user_metadata.full_name.split(" ")[0]) || "tú";
+
+          function descartarNoti(id) {
+            setDescartadas(function(prev){
+              var nuevas = prev.indexOf(id) >= 0 ? prev : prev.concat([id]);
+              try { localStorage.setItem('gonnie_notis_descartadas', JSON.stringify(nuevas)); } catch(e) {}
+              return nuevas;
+            });
+          }
+          var notisVisibles = notis.filter(function(n){ return descartadas.indexOf(n.id) < 0; });
           return (
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
               <div style={{ padding: "16px 18px 12px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -471,9 +527,9 @@
                       <path d="M13.73 21a2 2 0 01-3.46 0"/>
                     </svg>
                   </div>
-                  {notis.length > 0 && (
+                  {notisVisibles.length > 0 && (
                     <div style={{ position: "absolute", top: -2, right: -2, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, background: G.brand, border: `2px solid ${G.bg}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 9, fontWeight: 800, color: "#fff" }}>{notis.length > 9 ? '9+' : notis.length}</span>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: "#fff" }}>{notisVisibles.length > 9 ? '9+' : notisVisibles.length}</span>
                     </div>
                   )}
                 </div>
@@ -648,24 +704,16 @@
                       <button onClick={function(){ setShowNotis(false); }} style={{ background: "transparent", border: "none", fontSize: 22, color: G.muted, cursor: "pointer", lineHeight: 1, fontFamily: "inherit" }}>×</button>
                     </div>
                     <div style={{ flex: 1, overflowY: "auto", padding: "14px 18px 30px" }}>
-                      {notis.length === 0 && (
+                      {notisVisibles.length === 0 && (
                         <div style={{ textAlign: "center", padding: "60px 0", color: G.muted }}>
                           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={G.bdr} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 auto 12px" }}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
                           <p style={{ fontSize: 13, margin: 0 }}>No tienes notificaciones</p>
                         </div>
                       )}
-                      {notis.map(function(n, i) {
+                      {notisVisibles.map(function(n) {
                         var colores = { hoy: G.green, manana: G.brand, futura: G.brand, cancel: G.red, pasada: G.muted, puntos: G.gold };
                         var col = colores[n.tipo] || G.brand;
-                        return (
-                          <div key={i} style={{ display: "flex", gap: 12, background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: "14px 14px", marginBottom: 10 }}>
-                            <div style={{ width: 8, height: 8, borderRadius: 4, background: col, marginTop: 5, flexShrink: 0 }} />
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: "0 0 3px" }}>{n.titulo}</p>
-                              <p style={{ fontSize: 12, color: G.muted, margin: 0, lineHeight: 1.5 }}>{n.texto}</p>
-                            </div>
-                          </div>
-                        );
+                        return <NotiCard key={n.id} noti={n} col={col} onDismiss={descartarNoti} />;
                       })}
                     </div>
                   </div>
