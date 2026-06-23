@@ -407,7 +407,7 @@
           const [rescheduleSlot, setRescheduleSlot] = useState('');
           const [rescheduling, setRescheduling] = useState(false);
           const [rescheduleDone, setRescheduleDone] = useState(false);
-          const slots = ['09:00','09:40','10:20','11:00','11:40','16:00','16:40','17:20'];
+          const slots = ['10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
 
           useEffect(function() {
             var email = user && user.email;
@@ -855,7 +855,23 @@
           const [slot, setSlot] = useState("");
           const [saving, setSaving] = useState(false);
           const [metodoPago, setMetodoPago] = useState("");
-          const slots = ["09:00", "09:40", "10:20", "11:00", "11:40", "16:00", "16:40", "17:20"];
+          const [ocupados, setOcupados] = useState([]);
+          const [loadingHoras, setLoadingHoras] = useState(false);
+          const slots = ["10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00","20:30"];
+
+          // Cargar horas ya reservadas para la fecha y barbero elegidos
+          useEffect(function() {
+            if (!date) { setOcupados([]); return; }
+            setLoadingHoras(true);
+            setSlot("");
+            dbGet("appointments", "?date=eq." + date + "&barbero_id=eq." + booking.bar.id + "&status=neq.cancelled&select=time")
+              .then(function(data){
+                var arr = Array.isArray(data) ? data : [];
+                setOcupados(arr.map(function(a){ return a.time ? a.time.slice(0,5) : ''; }));
+                setLoadingHoras(false);
+              })
+              .catch(function(){ setOcupados([]); setLoadingHoras(false); });
+          }, [date]);
 
           const confirm = async () => {
             if (!date || !slot) return alert("Selecciona fecha y hora");
@@ -905,10 +921,28 @@
               <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, padding: 12, borderRadius: 12, color: G.text, marginTop: 14, marginBottom: 18 }} />
 
               <SLabel>Horarios Disponibles</SLabel>
+              {date && loadingHoras && <p style={{ fontSize: 12, color: G.muted, margin: '0 0 10px' }}>Comprobando disponibilidad...</p>}
+              {!date && <p style={{ fontSize: 12, color: G.muted, margin: '0 0 10px' }}>Elige primero una fecha</p>}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 24 }}>
-                {slots.map(s => (
-                  <button key={s} onClick={() => setSlot(s)} style={{ background: slot === s ? G.brand : G.card, color: slot === s ? "#000" : G.text, border: `1px solid ${G.bdr}`, padding: 10, borderRadius: 10, fontWeight: 700, cursor: "pointer" }}>{s}</button>
-                ))}
+                {slots.map(function(s) {
+                  var ocupado = ocupados.indexOf(s) >= 0;
+                  var elegido = slot === s;
+                  return (
+                    <button key={s} onClick={function(){ if (!ocupado) setSlot(s); }} disabled={ocupado || !date}
+                      style={{
+                        position: 'relative',
+                        background: ocupado ? '#f0f0f0' : (elegido ? G.brand : G.card),
+                        color: ocupado ? '#bbb' : (elegido ? "#000" : G.text),
+                        border: "1px solid " + (elegido ? G.brand : G.bdr),
+                        padding: 10, borderRadius: 10, fontWeight: 700,
+                        cursor: ocupado || !date ? "not-allowed" : "pointer",
+                        textDecoration: ocupado ? 'line-through' : 'none',
+                        opacity: !date ? 0.5 : 1
+                      }}>
+                      {s}
+                    </button>
+                  );
+                })}
               </div>
 
               <SLabel>Método de pago</SLabel>
@@ -1112,7 +1146,19 @@
           const [ncHora, setNcHora] = useState('');
           const [ncGuardando, setNcGuardando] = useState(false);
           const [ncDone, setNcDone] = useState(false);
-          const slots = ['09:00','09:40','10:20','11:00','11:40','16:00','16:40','17:20'];
+          const [ncOcupados, setNcOcupados] = useState([]);
+          const slots = ['10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
+
+          // Horas ya ocupadas para el barbero y fecha de Nueva cita
+          useEffect(function() {
+            if (!ncBarbero || !ncFecha) { setNcOcupados([]); return; }
+            dbGet('appointments', '?date=eq.' + ncFecha + '&barbero_id=eq.' + ncBarbero + '&status=neq.cancelled&select=time')
+              .then(function(data){
+                var arr = Array.isArray(data) ? data : [];
+                setNcOcupados(arr.map(function(a){ return a.time ? a.time.slice(0,5) : ''; }));
+              })
+              .catch(function(){ setNcOcupados([]); });
+          }, [ncBarbero, ncFecha]);
 
           useEffect(function() {
             dbGet('barberos', '?select=*').then(function(d){ setBarberos(Array.isArray(d) ? d : []); }).catch(function(){});
@@ -1740,10 +1786,13 @@
                       style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, fontWeight: 700, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }} />
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 8px' }}>HORA</p>
+                    {ncBarbero && ncFecha ? null : <p style={{ fontSize: 11, color: G.muted, margin: '0 0 8px' }}>Elige barbero y fecha primero</p>}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 16 }}>
-                      {slots.map(function(s){ return (
-                        <button key={s} onClick={function(){ setNcHora(s); }}
-                          style={{ background: ncHora === s ? G.brand : G.card2, color: ncHora === s ? '#fff' : G.text, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '8px 4px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {slots.map(function(s){
+                        var ocupado = ncOcupados.indexOf(s) >= 0;
+                        return (
+                        <button key={s} onClick={function(){ if (!ocupado) setNcHora(s); }} disabled={ocupado}
+                          style={{ background: ocupado ? '#f0f0f0' : (ncHora === s ? G.brand : G.card2), color: ocupado ? '#bbb' : (ncHora === s ? '#fff' : G.text), border: '1px solid ' + G.bdr, borderRadius: 8, padding: '8px 4px', fontSize: 12, fontWeight: 700, cursor: ocupado ? 'not-allowed' : 'pointer', fontFamily: 'inherit', textDecoration: ocupado ? 'line-through' : 'none' }}>
                           {s}
                         </button>
                       ); })}
