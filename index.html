@@ -317,23 +317,15 @@
         function ShopScreen({ nav }) {
           const [selected, setSelected] = useState(null);
           const [catActiva, setCatActiva] = useState('Todos');
-          const productos = [
-  { id: 1, nombre: 'Gel de afeitado Flame', precio: 15, descripcion: 'Gel transparente para un afeitado suave y sin irritaciones. Para todo tipo de piel.', img: 'https://i.imgur.com/2HQ2MZy.png', categoria: 'Gel de afeitar' },
-  { id: 2, nombre: 'Pasta de acabado mate', precio: 11, descripcion: 'Acabado mate de fijación media. Perfecto para estilos naturales con textura.', img: 'https://i.imgur.com/5Xj65at.png', categoria: 'Pastas, ceras y cremas' },
-  { id: 3, nombre: 'Polvos de peinado fijación ligera', precio: 12, descripcion: 'Polvo de styling con acabado mate y volumen. Fijación ligera y natural.', img: 'https://i.imgur.com/0pQVonP.png', categoria: 'Polvos de peinado' },
-  { id: 4, nombre: 'Polvos de peinado fijación extrafuerte', precio: 12, descripcion: 'Polvo de styling con fijación extrafuerte y acabado mate.', img: 'https://i.imgur.com/MM7IdsL.png', categoria: 'Polvos de peinado' },
-  { id: 5, nombre: 'Spray de sal texturizante', precio: 14, descripcion: 'Spray texturizante con sal marina para un look playero con volumen y movimiento.', img: 'https://i.imgur.com/lFkGSRN.png', categoria: 'Sprays' },
-  { id: 6, nombre: 'Acabado fijación fuerte Putty', precio: 11, descripcion: 'Acabado con fijación fuerte tipo putty. Control total con textura mate.', img: 'https://i.imgur.com/DTk76Av.png', categoria: 'Pastas, ceras y cremas' },
-  { id: 7, nombre: 'Forming cream', precio: 11, descripcion: 'Crema modeladora con fijación media y acabado natural. Hidrata y define.', img: 'https://i.imgur.com/jO23Pjn.png', categoria: 'Pastas, ceras y cremas' },
-  { id: 8, nombre: 'Cera Spider', precio: 11, descripcion: 'Cera de fijación fuerte con efecto hebra. Ideal para peinados con textura y definición.', img: 'https://i.imgur.com/qlodsEi.png', categoria: 'Pastas, ceras y cremas' },
-  { id: 9, nombre: 'Crema transparente 500ml', precio: 20, descripcion: 'Crema de peinado transparente en formato profesional de 500ml.', img: 'https://i.imgur.com/jUzOYJv.png', categoria: 'Pastas, ceras y cremas' },
-  { id: 10, nombre: 'Curl cream 250ml', precio: 14, descripcion: 'Crema para rizos que define, hidrata y aporta volumen natural.', img: 'https://i.imgur.com/InzPG8P.png', categoria: 'Pastas, ceras y cremas' },
-  { id: 11, nombre: 'Champú Violeta 280ml', precio: 17, descripcion: 'Champú matizador violeta para cabello rubio o con mechas. Neutraliza los tonos amarillos.', img: 'https://i.imgur.com/j6tb8gc.png', categoria: 'Champú' },
-  { id: 12, nombre: 'Champú 2en1 con queratina', precio: 18, descripcion: 'Champú y acondicionador en uno con queratina. Fortalece y nutre el cabello.', img: 'https://i.imgur.com/pm8AneN.png', categoria: 'Champú' },
-  { id: 13, nombre: 'Laca fijación fuerte', precio: 12, descripcion: 'Laca de acabado con fijación fuerte. Mantiene el peinado todo el día.', img: 'https://i.imgur.com/tXnQLL0.png', categoria: 'Sprays' },
-  { id: 14, nombre: 'Eau de Parfum Aqua 100ml', precio: 55, descripcion: 'Fragancia fresca y acuática. Notas de agua de mar, madera y almizcle.', img: 'https://i.imgur.com/ZpTKFeY.png', categoria: 'Eau de Parfum' },
-  { id: 15, nombre: 'Eau de Parfum Frost 100ml', precio: 55, descripcion: 'Fragancia intensa y sofisticada. Notas amaderadas y especiadas.', img: 'https://i.imgur.com/RopsTHR.png', categoria: 'Eau de Parfum' },
-];
+          const [productos, setProductos] = useState([]);
+          const [loadingProd, setLoadingProd] = useState(true);
+
+          useEffect(function() {
+            setLoadingProd(true);
+            dbGet('productos', '?order=created_at.asc&select=*')
+              .then(function(data){ setProductos(Array.isArray(data) ? data : []); setLoadingProd(false); })
+              .catch(function(){ setLoadingProd(false); });
+          }, []);
 
           if (selected) {
             return (
@@ -382,6 +374,8 @@
                 })}
               </div>
               <div style={{ padding: '0 18px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {loadingProd && <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: G.muted, fontSize: 13, padding: '20px 0' }}>Cargando productos...</p>}
+                {!loadingProd && filtrados.length === 0 && <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: G.muted, fontSize: 13, padding: '20px 0' }}>No hay productos</p>}
                 {filtrados.map(function(p) {
                   return (
                     <div key={p.id} onClick={function(){ setSelected(p); }} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, overflow: 'hidden', cursor: 'pointer' }}>
@@ -1100,6 +1094,11 @@
           const [showDesglose, setShowDesglose] = useState(false);
           const [citaSel, setCitaSel] = useState(null);
           const [guardandoPago, setGuardandoPago] = useState(false);
+          const [productos, setProductos] = useState([]);
+          const [loadingProd, setLoadingProd] = useState(false);
+          const [editProd, setEditProd] = useState(null); // producto en edición o {} para nuevo
+          const [savingProd, setSavingProd] = useState(false);
+          const [uploadingImg, setUploadingImg] = useState(false);
           const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
           const [ingresosMes, setIngresosMes] = useState(0);
           const [citasMes, setCitasMes] = useState([]);
@@ -1202,6 +1201,75 @@
               })
               .catch(function(){ setLoadingClientes(false); });
           }, [panel]);
+
+          // Cargar productos (al abrir el panel de productos)
+          useEffect(function() {
+            if (panel !== 'productos') return;
+            setLoadingProd(true);
+            dbGet('productos', '?order=created_at.asc&select=*')
+              .then(function(data){ setProductos(Array.isArray(data) ? data : []); setLoadingProd(false); })
+              .catch(function(){ setLoadingProd(false); });
+          }, [panel]);
+
+          function recargarProductos() {
+            return dbGet('productos', '?order=created_at.asc&select=*')
+              .then(function(data){ setProductos(Array.isArray(data) ? data : []); });
+          }
+
+          // Subir imagen a Supabase Storage y devolver su URL pública
+          async function subirImagen(file) {
+            setUploadingImg(true);
+            try {
+              var ext = file.name.indexOf('.') >= 0 ? file.name.split('.').pop() : 'jpg';
+              var nombreArchivo = 'prod_' + Date.now() + '.' + ext;
+              var res = await fetch(SUPABASE_URL + '/storage/v1/object/productos/' + nombreArchivo, {
+                method: 'POST',
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': file.type || 'image/jpeg' },
+                body: file
+              });
+              setUploadingImg(false);
+              if (!res.ok) { alert('Error al subir la imagen'); return null; }
+              return SUPABASE_URL + '/storage/v1/object/public/productos/' + nombreArchivo;
+            } catch(e) { setUploadingImg(false); alert('Error al subir la imagen'); return null; }
+          }
+
+          // Guardar producto (nuevo o edición)
+          async function guardarProducto() {
+            if (!editProd || !editProd.nombre || !editProd.precio) { alert('Nombre y precio son obligatorios'); return; }
+            setSavingProd(true);
+            try {
+              var payload = {
+                nombre: editProd.nombre,
+                precio: Number(editProd.precio),
+                descripcion: editProd.descripcion || '',
+                img: editProd.img || '',
+                categoria: editProd.categoria || 'Otros'
+              };
+              if (editProd.id) {
+                await fetch(SUPABASE_URL + '/rest/v1/productos?id=eq.' + editProd.id, {
+                  method: 'PATCH', headers: { ...DB_HEADERS }, body: JSON.stringify(payload)
+                });
+              } else {
+                await fetch(SUPABASE_URL + '/rest/v1/productos', {
+                  method: 'POST', headers: { ...DB_HEADERS }, body: JSON.stringify(payload)
+                });
+              }
+              await recargarProductos();
+              setEditProd(null);
+            } catch(e) { alert('Error al guardar'); }
+            setSavingProd(false);
+          }
+
+          // Borrar producto
+          async function borrarProducto(prod) {
+            if (!confirm('¿Borrar "' + prod.nombre + '"?')) return;
+            try {
+              await fetch(SUPABASE_URL + '/rest/v1/productos?id=eq.' + prod.id, {
+                method: 'DELETE', headers: { ...DB_HEADERS }
+              });
+              await recargarProductos();
+            } catch(e) { alert('Error al borrar'); }
+          }
 
           function formatHora(t) { return t ? t.slice(0,5) : ''; }
 
@@ -1378,6 +1446,7 @@
               { id: 'agenda', label: 'Agenda', desc: 'Citas del día y semana', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' },
               { id: 'stats', label: 'Estadísticas', desc: 'Ingresos y rendimiento', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>' },
               { id: 'clientes', label: 'Clientes', desc: 'Tu base de clientes', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>' },
+              { id: 'productos', label: 'Productos', desc: 'Gestiona la tienda', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>' },
             ];
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
@@ -1511,6 +1580,84 @@
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            );
+          }
+
+          // ─── PANEL PRODUCTOS ───
+          if (panel === 'productos') {
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <button onClick={function(){ if (editProd) { setEditProd(null); } else { setPanel('menu'); } }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
+                  <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>{editProd ? (editProd.id ? 'Editar producto' : 'Nuevo producto') : 'Productos'}</h1>
+                  {!editProd && (
+                    <button onClick={function(){ setEditProd({ nombre: '', precio: '', descripcion: '', img: '', categoria: '' }); }}
+                      style={{ marginLeft: 'auto', background: G.brand, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Añadir
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
+                  {/* FORMULARIO */}
+                  {editProd && (
+                    <div>
+                      {/* Imagen */}
+                      <div style={{ marginBottom: 16 }}>
+                        <div style={{ width: '100%', height: 180, background: '#f7f7f7', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid ' + G.bdr, marginBottom: 10 }}>
+                          {editProd.img ? <img src={editProd.img} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 16, boxSizing: 'border-box' }} alt="" /> : <span style={{ color: G.muted, fontSize: 13 }}>Sin imagen</span>}
+                        </div>
+                        <input id="prodImgInput" type="file" accept="image/*" style={{ display: 'none' }}
+                          onChange={async function(e){ var f = e.target.files && e.target.files[0]; if (!f) return; var url = await subirImagen(f); if (url) setEditProd(Object.assign({}, editProd, { img: url })); }} />
+                        <button onClick={function(){ document.getElementById('prodImgInput').click(); }} disabled={uploadingImg}
+                          style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '11px', fontSize: 13, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          {uploadingImg ? 'Subiendo...' : (editProd.img ? 'Cambiar foto' : 'Subir foto')}
+                        </button>
+                      </div>
+                      {/* Campos */}
+                      <input value={editProd.nombre} onChange={function(e){ setEditProd(Object.assign({}, editProd, { nombre: e.target.value })); }} placeholder="Nombre"
+                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                      <input value={editProd.precio} onChange={function(e){ setEditProd(Object.assign({}, editProd, { precio: e.target.value })); }} placeholder="Precio (€)" type="number"
+                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                      <input value={editProd.categoria} onChange={function(e){ setEditProd(Object.assign({}, editProd, { categoria: e.target.value })); }} placeholder="Categoría (ej: Sprays)"
+                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                      <textarea value={editProd.descripcion} onChange={function(e){ setEditProd(Object.assign({}, editProd, { descripcion: e.target.value })); }} placeholder="Descripción" rows={3}
+                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit', resize: 'vertical' }} />
+                      <button onClick={guardarProducto} disabled={savingProd || uploadingImg}
+                        style={{ width: '100%', background: G.brand, border: 'none', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        {savingProd ? 'Guardando...' : 'Guardar producto'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* LISTA */}
+                  {!editProd && (
+                    <div>
+                      {loadingProd && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
+                      {!loadingProd && productos.length === 0 && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>No hay productos. Pulsa "Añadir".</p>}
+                      {!loadingProd && productos.map(function(p) {
+                        return (
+                          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '12px 14px', marginBottom: 10 }}>
+                            <div style={{ width: 50, height: 50, background: '#f7f7f7', borderRadius: 10, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {p.img ? <img src={p.img} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }} alt="" /> : <span style={{ fontSize: 18 }}>📦</span>}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.nombre}</p>
+                              <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{p.precio}€ · {p.categoria || 'Sin categoría'}</p>
+                            </div>
+                            <button onClick={function(){ setEditProd(Object.assign({}, p)); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, color: G.brand }} title="Editar">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            <button onClick={function(){ borrarProducto(p); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, color: G.red }} title="Borrar">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={G.red} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             );
