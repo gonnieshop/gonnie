@@ -21,21 +21,88 @@
     <script src="https://unpkg.com/@babel/standalone@7.23.4/babel.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
-        body { 
-            background-color: #F2F2F7; 
-            color: #EEF2F7;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+
+        /* ─── BASE MODERNA ───────────────────────────────────────────── */
+        body {
+            background: linear-gradient(180deg, #F7F8FB 0%, #EEF0F5 100%);
+            background-attachment: fixed;
+            color: #0B1220;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-feature-settings: 'cv02','cv03','cv04','cv11';
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            letter-spacing: -0.01em;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
         }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: #0F1419; }
-        ::-webkit-scrollbar-thumb { background: #161D25; border-radius: 2px; }
-        input, select, textarea { color-scheme: dark; }
+
+        /* Scrollbars claros y discretos */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(17, 24, 39, 0.16);
+            border-radius: 8px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(17, 24, 39, 0.28);
+            background-clip: content-box;
+        }
+
+        /* Selección de texto con el color de marca */
+        ::selection { background: rgba(0, 161, 201, 0.22); color: inherit; }
+
+        input, select, textarea { color-scheme: light; }
+
+        /* Micro-interacciones en botones (no pisan tus estilos inline) */
+        button, [role="button"] {
+            transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.18s ease, opacity 0.15s ease;
+        }
+        button:hover:not(:disabled), [role="button"]:hover {
+            filter: brightness(1.04);
+        }
+        button:active:not(:disabled), [role="button"]:active {
+            transform: scale(0.97);
+        }
+
+        /* Focus rings modernos accesibles */
+        input:focus, select:focus, textarea:focus {
+            outline: 2px solid #00A1C9;
+            outline-offset: 1px;
+        }
+        input, select, textarea {
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        button:focus-visible, [role="button"]:focus-visible {
+            outline: 2px solid #00A1C9;
+            outline-offset: 2px;
+        }
+
+        /* Sombras sutiles automáticas en cards (radios 12/14/16/18/20 típicos de tarjetas) */
+        #root div[style*="border-radius: 12px"],
+        #root div[style*="border-radius: 14px"],
+        #root div[style*="border-radius: 16px"],
+        #root div[style*="border-radius: 18px"],
+        #root div[style*="border-radius: 20px"] {
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 20px -6px rgba(15, 23, 42, 0.06);
+        }
+        /* Evita doble sombra en píldoras, avatares y elementos pequeños */
+        #root div[style*="border-radius: 50%"],
+        #root div[style*="border-radius: 20px"][style*="padding: 2px"],
+        #root span[style*="border-radius"] {
+            box-shadow: none !important;
+        }
+
+        /* Sin arrastre fantasma en imágenes */
+        img { -webkit-user-drag: none; user-select: none; }
     
     /* ─── GONNIE ANIMATIONS ─── */
     @keyframes confettiFall {
@@ -137,10 +204,10 @@
         // ─── PALETA DE COLORES GONNIE ──────────────────────────────────────────
         const G = {
           brand: "#00A1C9", brandD: "#0081A3", brandL: "#33BDD9",
-          bg: "#F2F2F7", card: "#FFFFFF", card2: "#F2F2F7",
-          text: "#1C1C1E", muted: "#3C3C43",
-          bdr: "rgba(0,0,0,0.08)",
-          green: "#34C759", red: "#FF3B30", blue: "#007AFF", gold: "#FF9500",
+          bg: "#F5F6FA", card: "#FFFFFF", card2: "#F5F6FA",
+          text: "#0B1220", muted: "#6B7280",
+          bdr: "rgba(17, 24, 39, 0.06)",
+          green: "#10B981", red: "#EF4444", blue: "#3B82F6", gold: "#F59E0B",
         };
 
 
