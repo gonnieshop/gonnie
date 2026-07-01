@@ -24,254 +24,78 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
     <style>
       @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
-      @keyframes floatOrb {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        50%      { transform: translate(30px, -20px) scale(1.05); }
-      }
+      @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-      /* ══════════════════════════════════════════════════════════════════
-         DARK GLASSMORPHISM REDESIGN — inspirado en dashboard "Ethereal".
-         Fondo púrpura profundo con orbes de luz, cards de cristal,
-         tipografía blanca, glow cyan en botones de marca.
-         ══════════════════════════════════════════════════════════════════ */
+        body {
+            background:
+              radial-gradient(1200px 700px at 100% -10%, rgba(212, 240, 89, 0.18), transparent 55%),
+              radial-gradient(900px 500px at -10% 100%, rgba(0, 161, 201, 0.10), transparent 55%),
+              #F1EEE7;
+            background-attachment: fixed;
+            color: #0A0A0A;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-feature-settings: 'cv02','cv03','cv04','cv11','ss01';
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            letter-spacing: -0.015em;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
 
-      html, body {
-        background: #0B0B14 !important;
-      }
+        /* Scrollbars claros y discretos */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(10, 10, 10, 0.15);
+            border-radius: 8px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 161, 201, 0.5);
+            background-clip: content-box;
+        }
 
-      body {
-        position: relative;
-        color: #FFFFFF;
-        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-feature-settings: 'cv02','cv03','cv04','cv11','ss01';
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        letter-spacing: -0.015em;
-        margin: 0;
-        padding: 0;
-        overflow-x: hidden;
-        min-height: 100vh;
-      }
+        ::selection { background: rgba(0, 161, 201, 0.22); color: inherit; }
+        input, select, textarea { color-scheme: light; }
+        img { -webkit-user-drag: none; user-select: none; }
+        svg { shape-rendering: geometricPrecision; }
 
-      /* Orbes de luz de fondo (aurora púrpura + cyan) */
-      body::before {
-        content: '';
-        position: fixed;
-        top: -20%;
-        right: -20%;
-        width: 700px;
-        height: 700px;
-        background: radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, transparent 60%);
-        pointer-events: none;
-        z-index: 0;
-        animation: floatOrb 12s ease-in-out infinite;
-      }
-      body::after {
-        content: '';
-        position: fixed;
-        bottom: -20%;
-        left: -15%;
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, rgba(0, 212, 255, 0.28) 0%, transparent 60%);
-        pointer-events: none;
-        z-index: 0;
-        animation: floatOrb 14s ease-in-out infinite reverse;
-      }
-      #root { position: relative; z-index: 1; }
+        /* Tipografía audaz en títulos (h1/h2/h3) — no rompe nada, solo refina */
+        #root h1 { font-weight: 900 !important; letter-spacing: -0.04em !important; line-height: 1.02 !important; }
+        #root h2 { font-weight: 800 !important; letter-spacing: -0.03em !important; }
+        #root h3 { font-weight: 700 !important; letter-spacing: -0.02em !important; }
 
-      /* ─── TIPOGRAFÍA XXL AUDAZ ─── */
-      #root h1 {
-        font-weight: 900 !important;
-        letter-spacing: -0.04em !important;
-        line-height: 1.02 !important;
-        color: #FFFFFF !important;
-      }
-      #root h2 {
-        font-weight: 800 !important;
-        letter-spacing: -0.03em !important;
-        color: #FFFFFF !important;
-      }
-      #root h3, #root h4 {
-        letter-spacing: -0.02em !important;
-        font-weight: 700 !important;
-        color: #FFFFFF !important;
-      }
+        /* Sombras suaves en cards blancas (selector quirúrgico: solo divs con fondo blanco Y border-radius) */
+        #root div[style*="background: rgb(255, 255, 255)"][style*="border-radius"],
+        #root div[style*="background:#FFFFFF"][style*="border-radius"],
+        #root div[style*="background: #FFFFFF"][style*="border-radius"] {
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -14px rgba(15, 23, 42, 0.12) !important;
+            border-color: rgba(10, 10, 10, 0.04) !important;
+        }
 
-      /* ─── CARDS: CRISTAL GLASSMORPHISM ─── */
-      #root div[style*="border-radius: 12px"],
-      #root div[style*="border-radius: 14px"],
-      #root div[style*="border-radius: 16px"],
-      #root div[style*="border-radius: 18px"],
-      #root div[style*="border-radius: 20px"] {
-        background: rgba(255, 255, 255, 0.05) !important;
-        backdrop-filter: blur(24px) saturate(180%) !important;
-        -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.10) !important;
-        box-shadow:
-          0 1px 0 rgba(255, 255, 255, 0.08) inset,
-          0 20px 40px -20px rgba(0, 0, 0, 0.6) !important;
-      }
-      #root div[style*="border-radius: 12px"] { border-radius: 18px !important; }
-      #root div[style*="border-radius: 14px"] { border-radius: 20px !important; }
-      #root div[style*="border-radius: 16px"] { border-radius: 24px !important; }
-      #root div[style*="border-radius: 18px"] { border-radius: 26px !important; }
-      #root div[style*="border-radius: 20px"] { border-radius: 28px !important; }
+        /* Micro-interacciones en botones y elementos clicables */
+        button, [role="button"], a {
+            transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        box-shadow 0.25s ease, filter 0.18s ease, opacity 0.15s ease;
+        }
+        button:hover:not(:disabled), [role="button"]:hover { filter: brightness(1.05); transform: translateY(-1px); }
+        button:active:not(:disabled), [role="button"]:active { transform: translateY(0) scale(0.97); }
 
-      /* Sobrescribir cards con fondo blanco hardcoded (LoginScreen, SplashScreen, etc.) */
-      #root div[style*="background: rgb(255, 255, 255)"],
-      #root div[style*="background: #FFFFFF"],
-      #root div[style*="background: #fff"],
-      #root div[style*="background:#fff"],
-      #root div[style*="background: #f7f7f7"],
-      #root div[style*="background:#f7f7f7"] {
-        background: rgba(255, 255, 255, 0.05) !important;
-        color: #FFFFFF !important;
-      }
-
-      /* Contenedores del login screen que fijan fondo blanco */
-      #root div[style*="minHeight: '100vh'"][style*="background: '#fff'"],
-      #root div[style*="min-height: 100vh"][style*="background: rgb(255, 255, 255)"] {
-        background: transparent !important;
-      }
-
-      /* ─── AVATARES Y ELEMENTOS REDONDOS: sin blur ─── */
-      #root div[style*="border-radius: 50%"],
-      #root div[style*="border-radius:50%"] {
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        border-radius: 50% !important;
-        box-shadow: 0 8px 20px -6px rgba(0, 212, 255, 0.3) !important;
-      }
-      /* Píldoras totalmente redondas */
-      #root span[style*="border-radius: 20px"],
-      #root span[style*="border-radius:20px"] {
-        border-radius: 999px !important;
-      }
-      /* Iconitos cuadrados de 10px → 14 */
-      #root div[style*="border-radius: 10px"] {
-        border-radius: 14px !important;
-        background: rgba(0, 212, 255, 0.10) !important;
-        border: 1px solid rgba(0, 212, 255, 0.15) !important;
-        backdrop-filter: none !important;
-      }
-
-      /* ─── TEXTOS: forzar blancos y grises adaptados ─── */
-      #root p[style*="color: rgb(28, 28, 30)"],
-      #root p[style*="color: #1C1C1E"],
-      #root p[style*="color: #0B1220"],
-      #root p[style*="color: #000"],
-      #root p[style*="color: rgb(0, 0, 0)"],
-      #root h1[style*="color: '#000'"],
-      #root span[style*="color: rgb(28, 28, 30)"] {
-        color: #FFFFFF !important;
-      }
-      #root p[style*="color: rgb(60, 60, 67)"],
-      #root p[style*="color: #3C3C43"],
-      #root p[style*="color: #6B7280"],
-      #root p[style*="color: #888"],
-      #root p[style*="color: #555"],
-      #root p[style*="color: #bbb"] {
-        color: #8B8FA3 !important;
-      }
-
-      /* ─── BOTONES ─── */
-      #root button {
-        border-radius: 16px !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.01em !important;
-      }
-      /* Botón primario cyan → gradiente + glow potente */
-      #root button[style*="#00A1C9"]:not([style*="transparent"]),
-      #root button[style*="#00D4FF"]:not([style*="transparent"]),
-      #root button[style*="rgb(0, 161, 201)"]:not([style*="transparent"]),
-      #root button[style*="rgb(0, 212, 255)"]:not([style*="transparent"]) {
-        background: linear-gradient(135deg, #00D4FF 0%, #0081A3 100%) !important;
-        border-radius: 18px !important;
-        color: #FFFFFF !important;
-        box-shadow:
-          0 14px 36px -10px rgba(0, 212, 255, 0.65),
-          0 4px 12px -2px rgba(0, 212, 255, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
-      }
-      /* Botón negro del login → cristal oscuro con glow */
-      #root button[style*="background: rgb(0, 0, 0)"],
-      #root button[style*="background:#000"],
-      #root button[style*="background: '#000'"] {
-        background: rgba(255, 255, 255, 0.08) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 18px !important;
-        box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5) !important;
-      }
-      /* Ghost buttons */
-      #root button[style*="background: transparent"] {
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        color: #FFFFFF !important;
-      }
-
-      /* ─── INPUTS DARK ─── */
-      #root input, #root select, #root textarea {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.10) !important;
-        color: #FFFFFF !important;
-        border-radius: 14px !important;
-        backdrop-filter: blur(12px);
-        transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
-      }
-      #root input::placeholder, #root textarea::placeholder {
-        color: rgba(255, 255, 255, 0.4) !important;
-      }
-      #root input:focus, #root select:focus, #root textarea:focus {
-        outline: none !important;
-        border-color: #00D4FF !important;
-        box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.18) !important;
-      }
-      input, select, textarea { color-scheme: dark; }
-
-      /* ─── INTERACCIONES ─── */
-      button, [role="button"], a {
-        transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    box-shadow 0.25s ease, filter 0.18s ease, opacity 0.15s ease !important;
-      }
-      button:hover:not(:disabled), [role="button"]:hover {
-        filter: brightness(1.08);
-        transform: translateY(-1px);
-      }
-      button:active:not(:disabled), [role="button"]:active {
-        transform: translateY(0) scale(0.97);
-        filter: brightness(0.94);
-      }
-
-      /* ─── SCROLLBARS ─── */
-      ::-webkit-scrollbar { width: 8px; height: 8px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 8px;
-        border: 2px solid transparent;
-        background-clip: content-box;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(0, 212, 255, 0.5);
-        background-clip: content-box;
-      }
-
-      ::selection { background: rgba(0, 212, 255, 0.35); color: #FFFFFF; }
-      img { -webkit-user-drag: none; user-select: none; }
-      svg { shape-rendering: geometricPrecision; }
-
-      /* ─── FEATURE CARDS del login (los mini iconos ⚡🏆✂️) ─── */
-      #root div[style*="background: #f7f7f7"],
-      #root div[style*="background:#f7f7f7"] {
-        background: rgba(255, 255, 255, 0.06) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        backdrop-filter: blur(20px);
-      }
+        /* Focus rings modernos */
+        input:focus, select:focus, textarea:focus {
+            outline: 2px solid #00A1C9 !important;
+            outline-offset: 1px !important;
+            box-shadow: 0 0 0 5px rgba(0, 161, 201, 0.12) !important;
+        }
+        input, select, textarea { transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+        button:focus-visible, [role="button"]:focus-visible { outline: 2px solid #00A1C9; outline-offset: 3px; }
     
     /* ─── GONNIE ANIMATIONS ─── */
     @keyframes confettiFall {
@@ -370,13 +194,15 @@
           }
         }
 
-        // ─── PALETA DE COLORES GONNIE (DARK GLASSMORPHISM) ─────────────────────
+        // ─── PALETA DE COLORES GONNIE ──────────────────────────────────────────
         const G = {
-          brand: "#00D4FF", brandD: "#00A1C9", brandL: "#5EE7FF",
-          bg: "#0B0B14", card: "rgba(255,255,255,0.06)", card2: "rgba(255,255,255,0.04)",
-          text: "#FFFFFF", muted: "#8B8FA3",
-          bdr: "rgba(255,255,255,0.10)",
-          green: "#4ADE80", red: "#FB7185", blue: "#60A5FA", gold: "#FBBF24",
+          brand: "#00A1C9", brandD: "#0081A3", brandL: "#33BDD9",
+          bg: "#F1EEE7", card: "#FFFFFF", card2: "#F7F5EF",
+          text: "#0A0A0A", muted: "#6B7280",
+          bdr: "rgba(10, 10, 10, 0.06)",
+          green: "#10B981", red: "#EF4444", blue: "#3B82F6", gold: "#F59E0B",
+          accent: "#D4F059",     // verde lima estilo referencias — para destacar 1 card
+          accentDark: "#0F1720", // gris muy oscuro casi negro — cards de acento tipo "Scheduled Assignments"
         };
 
 
@@ -408,40 +234,40 @@
         ];
 
         // ─── COMPONENTES AUXILIARES DE UI ───────────────────────────────────────
-        const Av = ({ txt, size = 38, bg = "#1A2535", color = G.brand }) => (
-          <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.34, fontWeight: 700, color, flexShrink: 0 }}>{txt}</div>
+        const Av = ({ txt, size = 38, bg = "#F1EEE7", color = G.brand }) => (
+          <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.34, fontWeight: 800, color, flexShrink: 0, border: "2px solid #FFFFFF", boxShadow: "0 4px 12px rgba(15, 23, 42, 0.08)" }}>{txt}</div>
         );
 
         const Pill = ({ children, color = G.brand, bg }) => (
-          <span style={{ background: bg || `${color}18`, color, fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 20, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{children}</span>
+          <span style={{ background: bg || `${color}15`, color, fontSize: 10, fontWeight: 800, padding: "4px 12px", borderRadius: 999, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{children}</span>
         );
 
         const NewPill = () => <Pill color="#FFFFFF" bg={G.brand}>NUEVO</Pill>;
 
         const PrimaryBtn = ({ onClick, children, disabled, style = {} }) => (
-          <button onClick={disabled ? undefined : onClick} style={{ background: disabled ? `${G.brand}40` : G.brand, color: disabled ? "rgba(255,255,255,0.3)" : "#FFFFFF", border: "none", borderRadius: 14, padding: "13px 20px", fontSize: 14, fontWeight: 800, cursor: disabled ? "not-allowed" : "pointer", width: "100%", fontFamily: "inherit", ...style }}>
+          <button onClick={disabled ? undefined : onClick} style={{ background: disabled ? `${G.brand}40` : `linear-gradient(135deg, ${G.brandL} 0%, ${G.brand} 100%)`, color: disabled ? "rgba(255,255,255,0.5)" : "#FFFFFF", border: "none", borderRadius: 18, padding: "15px 22px", fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em", cursor: disabled ? "not-allowed" : "pointer", width: "100%", fontFamily: "inherit", boxShadow: disabled ? "none" : `0 12px 28px -8px ${G.brand}66, 0 4px 10px -2px ${G.brand}33, inset 0 1px 0 rgba(255,255,255,0.25)`, ...style }}>
             {children}
           </button>
         );
 
         const GhostBtn = ({ onClick, children }) => (
-          <button onClick={onClick} style={{ background: "transparent", border: `1px solid ${G.bdr}`, borderRadius: 14, padding: "12px 20px", fontSize: 13, fontWeight: 500, cursor: "pointer", width: "100%", fontFamily: "inherit", color: G.muted }}>
+          <button onClick={onClick} style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 18, padding: "14px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", fontFamily: "inherit", color: G.text, boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)" }}>
             {children}
           </button>
         );
 
         const Back = ({ onBack }) => (
-          <button onClick={onBack} style={{ background: `${G.brand}15`, border: "none", borderRadius: 10, padding: "6px 12px", fontSize: 12, color: G.brand, cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>
+          <button onClick={onBack} style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 999, padding: "8px 14px", fontSize: 12, color: G.text, cursor: "pointer", fontFamily: "inherit", fontWeight: 700, boxShadow: "0 2px 6px rgba(15, 23, 42, 0.06)" }}>
             ← Volver
           </button>
         );
 
         const SLabel = ({ children }) => (
-          <p style={{ fontSize: 10, color: G.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10 }}>{children}</p>
+          <p style={{ fontSize: 10, color: G.muted, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>{children}</p>
         );
 
-        const Skeleton = ({ h = 60, r = 14 }) => (
-          <div style={{ height: h, borderRadius: r, background: "#E5E5EA", border: "none", marginBottom: 12, opacity: 1 }} />
+        const Skeleton = ({ h = 60, r = 20 }) => (
+          <div style={{ height: h, borderRadius: r, background: "linear-gradient(90deg, #EDEBE4 0%, #F5F3EE 50%, #EDEBE4 100%)", backgroundSize: "200% 100%", animation: "shimmer 1.4s infinite", border: "none", marginBottom: 12 }} />
         );
 
         const GONNIE_LOGO = "/logo transparente.png";
