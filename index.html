@@ -947,26 +947,16 @@
 
                 {loading && <Skeleton h={80} />}
 
-                {tab === "barberos" && !loading && (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    {barberos.map((br, idx) => {
-                      const bc = BARBER_COLORS[idx % 4];
-                      const isSel = selB && selB.id === br.id;
-                      return (
-                        <div key={br.id} onClick={() => setSelB(br)} style={{ background: G.card, border: `2px solid ${isSel ? G.brand : "transparent"}`, borderRadius: 20, padding: 14, cursor: "pointer" }}>
-                          {br.photo_url
-                            ? <img src={br.photo_url} style={{ width: "100%", aspectRatio: "1", borderRadius: "50%", objectFit: "cover", marginBottom: 10 }} alt={br.name} />
-                            : <div style={{ width: "100%", aspectRatio: "1", borderRadius: "50%", background: bc.bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
-                                <svg width="60%" height="60%" viewBox="0 0 70 70"><circle cx="26" cy="30" r="3" fill={bc.color}/><circle cx="46" cy="30" r="3" fill={bc.color}/><path d="M22 44 Q35 54 48 44" stroke={bc.color} strokeWidth="3" fill="none" strokeLinecap="round"/></svg>
-                              </div>
-                          }
-                          <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 600, color: G.text, margin: 0 }}>{br.name}</p>
-                          <p style={{ fontSize: 11, color: G.muted, margin: "2px 0 0" }}>{br.role} · ★ {br.rating}</p>
-                        </div>
-                      );
-                    })}
+                {tab === "barberos" && !loading && barberos.map((br, idx) => (
+                  <div key={br.id} onClick={() => setSelB(br)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: (selB && selB.id === br.id) ? G.mint : G.card, border: `1px solid ${(selB && selB.id === br.id) ? "transparent" : G.bdr}`, borderRadius: 16, marginBottom: 10, cursor: "pointer" }}>
+                    {br.photo_url
+                      ? <img src={br.photo_url} style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} alt={br.name} />
+                      : <Av txt={br.initials || br.name.slice(0,2).toUpperCase()} bg={BARBER_COLORS[idx % 4].bg} color={BARBER_COLORS[idx % 4].color} />
+                    }
+                    <div style={{ flex: 1 }}><p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, color: selB && selB.id === br.id ? "#0F2A20" : G.text, margin: 0 }}>{br.name}</p><p style={{ fontSize: 11, color: selB && selB.id === br.id ? "#0F2A20" : G.muted, margin: 0, opacity: selB && selB.id === br.id ? 0.7 : 1 }}>{br.role}</p></div>
+                    <p style={{ fontSize: 12, color: selB && selB.id === br.id ? "#0F2A20" : G.muted, fontWeight: 700 }}>★ {br.rating}</p>
                   </div>
-                )}
+                ))}
 
                 {tab === "servicios" && !loading && servicios.map(sv => (
                   <div key={sv.id} onClick={() => setSelS(sv)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px", background: (selS && selS.id === sv.id) ? G.mint : G.card, border: `1px solid ${(selS && selS.id === sv.id) ? "transparent" : G.bdr}`, borderRadius: 18, marginBottom: 10, cursor: "pointer" }}>
@@ -2088,6 +2078,7 @@
           const nivel = getNivel(puntos);
           const progreso = getProgreso(puntos);
           const ptsSiguiente = getPtsParaSiguiente(puntos);
+          const premiosDisponibles = puntos >= 500 ? 1 : 0;
           var email = (user && user.email) || '';
           var googleAvatar = (user && user.user_metadata && user.user_metadata.avatar_url) || null;
           var googleName = (user && user.user_metadata && user.user_metadata.full_name) || email || 'Usuario';
@@ -2141,16 +2132,21 @@
                   </div>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>Mis premios</p>
-                    <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>2 disponibles</p>
+                    <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{premiosDisponibles} disponible{premiosDisponibles === 1 ? "" : "s"}</p>
                   </div>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
                 </div>
-                <div style={{ background: G.card, borderRadius: 20, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => nav('appointments')}>
+                <div style={{ background: G.card, borderRadius: 20, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={function(){
+                  var shareData = { title: 'Gonnie', text: 'Reserva tu barbería favorita con Gonnie 💈', url: window.location.href };
+                  if (navigator.share) { navigator.share(shareData).catch(function(){}); }
+                  else { navigator.clipboard.writeText(shareData.url); alert('Enlace copiado al portapapeles'); }
+                }}>
                   <div style={{ width: 38, height: 38, borderRadius: 12, background: G.rose, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3A0F1B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 8v8M8 12h8"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3A0F1B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 3.9M15.4 6.6L8.6 10.5"/></svg>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>Historial de citas</p>
+                    <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>Compartir la app</p>
+                    <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Invita a un amigo</p>
                   </div>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
                 </div>
