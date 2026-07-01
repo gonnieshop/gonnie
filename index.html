@@ -8,8 +8,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Gonnie" />
-    <meta name="theme-color" content="#00A1C9" />
+    <meta name="theme-color" content="#EDE4D3" />
     <title>Gonnie App - Supabase Edition</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -21,108 +25,25 @@
     <script src="https://unpkg.com/@babel/standalone@7.23.4/babel.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
-      @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-      @keyframes floatOrb {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        50%      { transform: translate(20px, -30px) scale(1.06); }
-      }
-
-      html, body { background: #F1EEE7; }
-
-      body {
-        position: relative;
-        color: #0A0A0A;
-        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-feature-settings: 'cv02','cv03','cv04','cv11','ss01';
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        letter-spacing: -0.015em;
-        margin: 0;
-        padding: 0;
-        overflow-x: hidden;
-        min-height: 100vh;
-      }
-
-      /* Orbes de color en el fondo (crema + verde lima + cyan tenue) */
-      body::before {
-        content: '';
-        position: fixed;
-        top: -15%;
-        right: -20%;
-        width: 700px;
-        height: 700px;
-        background: radial-gradient(circle, rgba(212, 240, 89, 0.25) 0%, transparent 60%);
-        pointer-events: none;
-        z-index: 0;
-        animation: floatOrb 14s ease-in-out infinite;
-      }
-      body::after {
-        content: '';
-        position: fixed;
-        bottom: -20%;
-        left: -15%;
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, rgba(0, 161, 201, 0.14) 0%, transparent 60%);
-        pointer-events: none;
-        z-index: 0;
-        animation: floatOrb 16s ease-in-out infinite reverse;
-      }
-      #root { position: relative; z-index: 1; min-height: 100vh; }
-
-      /* Scrollbars limpios */
-      ::-webkit-scrollbar { width: 8px; height: 8px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: rgba(10, 10, 10, 0.14); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(0, 161, 201, 0.5); background-clip: content-box; }
-
-      ::selection { background: rgba(0, 161, 201, 0.22); color: inherit; }
-      input, select, textarea { color-scheme: light; }
-      img { -webkit-user-drag: none; user-select: none; }
-      svg { shape-rendering: geometricPrecision; }
-
-      /* Tipografía audaz forzada en h1/h2/h3 */
-      #root h1 { font-weight: 900 !important; letter-spacing: -0.045em !important; line-height: 1.0 !important; }
-      #root h2 { font-weight: 900 !important; letter-spacing: -0.035em !important; line-height: 1.05 !important; }
-      #root h3 { font-weight: 800 !important; letter-spacing: -0.025em !important; }
-
-      /* Sombras suaves en TODAS las cards blancas (selector quirúrgico) */
-      #root div[style*="background: rgb(255, 255, 255)"][style*="border-radius"],
-      #root div[style*="background:#FFFFFF"][style*="border-radius"],
-      #root div[style*="background: #FFFFFF"][style*="border-radius"],
-      #root div[style*="background: #fff"][style*="border-radius"],
-      #root div[style*="background:#fff"][style*="border-radius"] {
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 40px -14px rgba(15, 23, 42, 0.14) !important;
-        border-color: rgba(10, 10, 10, 0.03) !important;
-      }
-      /* Excepciones: modales flotantes ya tienen sombra propia, no la dupliques */
-      #root div[style*="position: fixed"][style*="background: rgb(255, 255, 255)"] {
-        box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.3), 0 8px 24px -8px rgba(0, 0, 0, 0.15) !important;
-      }
-
-      /* Micro-interacciones globales */
-      button, [role="button"], a {
-        transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    box-shadow 0.25s ease, filter 0.18s ease, opacity 0.15s ease;
-      }
-      button:hover:not(:disabled), [role="button"]:hover { filter: brightness(1.05); transform: translateY(-1px); }
-      button:active:not(:disabled), [role="button"]:active { transform: translateY(0) scale(0.97); }
-
-      /* Focus rings modernos */
-      input:focus, select:focus, textarea:focus {
-        outline: 2px solid #00A1C9 !important;
-        outline-offset: 1px !important;
-        box-shadow: 0 0 0 5px rgba(0, 161, 201, 0.14) !important;
-      }
-      input, select, textarea { transition: border-color 0.15s ease, box-shadow 0.15s ease; }
-      button:focus-visible, [role="button"]:focus-visible { outline: 2px solid #00A1C9; outline-offset: 3px; }
-
+        body { 
+            background-color: #EDE4D3; 
+            color: #1A1614;
+            font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Bricolage Grotesque', serif; font-optical-sizing: auto; letter-spacing: -0.02em; }
+        button, input, select, textarea { font-family: 'DM Sans', inherit; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0F1419; }
+        ::-webkit-scrollbar-thumb { background: #161D25; border-radius: 2px; }
+        input, select, textarea { color-scheme: dark; }
+    
     /* ─── GONNIE ANIMATIONS ─── */
     @keyframes confettiFall {
       0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
@@ -220,18 +141,14 @@
           }
         }
 
-        // ─── PALETA DE COLORES GONNIE (REDISEÑO 2026) ──────────────────────────
+        // ─── PALETA DE COLORES GONNIE ──────────────────────────────────────────
         const G = {
-          brand: "#00A1C9", brandD: "#0081A3", brandL: "#33BDD9",
-          bg: "#F1EEE7", card: "#FFFFFF", card2: "#FAF8F3",
-          text: "#0A0A0A", muted: "#6B7280",
-          bdr: "rgba(10, 10, 10, 0.05)",
-          green: "#10B981", red: "#EF4444", blue: "#3B82F6", gold: "#F59E0B",
-          accent: "#D4F059",      // verde lima — hero cards
-          accentDark: "#111318",  // casi negro — cards de contraste
-          soft1: "#FFE7C7",       // melocotón pastel
-          soft2: "#E7DDFF",       // lavanda pastel
-          soft3: "#FFD5E5",       // rosa pastel
+          brand: "#1E3EE6", brandD: "#1730B5", brandL: "#4A63EC",
+          bg: "#EDE4D3", card: "#F8F1E3", card2: "#EDE4D3",
+          text: "#1A1614", muted: "#6B5F52",
+          bdr: "rgba(26,22,20,0.08)",
+          green: "#8BD5B8", red: "#E5556B", blue: "#1E3EE6", gold: "#FFA582",
+          mint: "#8BD5B8", rose: "#F5A0B4", coral: "#FFA582", cream: "#F8F1E3", ink: "#1A1614",
         };
 
 
@@ -256,60 +173,47 @@
         }
 
         const BARBER_COLORS = [
-          { bg: "#E8F4FD", color: "#007AFF" },
-          { bg: "#E8F8F2", color: "#00A1C9" },
-          { bg: "#F3E8FD", color: "#AF52DE" },
-          { bg: "#FFF3E8", color: "#FF9500" },
+          { bg: "#8BD5B8", color: "#0F2A20" },
+          { bg: "#F5A0B4", color: "#3A0F1B" },
+          { bg: "#FFA582", color: "#3A1E10" },
+          { bg: "#1A1614", color: "#F8F1E3" },
         ];
 
         // ─── COMPONENTES AUXILIARES DE UI ───────────────────────────────────────
-        const Av = ({ txt, size = 40, bg = G.bg, color = G.brand }) => (
-          <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.36, fontWeight: 800, color, flexShrink: 0, border: "2.5px solid #FFFFFF", boxShadow: "0 6px 16px rgba(15, 23, 42, 0.10)" }}>{txt}</div>
+        const Av = ({ txt, size = 38, bg = "#1A2535", color = G.brand }) => (
+          <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.34, fontWeight: 700, color, flexShrink: 0 }}>{txt}</div>
         );
 
         const Pill = ({ children, color = G.brand, bg }) => (
-          <span style={{ background: bg || `${color}15`, color, fontSize: 10, fontWeight: 800, padding: "5px 12px", borderRadius: 999, letterSpacing: "0.04em", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" }}>{children}</span>
+          <span style={{ background: bg || `${color}18`, color, fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 24, letterSpacing: "0.06em", whiteSpace: "nowrap", textTransform: "uppercase" }}>{children}</span>
         );
 
-        const NewPill = () => <Pill color="#0A0A0A" bg={G.accent}>NUEVO</Pill>;
+        const NewPill = () => <Pill color="#FFFFFF" bg={G.brand}>NUEVO</Pill>;
 
         const PrimaryBtn = ({ onClick, children, disabled, style = {} }) => (
-          <button onClick={disabled ? undefined : onClick} style={{ background: disabled ? "#E5E5EA" : G.accentDark, color: disabled ? "#A0A0A0" : "#FFFFFF", border: "none", borderRadius: 999, padding: "17px 24px", fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em", cursor: disabled ? "not-allowed" : "pointer", width: "100%", fontFamily: "inherit", boxShadow: disabled ? "none" : "0 12px 28px -10px rgba(17, 19, 24, 0.5), inset 0 1px 0 rgba(255,255,255,0.12)", ...style }}>
-            {children}
-          </button>
-        );
-
-        const AccentBtn = ({ onClick, children, disabled, style = {} }) => (
-          <button onClick={disabled ? undefined : onClick} style={{ background: disabled ? "#E5E5EA" : G.accent, color: "#0A0A0A", border: "none", borderRadius: 999, padding: "17px 24px", fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em", cursor: disabled ? "not-allowed" : "pointer", width: "100%", fontFamily: "inherit", boxShadow: disabled ? "none" : "0 14px 32px -10px rgba(154, 178, 42, 0.55)", ...style }}>
+          <button onClick={disabled ? undefined : onClick} style={{ background: disabled ? `${G.brand}40` : G.brand, color: disabled ? "rgba(255,255,255,0.4)" : "#F8F1E3", border: "none", borderRadius: 24, padding: "16px 22px", fontSize: 15, fontWeight: 700, cursor: disabled ? "not-allowed" : "pointer", width: "100%", fontFamily: "'Bricolage Grotesque', inherit", letterSpacing: "-0.01em", ...style }}>
             {children}
           </button>
         );
 
         const GhostBtn = ({ onClick, children }) => (
-          <button onClick={onClick} style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 999, padding: "16px 22px", fontSize: 14, fontWeight: 700, cursor: "pointer", width: "100%", fontFamily: "inherit", color: G.text, boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)" }}>
+          <button onClick={onClick} style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 24, padding: "14px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", fontFamily: "'Bricolage Grotesque', inherit", color: G.text }}>
             {children}
           </button>
         );
 
         const Back = ({ onBack }) => (
-          <button onClick={onBack} style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 999, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: G.text, cursor: "pointer", fontFamily: "inherit", fontWeight: 700, boxShadow: "0 4px 12px rgba(15, 23, 42, 0.08)", padding: 0 }}>
-            ←
+          <button onClick={onBack} style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 20, padding: "8px 14px", fontSize: 12, color: G.text, cursor: "pointer", fontFamily: "'Bricolage Grotesque', inherit", fontWeight: 600 }}>
+            ← Volver
           </button>
         );
 
         const SLabel = ({ children }) => (
-          <p style={{ fontSize: 11, color: G.muted, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 12 }}>{children}</p>
+          <p style={{ fontSize: 11, color: G.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>{children}</p>
         );
 
-        const Skeleton = ({ h = 60, r = 24 }) => (
-          <div style={{ height: h, borderRadius: r, background: "linear-gradient(90deg, #EDEBE4 0%, #F5F3EE 50%, #EDEBE4 100%)", backgroundSize: "200% 100%", animation: "shimmer 1.4s infinite", border: "none", marginBottom: 12 }} />
-        );
-
-        // Contenedor de card estándar (para uso futuro)
-        const Card = ({ children, style = {}, onClick }) => (
-          <div onClick={onClick} style={{ background: G.card, borderRadius: 28, padding: 20, boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 14px 40px -14px rgba(15,23,42,0.14)", cursor: onClick ? "pointer" : "default", ...style }}>
-            {children}
-          </div>
+        const Skeleton = ({ h = 60, r = 20 }) => (
+          <div style={{ height: h, borderRadius: r, background: "rgba(26,22,20,0.05)", border: "none", marginBottom: 12, opacity: 1 }} />
         );
 
         const GONNIE_LOGO = "/logo transparente.png";
@@ -339,7 +243,7 @@
           };
 
           return (
-            <div style={{ minHeight: '100vh', background: 'transparent', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ minHeight: '100vh', background: '#fff', position: 'relative', display: 'flex', flexDirection: 'column' }}>
 
               {/* Fase logo — centrado animado */}
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: phase === 'logo' ? 10 : 0, pointerEvents: 'none' }}>
@@ -349,37 +253,23 @@
               </div>
 
               {/* Fase contenido */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', opacity: phase === 'content' ? 1 : 0, transition: 'opacity 0.6s ease', padding: '0 24px 40px' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', opacity: phase === 'content' ? 1 : 0, transition: 'opacity 0.6s ease', padding: '0 28px 48px' }}>
                 {/* Logo pequeño arriba */}
-                <div style={{ paddingTop: 44, marginBottom: 8, display: 'flex', justifyContent: 'flex-start' }}>
-                  <img src="https://i.imgur.com/22GIzhb.png" style={{ height: 44, width: 'auto' }} alt="Gonnie" />
+                <div style={{ paddingTop: 48, marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                  <img src="https://i.imgur.com/22GIzhb.png" style={{ width: '80%', height: 'auto' }} alt="Gonnie" />
                 </div>
 
                 {/* Texto */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <h1 style={{ fontSize: 48, fontWeight: 900, color: G.text, margin: '0 0 14px', lineHeight: 0.98, letterSpacing: '-0.045em' }}>Tu barbería,<br/>en tu bolsillo <span style={{ color: G.brand }}>✂</span></h1>
-                  <p style={{ fontSize: 16, color: G.muted, margin: '0 0 32px', fontWeight: 500, lineHeight: 1.45 }}>Reserva, acumula puntos y gestiona<br/>tus citas en segundos.</p>
+                  <h1 style={{ fontSize: 34, fontWeight: 800, color: '#000', margin: '0 0 10px', lineHeight: 1.1 }}>Tu barbería,<br/>en tu bolsillo.</h1>
+                  <p style={{ fontSize: 15, color: '#888', margin: '0 0 40px', fontWeight: 400, lineHeight: 1.5 }}>Reserva, acumula puntos y gestiona tus citas en segundos.</p>
 
-                  {/* Hero card verde lima */}
-                  <div style={{ background: G.accent, borderRadius: 32, padding: '22px 22px', marginBottom: 14, boxShadow: '0 20px 50px -15px rgba(154, 178, 42, 0.5)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                      <div style={{ width: 42, height: 42, borderRadius: 999, background: G.accentDark, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>⚡</div>
-                      <div>
-                        <p style={{ fontSize: 11, color: G.accentDark, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0, opacity: 0.7 }}>MÁS RÁPIDO</p>
-                        <p style={{ fontSize: 20, color: G.accentDark, fontWeight: 900, margin: 0, letterSpacing: '-0.02em' }}>30 segundos</p>
-                      </div>
-                    </div>
-                    <p style={{ fontSize: 13, color: G.accentDark, margin: 0, fontWeight: 600, opacity: 0.8, lineHeight: 1.4 }}>Reserva tu próxima cita en menos tiempo del que tardas en atarte los cordones.</p>
-                  </div>
-
-                  {/* Sub-features */}
-                  <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-                    {[{ icon: '🏆', label: 'Puntos', sub: 'y premios' }, { icon: '✂️', label: 'Barberos', sub: 'favoritos' }].map(function(f, i) {
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+                    {[{ icon: '⚡', label: 'Reserva rápida' }, { icon: '🏆', label: 'Puntos y premios' }, { icon: '✂️', label: 'Tus barberos' }].map(function(f, i) {
                       return (
-                        <div key={i} style={{ flex: 1, background: G.card, borderRadius: 24, padding: '16px 14px' }}>
-                          <p style={{ fontSize: 22, margin: '0 0 8px' }}>{f.icon}</p>
-                          <p style={{ fontSize: 13, fontWeight: 800, color: G.text, margin: 0, letterSpacing: '-0.01em' }}>{f.label}</p>
-                          <p style={{ fontSize: 11, fontWeight: 500, color: G.muted, margin: '2px 0 0' }}>{f.sub}</p>
+                        <div key={i} style={{ flex: 1, background: '#f7f7f7', borderRadius: 14, padding: '14px 8px', textAlign: 'center' }}>
+                          <p style={{ fontSize: 22, margin: '0 0 5px' }}>{f.icon}</p>
+                          <p style={{ fontSize: 10, fontWeight: 600, color: '#555', margin: 0 }}>{f.label}</p>
                         </div>
                       );
                     })}
@@ -388,7 +278,7 @@
 
                 {/* Botón */}
                 <button onClick={async function() { setLoading(true); await signInWithGoogle(); }} disabled={loading}
-                  style={{ width: '100%', background: G.accentDark, color: '#fff', border: 'none', borderRadius: 999, padding: '18px 22px', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 14, opacity: loading ? 0.6 : 1, fontFamily: 'inherit', boxShadow: '0 14px 34px -10px rgba(17, 19, 24, 0.5)' }}>
+                  style={{ width: '100%', background: '#000', color: '#fff', border: 'none', borderRadius: 16, padding: '16px 20px', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 14, opacity: loading ? 0.6 : 1, fontFamily: 'inherit' }}>
                   <svg width="20" height="20" viewBox="0 0 48 48">
                     <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.7 33.6 29.3 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l5.7-5.7C34.3 5.1 29.4 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.8 20-21 0-1.3-.2-2.7-.4-4z"/>
                     <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.1 8.1 2.9l5.7-5.7C34.3 5.1 29.4 3 24 3 16.3 3 9.7 7.9 6.3 14.7z"/>
@@ -397,7 +287,7 @@
                   </svg>
                   {loading ? 'Redirigiendo...' : 'Continuar con Google'}
                 </button>
-                <p style={{ fontSize: 11, color: G.muted, textAlign: 'center', margin: 0, fontWeight: 500 }}>Al continuar aceptas los términos de uso · Gratis para clientes</p>
+                <p style={{ fontSize: 11, color: '#bbb', textAlign: 'center', margin: 0 }}>Al continuar aceptas los términos de uso · Gratis para clientes</p>
               </div>
             </div>
           );
@@ -406,26 +296,26 @@
         // ─── VISTA 0: SPLASH SCREEN ───────────────────────────────────────────
         function SplashScreen({ onDone }) {
           return (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", minHeight: "80vh", background: "transparent" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", minHeight: "80vh", background: G.bg }}>
               <div style={{ marginBottom: 36, textAlign: "center" }}>
-                <img src="https://i.imgur.com/22GIzhb.png" style={{ height: 120, width: "auto" }} alt="Gonnie" />
-                <p style={{ fontSize: 15, color: G.muted, fontWeight: 500, marginTop: 4 }}>Tu barbería, en tu bolsillo</p>
+               <img src="https://i.imgur.com/22GIzhb.png" style={{ height: 140, width: "auto" }} alt="Gonnie" />
+                <p style={{ fontSize: 14, color: G.muted }}>Tu barbería, en tu bolsillo</p>
               </div>
-              <div style={{ width: "100%", marginBottom: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ width: "100%", marginBottom: 28 }}>
                 {[
-                  { icon: "⚡", label: "Reserva en menos de 30 segundos", accent: true },
-                  { icon: "🏆", label: "Acumula puntos con cada visita", accent: false },
-                  { icon: "🤖", label: "Tu barbero ideal sugerido por IA", accent: false },
+                  { icon: "⚡", label: "Reserva en menos de 30 segundos" },
+                  { icon: "🏆", label: "Acumula puntos con cada visita" },
+                  { icon: "🤖", label: "Tu barbero ideal sugerido por IA" },
                 ].map((f, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", background: f.accent ? G.accent : G.card, borderRadius: 24 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 999, background: f.accent ? G.accentDark : `${G.brand}12`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{f.icon}</div>
-                    <p style={{ fontSize: 14, color: G.text, fontWeight: 700, letterSpacing: "-0.01em" }}>{f.label}</p>
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderBottom: i < 2 ? `0.5px solid ${G.bdr}` : "none" }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 11, background: `${G.brand}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{f.icon}</div>
+                    <p style={{ fontSize: 13, color: G.text, fontWeight: 500 }}>{f.label}</p>
                   </div>
                 ))}
               </div>
               <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
                 <PrimaryBtn onClick={onDone}>Empezar →</PrimaryBtn>
-                <p style={{ fontSize: 11, color: G.muted, textAlign: "center", fontWeight: 500 }}>Gratis para clientes · Barberías desde 29€/mes</p>
+                <p style={{ fontSize: 11, color: G.muted, textAlign: "center" }}>Gratis para clientes · Barberías desde 29€/mes</p>
               </div>
             </div>
           );
@@ -448,7 +338,7 @@
           if (selected) {
             return (
               <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
-                <div style={{ position: 'relative', height: 280, background: G.card, overflow: 'hidden' }}>
+                <div style={{ position: 'relative', height: 280, background: '#f7f7f7', overflow: 'hidden' }}>
                   <img src={selected.img} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 20, boxSizing: 'border-box' }} alt={selected.nombre} />
                   <div style={{ position: 'absolute', top: 16, left: 16 }}>
                     <Back onBack={function(){ setSelected(null); }} />
@@ -458,11 +348,11 @@
                   <p style={{ fontSize: 11, fontWeight: 700, color: G.brand, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>Level 3</p>
                   <h2 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: '0 0 8px' }}>{selected.nombre}</h2>
                   <p style={{ fontSize: 26, fontWeight: 900, color: G.text, margin: '0 0 16px' }}>{selected.precio}€</p>
-                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 22, padding: '14px 16px', marginBottom: 24 }}>
+                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px 16px', marginBottom: 24 }}>
                     <p style={{ fontSize: 13, color: G.muted, margin: 0, lineHeight: 1.7 }}>{selected.descripcion}</p>
                   </div>
                   <button onClick={function(){ window.open('https://wa.me/34663528459?text=' + encodeURIComponent('Hola, me interesa el producto: ' + selected.nombre + ' (' + selected.precio + '€)'), '_blank'); }}
-                    style={{ width: '100%', background: '#25D366', border: 'none', borderRadius: 22, padding: '14px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                    style={{ width: '100%', background: '#25D366', border: 'none', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.534 5.856L.057 23.625a.75.75 0 00.918.918l5.769-1.477A11.944 11.944 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.891 0-3.667-.505-5.2-1.387l-.373-.214-3.865.99.99-3.865-.214-.373A9.956 9.956 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
                     Pedir por WhatsApp
                   </button>
@@ -485,7 +375,7 @@
                 {categorias.map(function(cat) {
                   return (
                     <button key={cat} onClick={function(){ setCatActiva(cat); }}
-                      style={{ flexShrink: 0, background: catActiva === cat ? G.brand : G.card, color: catActiva === cat ? '#fff' : G.muted, border: '1px solid ' + (catActiva === cat ? G.brand : G.bdr), borderRadius: 999, padding: '6px 14px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                      style={{ flexShrink: 0, background: catActiva === cat ? G.brand : G.card, color: catActiva === cat ? '#fff' : G.muted, border: '1px solid ' + (catActiva === cat ? G.brand : G.bdr), borderRadius: 20, padding: '6px 14px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
                       {cat}
                     </button>
                   );
@@ -496,8 +386,8 @@
                 {!loadingProd && filtrados.length === 0 && <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: G.muted, fontSize: 13, padding: '20px 0' }}>No hay productos</p>}
                 {filtrados.map(function(p) {
                   return (
-                    <div key={p.id} onClick={function(){ setSelected(p); }} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 26, overflow: 'hidden', cursor: 'pointer' }}>
-                      <div style={{ background: G.card, height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }}>
+                    <div key={p.id} onClick={function(){ setSelected(p); }} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, overflow: 'hidden', cursor: 'pointer' }}>
+                      <div style={{ background: '#f7f7f7', height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }}>
                         <img src={p.img} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt={p.nombre} />
                       </div>
                       <div style={{ padding: '10px 12px 12px' }}>
@@ -537,14 +427,14 @@
           }
 
           return (
-            <div style={{ position: "relative", marginBottom: 10, overflow: "hidden", borderRadius: 22 }}>
-              <div style={{ position: "absolute", inset: 0, background: G.red, borderRadius: 22, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 18 }}>
+            <div style={{ position: "relative", marginBottom: 10, overflow: "hidden", borderRadius: 14 }}>
+              <div style={{ position: "absolute", inset: 0, background: G.red, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 18 }}>
                 <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>Quitar</span>
               </div>
               <div
                 onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd}
                 onMouseDown={onStart} onMouseMove={function(e){ if(startX!==null) onMove(e); }} onMouseUp={onEnd} onMouseLeave={function(){ if(startX!==null) onEnd(); }}
-                style={{ position: "relative", display: "flex", gap: 12, background: G.card, border: "1px solid " + G.bdr, borderRadius: 22, padding: "14px 14px", transform: "translateX(" + dx + "px)", transition: (startX === null || saliendo) ? "transform 0.18s ease" : "none", cursor: "grab", touchAction: "pan-y" }}>
+                style={{ position: "relative", display: "flex", gap: 12, background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: "14px 14px", transform: "translateX(" + dx + "px)", transition: (startX === null || saliendo) ? "transform 0.18s ease" : "none", cursor: "grab", touchAction: "pan-y" }}>
                 <div style={{ width: 8, height: 8, borderRadius: 4, background: col, marginTop: 5, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: "0 0 3px" }}>{noti.titulo}</p>
@@ -633,51 +523,52 @@
           var notisVisibles = notis.filter(function(n){ return descartadas.indexOf(n.id) < 0; });
           return (
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
-              <div style={{ padding: "20px 20px 16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+              <div style={{ padding: "16px 18px 12px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2 }}>
                   <GonnieLogo size={22} />
-                  <p style={{ fontSize: 12, color: G.muted, margin: 0, paddingLeft: 2, fontWeight: 600 }}>Buenas 👋 <span style={{ color: G.text, fontWeight: 800 }}>{nombre}</span></p>
+                  <p style={{ fontSize: 11, color: "#1C1C1E", margin: 0, paddingLeft: 2 }}>Buenas 👋 {nombre}</p>
                 </div>
                 <div style={{ position: "relative", cursor: "pointer" }} onClick={function(){ setShowNotis(true); }}>
-                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: G.card, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(15, 23, 42, 0.08)" }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={G.text} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div style={{ width: 38, height: 38, borderRadius: "50%", background: G.card, border: `0.5px solid ${G.bdr}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                       <path d="M13.73 21a2 2 0 01-3.46 0"/>
                     </svg>
                   </div>
                   {notisVisibles.length > 0 && (
-                    <div style={{ position: "absolute", top: -2, right: -2, minWidth: 18, height: 18, padding: "0 5px", borderRadius: 999, background: G.red, border: `2px solid ${G.bg}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: "#fff" }}>{notisVisibles.length > 9 ? '9+' : notisVisibles.length}</span>
+                    <div style={{ position: "absolute", top: -2, right: -2, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, background: G.brand, border: `2px solid ${G.bg}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: "#fff" }}>{notisVisibles.length > 9 ? '9+' : notisVisibles.length}</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div style={{ padding: "0 20px" }}>
-                {/* HERO CARD: Puntos con verde lima */}
-                <div onClick={() => nav("loyalty")} style={{ background: G.accent, borderRadius: 32, padding: "24px 22px", marginBottom: 14, cursor: "pointer", position: "relative", boxShadow: "0 20px 50px -15px rgba(154, 178, 42, 0.55)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+              <div style={{ padding: "0 18px" }}>
+                {/* Caja de Puntos */}
+                <div onClick={() => nav("loyalty")} style={{ background: "linear-gradient(135deg,#EEF1F2,#DDE3E6)", border: `1px solid ${G.brand}30`, borderRadius: 20, padding: "18px 20px", marginBottom: 16, cursor: "pointer", position: "relative" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                     <div>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-                        <p style={{ fontSize: 10, color: G.accentDark, letterSpacing: "0.09em", textTransform: "uppercase", fontWeight: 800, opacity: 0.7, margin: 0 }}>Gonnie Points</p>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
+                        <p style={{ fontSize: 10, color: G.brandD, letterSpacing: "0.08em", textTransform: "uppercase" }}>Gonnie Points</p>
+                        <NewPill />
                       </div>
-                      <p style={{ fontSize: 48, fontWeight: 900, color: G.accentDark, lineHeight: 0.95, letterSpacing: "-0.04em", margin: 0 }}>{puntos.toLocaleString("es-ES")}</p>
-                      <p style={{ fontSize: 12, color: G.accentDark, marginTop: 8, opacity: 0.7, fontWeight: 600 }}>
+                      <p style={{ fontSize: 38, fontWeight: 900, color: G.brand, lineHeight: 1 }}>{puntos.toLocaleString("es-ES")}</p>
+                      <p style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>
                         Nivel {nivel.nombre} · {ptsSiguiente > 0 ? `${ptsSiguiente} pts para ${getNivel(puntos + ptsSiguiente).nombre}` : "¡Nivel máximo! 🎉"}
                       </p>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", background: G.accentDark, borderRadius: 999, padding: "10px 14px", textAlign: "center" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", background: `${G.brand}15`, border: `0.5px solid ${G.brand}30`, borderRadius: 14, padding: "10px 14px", textAlign: "center" }}>
                       <span dangerouslySetInnerHTML={{ __html: nivel.icono }} />
-                      <p style={{ fontSize: 9, fontWeight: 800, color: "#FFFFFF", marginTop: 4 }}>{nivel.nombre.toUpperCase()}</p>
+                      <p style={{ fontSize: 9, fontWeight: 800, color: nivel.color, marginTop: 4 }}>{nivel.nombre.toUpperCase()}</p>
                     </div>
                   </div>
-                  <div style={{ background: "rgba(17, 19, 24, 0.15)", borderRadius: 999, height: 6, overflow: "hidden" }}>
-                    <div style={{ width: `${progreso}%`, height: "100%", background: G.accentDark, transition: "width 0.8s ease" }} />
+                  <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 8, height: 5, overflow: "hidden" }}>
+                    <div style={{ width: `${progreso}%`, height: "100%", background: `linear-gradient(90deg,${G.brand},${G.brandL})`, transition: "width 0.8s ease" }} />
                   </div>
                 </div>
 
                 {/* Próxima Cita */}
-                <div style={{ background: G.card, boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04), 0 14px 40px -14px rgba(15, 23, 42, 0.14)", borderRadius: 28, padding: "18px 20px", marginBottom: 16 }}>
+                <div style={{ background: G.card, boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)", borderRadius: 18, padding: "14px 16px", marginBottom: 16 }}>
                   {cancelDone && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
                   <AnimCheck type="cross" />
@@ -691,7 +582,7 @@
                       <Pill color="#080B0F" bg={G.green}>{nextAppt.date} · {nextAppt.time}</Pill>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <Av txt={(nextAppt.barberos && nextAppt.barberos.name || "B").slice(0,2).toUpperCase()} size={42} bg={G.bg} color={G.blue} />
+                      <Av txt={(nextAppt.barberos && nextAppt.barberos.name || "B").slice(0,2).toUpperCase()} size={42} bg="#1A2535" color={G.blue} />
                       <div style={{ flex: 1 }}>
                         <p style={{ fontSize: 15, fontWeight: 700, color: G.text }}>{nextAppt.servicios && nextAppt.servicios.name}</p>
                         <p style={{ fontSize: 12, color: G.muted }}>{nextAppt.barberos && nextAppt.barberos.name}</p>
@@ -702,10 +593,10 @@
                       {/* Botones principales */}
                       {!confirmCancel && !showReschedule && (
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button onClick={function(){ setShowReschedule(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.brand + '50', borderRadius: 28, padding: '9px', fontSize: 12, color: G.brand, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          <button onClick={function(){ setShowReschedule(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.brand + '50', borderRadius: 10, padding: '9px', fontSize: 12, color: G.brand, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                             Cambiar fecha
                           </button>
-                          <button onClick={function(){ setConfirmCancel(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 28, padding: '9px', fontSize: 12, color: G.red, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          <button onClick={function(){ setConfirmCancel(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 10, padding: '9px', fontSize: 12, color: G.red, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                             Cancelar cita
                           </button>
                         </div>
@@ -713,7 +604,7 @@
 
                       {/* Confirmar cancelación */}
                       {confirmCancel && (
-                        <div style={{ background: G.red + '10', border: '1px solid ' + G.red + '30', borderRadius: 28, padding: '12px' }}>
+                        <div style={{ background: G.red + '10', border: '1px solid ' + G.red + '30', borderRadius: 10, padding: '12px' }}>
                           <p style={{ fontSize: 12, color: G.red, textAlign: 'center', marginBottom: 10, fontWeight: 600 }}>¿Seguro que quieres cancelar?</p>
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button onClick={function(){ setConfirmCancel(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 8, padding: '8px', fontSize: 12, color: G.muted, cursor: 'pointer', fontFamily: 'inherit' }}>No</button>
@@ -731,10 +622,10 @@
 
                       {/* Panel de reagendado */}
                       {showReschedule && (
-                        <div style={{ background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 999, padding: '14px' }}>
+                        <div style={{ background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '14px' }}>
                           <p style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 10 }}>Selecciona nueva fecha y hora</p>
                           <input type="date" value={rescheduleDate} onChange={function(e){ setRescheduleDate(e.target.value); }}
-                            style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '9px 12px', borderRadius: 28, color: G.text, fontSize: 13, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 700 }} />
+                            style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '9px 12px', borderRadius: 10, color: G.text, fontSize: 13, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 700 }} />
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 12 }}>
                             {slots.map(function(s) {
                               return (
@@ -799,7 +690,7 @@
                     { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', label: "Chat barbería", action: () => window.open("https://wa.me/34663528459", "_blank") },
                     { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>', label: "Tienda", action: () => nav("shop") },
                   ].map((a, i) => (
-                    <div key={i} onClick={a.action} style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 26, padding: "14px 14px 12px", cursor: "pointer", position: "relative" }}>
+                    <div key={i} onClick={a.action} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 16, padding: "14px 14px 12px", cursor: "pointer", position: "relative" }}>
                       {a.isNew && <div style={{ position: "absolute", top: 10, right: 10 }}><NewPill /></div>}
                       <span style={{ color: G.brand, display: "block", marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: a.svg.replace(/strokeWidth/g, 'stroke-width').replace(/<svg /, '<svg stroke="' + G.brand + '" ') }} />
                       <span style={{ fontSize: 12, fontWeight: 600, color: G.text }}>{a.label}</span>
@@ -863,7 +754,7 @@
         function BarberiaCard({ b, onSelect }) {
           const [esFav, setEsFav] = useState(getFavoritos().includes(String(b.id)));
           return (
-            <div onClick={onSelect} style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 28, marginBottom: 12, overflow: "hidden", cursor: "pointer" }}>
+            <div onClick={onSelect} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 18, marginBottom: 12, overflow: "hidden", cursor: "pointer" }}>
               <div style={{ height: 120, position: "relative", overflow: "hidden" }}>
                 <img src="https://i.imgur.com/W5os6Ue.jpeg" style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Barbería" />
                 <div style={{ position: "absolute", top: 10, right: 10 }}>
@@ -935,14 +826,14 @@
             <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", paddingBottom: 80 }}>
               <h2 style={{ fontSize: 22, fontWeight: 900, color: G.text, marginBottom: 14 }}>Explorar locales</h2>
 
-              <div style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 22, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <div style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 14, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                 <span style={{ color: G.muted }}>🔍</span>
                 <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar barberías..." style={{ background: "transparent", border: "none", outline: "none", color: G.text, fontSize: 16, flex: 1 }} />
               </div>
 
               <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 18, paddingBottom: 4 }}>
                 {tags.map(t => (
-                  <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, background: filter === t ? G.brand : G.card, color: filter === t ? "#080B0F" : G.muted, border: `1px solid ${filter === t ? "transparent" : G.bdr}`, borderRadius: 999, padding: "6px 16px", fontSize: 12, fontWeight: filter === t ? 800 : 400, cursor: "pointer" }}>{t}</button>
+                  <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, background: filter === t ? G.brand : G.card, color: filter === t ? "#080B0F" : G.muted, border: `0.5px solid ${filter === t ? "transparent" : G.bdr}`, borderRadius: 20, padding: "6px 16px", fontSize: 12, fontWeight: filter === t ? 800 : 400, cursor: "pointer" }}>{t}</button>
                 ))}
               </div>
 
@@ -1025,17 +916,17 @@
                   </button>
                 </div>
                 <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
-                  <a href="tel:663528459" style={{ display: "flex", alignItems: "center", gap: 6, background: G.card, border: "1px solid " + G.bdr, borderRadius: 28, padding: "7px 12px", fontSize: 12, fontWeight: 600, color: G.text, textDecoration: "none", flex: 1 }}>
+                  <a href="tel:663528459" style={{ display: "flex", alignItems: "center", gap: 6, background: G.card, border: "1px solid " + G.bdr, borderRadius: 10, padding: "7px 12px", fontSize: 12, fontWeight: 600, color: G.text, textDecoration: "none", flex: 1 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                     663 528 459
                   </a>
-                  <a href="https://instagram.com/gonniebarbershop" target="_blank" style={{ display: "flex", alignItems: "center", gap: 6, background: G.card, border: "1px solid " + G.bdr, borderRadius: 28, padding: "7px 12px", fontSize: 12, fontWeight: 600, color: G.text, textDecoration: "none", flex: 1 }}>
+                  <a href="https://instagram.com/gonniebarbershop" target="_blank" style={{ display: "flex", alignItems: "center", gap: 6, background: G.card, border: "1px solid " + G.bdr, borderRadius: 10, padding: "7px 12px", fontSize: 12, fontWeight: 600, color: G.text, textDecoration: "none", flex: 1 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill={G.brand}/></svg>
                     @gonniebarbershop
                   </a>
                 </div>
 
-                <div style={{ display: "flex", background: G.card2, borderRadius: 999, padding: 3, marginBottom: 18 }}>
+                <div style={{ display: "flex", background: G.card2, borderRadius: 12, padding: 3, marginBottom: 18 }}>
                   {[
                     { id: "barberos", l: "Barberos", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>' },
                     { id: "servicios", l: "Servicios", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>' },
@@ -1045,7 +936,7 @@
                     const col = active ? "#FFFFFF" : "#1C1C1E";
                     const svgHtml = t.svg.replace(/<svg /, '<svg stroke="' + col + '" ');
                     return (
-                      <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: active ? G.brand : "transparent", border: "none", borderRadius: 28, padding: "8px 4px", fontSize: 10, fontWeight: 700, cursor: "pointer", color: col, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                      <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: active ? G.brand : "transparent", border: "none", borderRadius: 10, padding: "8px 4px", fontSize: 10, fontWeight: 700, cursor: "pointer", color: col, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
                         <span dangerouslySetInnerHTML={{ __html: svgHtml }} />
                         <span>{t.l}</span>
                       </button>
@@ -1056,7 +947,7 @@
                 {loading && <Skeleton h={80} />}
 
                 {tab === "barberos" && !loading && barberos.map((br, idx) => (
-                  <div key={br.id} onClick={() => setSelB(br)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: (selB && selB.id === br.id) ? `${G.brand}10` : G.card, border: `1px solid ${(selB && selB.id === br.id) ? G.brand : G.bdr}`, borderRadius: 22, marginBottom: 10, cursor: "pointer" }}>
+                  <div key={br.id} onClick={() => setSelB(br)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: (selB && selB.id === br.id) ? `${G.brand}10` : G.card, border: `0.5px solid ${(selB && selB.id === br.id) ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
                     {br.photo_url
                       ? <img src={br.photo_url} style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} alt={br.name} />
                       : <Av txt={br.initials || br.name.slice(0,2).toUpperCase()} bg={BARBER_COLORS[idx % 4].bg} color={BARBER_COLORS[idx % 4].color} />
@@ -1067,7 +958,7 @@
                 ))}
 
                 {tab === "servicios" && !loading && servicios.map(sv => (
-                  <div key={sv.id} onClick={() => setSelS(sv)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: (selS && selS.id === sv.id) ? `${G.brand}10` : G.card, border: `1px solid ${(selS && selS.id === sv.id) ? G.brand : G.bdr}`, borderRadius: 22, marginBottom: 10, cursor: "pointer" }}>
+                  <div key={sv.id} onClick={() => setSelS(sv)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: (selS && selS.id === sv.id) ? `${G.brand}10` : G.card, border: `0.5px solid ${(selS && selS.id === sv.id) ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
                     <span dangerouslySetInnerHTML={{ __html: getSvgIcon(sv.icon || "✂️", selS && selS.id === sv.id ? G.brand : "#1C1C1E") }} />
                     <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 600, color: "#1C1C1E", margin: 0 }}>{sv.name}</p><p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>⏱ {sv.duration_min} min</p></div>
                     <p style={{ fontSize: 16, fontWeight: 800, color: "#1C1C1E" }}>{sv.price}€</p>
@@ -1159,7 +1050,7 @@
               <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 14 }}>Programar Horario</h3>
               <p style={{ fontSize: 12, color: G.muted }}>{booking.svc.name} con {booking.bar.name}</p>
 
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, padding: 12, borderRadius: 999, color: G.text, marginTop: 14, marginBottom: 18 }} />
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, padding: 12, borderRadius: 12, color: G.text, marginTop: 14, marginBottom: 18 }} />
 
               <SLabel>Horarios Disponibles</SLabel>
               {date && loadingHoras && <p style={{ fontSize: 12, color: G.muted, margin: '0 0 10px' }}>Comprobando disponibilidad...</p>}
@@ -1175,7 +1066,7 @@
                         background: ocupado ? '#f0f0f0' : (elegido ? G.brand : G.card),
                         color: ocupado ? '#bbb' : (elegido ? "#000" : G.text),
                         border: "1px solid " + (elegido ? G.brand : G.bdr),
-                        padding: 10, borderRadius: 28, fontWeight: 700,
+                        padding: 10, borderRadius: 10, fontWeight: 700,
                         cursor: ocupado || !date ? "not-allowed" : "pointer",
                         textDecoration: ocupado ? 'line-through' : 'none',
                         opacity: !date ? 0.5 : 1
@@ -1197,7 +1088,7 @@
                   var col = m.color;
                   return (
                     <button key={m.id} onClick={function(){ setMetodoPago(m.id); }}
-                      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: activo ? col + "14" : G.card, border: "1px solid " + (activo ? col : G.bdr), padding: "12px 6px", borderRadius: 999, cursor: "pointer", fontFamily: "inherit" }}>
+                      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: activo ? col + "14" : G.card, border: "1px solid " + (activo ? col : G.bdr), padding: "12px 6px", borderRadius: 12, cursor: "pointer", fontFamily: "inherit" }}>
                       <span dangerouslySetInnerHTML={{ __html: m.svg.replace(/COL/g, activo ? col : G.muted) }} />
                       <span style={{ fontSize: 12, fontWeight: 700, color: activo ? G.text : G.muted }}>{m.label}</span>
                     </button>
@@ -1223,7 +1114,7 @@
               <AnimCheck type="check" />
               <h2 style={{ fontSize: 22, fontWeight: 900, marginBottom: 8 }}>¡Reserva confirmada!</h2>
               <p style={{ fontSize: 13, color: G.muted, marginBottom: 24 }}>Te esperamos en GonnieBarbershop</p>
-              <div style={{ background: G.card, padding: 14, borderRadius: 999, textAlign: "left", marginBottom: 24, border: "1px solid " + G.bdr }}>
+              <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "left", marginBottom: 24, border: "1px solid " + G.bdr }}>
                 <p style={{ fontSize: 13, margin: "6px 0", color: G.text }}>📅 <b>Fecha:</b> {(appt && appt.date) || "Hoy"}</p>
                 <p style={{ fontSize: 13, margin: "6px 0", color: G.text }}>⏰ <b>Hora:</b> {(appt && appt.time) || "—"}</p>
                 <p style={{ fontSize: 13, margin: "6px 0", color: G.text }}>💰 <b>Importe:</b> {(appt && appt.price) || 0}€</p>
@@ -1302,7 +1193,7 @@
                       style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: G.card, border: '1px solid ' + G.bdr, borderRadius: abierto ? '14px 14px 0 0' : 14, padding: '12px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <span style={{ fontSize: 14, fontWeight: 800, color: G.text }}>{g.label}</span>
-                        <span style={{ fontSize: 11, color: G.muted, background: G.card2, borderRadius: 999, padding: '2px 8px' }}>{g.citas.length} {g.citas.length === 1 ? 'cita' : 'citas'}</span>
+                        <span style={{ fontSize: 11, color: G.muted, background: G.card2, borderRadius: 20, padding: '2px 8px' }}>{g.citas.length} {g.citas.length === 1 ? 'cita' : 'citas'}</span>
                       </div>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                         style={{ transform: abierto ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
@@ -1342,7 +1233,7 @@
               <p style={{ fontSize: 12, color: G.muted, marginBottom: 18 }}>Canjea tus puntos acumulados por servicios gratis</p>
 
               {rewards.map((r, i) => (
-                <div key={i} style={{ background: G.card, padding: 16, borderRadius: 22, border: `1px solid ${G.bdr}`, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div key={i} style={{ background: G.card, padding: 16, borderRadius: 14, border: `1px solid ${G.bdr}`, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <span style={{ fontSize: 11, color: G.brand, fontWeight: 700 }}>{r.pts} PUNTOS</span>
                     <h4 style={{ fontSize: 14, fontWeight: 700, margin: "2px 0 0", color: G.text }}>{r.title}</h4>
@@ -1745,8 +1636,8 @@
                   {opciones.map(function(o) {
                     return (
                       <button key={o.id} onClick={function(){ setPanel(o.id); }}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 16, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 28, padding: '18px 18px', marginBottom: 14, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-                        <span style={{ display: 'inline-flex', width: 48, height: 48, borderRadius: 22, background: G.brand + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 16, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 18, padding: '18px 18px', marginBottom: 14, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                        <span style={{ display: 'inline-flex', width: 48, height: 48, borderRadius: 14, background: G.brand + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                           dangerouslySetInnerHTML={{ __html: o.svg.replace(/COL/g, G.brand) }} />
                         <span style={{ flex: 1 }}>
                           <span style={{ display: 'block', fontSize: 17, fontWeight: 800, color: G.text }}>{o.label}</span>
@@ -1777,7 +1668,7 @@
                       { label: 'Ingresos hoy', value: ingresos.toFixed(0) + '€' },
                     ].map(function(s) {
                       return (
-                        <div key={s.label} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 26, padding: '16px 8px', textAlign: 'center' }}>
+                        <div key={s.label} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px 8px', textAlign: 'center' }}>
                           <p style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: '0 0 4px' }}>{s.value}</p>
                           <p style={{ fontSize: 10, color: G.muted, margin: 0 }}>{s.label}</p>
                         </div>
@@ -1787,7 +1678,7 @@
 
                   {/* Ingresos del mes — botón con desglose */}
                   <button onClick={function(){ setShowDesglose(!showDesglose); }}
-                    style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 26, padding: '18px 16px', marginBottom: 12, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '18px 16px', marginBottom: 12, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span>
                       <span style={{ display: 'block', fontSize: 11, color: G.muted, marginBottom: 4 }}>Ingresos del mes</span>
                       <span style={{ display: 'block', fontSize: 28, fontWeight: 800, color: G.text }}>{ingresosMes.toFixed(0)}€</span>
@@ -1800,7 +1691,7 @@
 
                   {/* Desglose por método de pago */}
                   {showDesglose && (
-                    <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 26, padding: '8px 16px', marginBottom: 12 }}>
+                    <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '8px 16px', marginBottom: 12 }}>
                       {[
                         { id: 'efectivo', label: 'Efectivo', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>' },
                         { id: 'tarjeta', label: 'Tarjeta', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>' },
@@ -1811,7 +1702,7 @@
                         var col = m.color || G.brand;
                         return (
                           <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < arr.length - 1 || desglosePagos.otro > 0 ? '1px solid ' + G.bdr : 'none' }}>
-                            <span style={{ display: 'inline-flex', width: 36, height: 36, borderRadius: 28, background: col + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                            <span style={{ display: 'inline-flex', width: 36, height: 36, borderRadius: 10, background: col + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                               dangerouslySetInnerHTML={{ __html: m.svg.replace(/COL/g, col) }} />
                             <span style={{ flex: 1 }}>
                               <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: G.text }}>{m.label}</span>
@@ -1830,11 +1721,11 @@
                     </div>
                   )}
 
-                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 26, padding: '16px', marginBottom: 12 }}>
+                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 12 }}>
                     <p style={{ fontSize: 12, color: G.muted, margin: '0 0 4px' }}>Citas confirmadas este mes</p>
                     <p style={{ fontSize: 28, fontWeight: 800, color: G.text, margin: 0 }}>{citasMes.length}</p>
                   </div>
-                  <button onClick={exportarPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: G.brand, border: 'none', borderRadius: 22, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <button onClick={exportarPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: G.brand, border: 'none', borderRadius: 14, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                     Exportar PDF del mes
                   </button>
@@ -1858,7 +1749,7 @@
                   {!loadingClientes && clientes.map(function(cl, i) {
                     var inicial = (cl.nombre || '?').charAt(0).toUpperCase();
                     return (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 26, padding: '14px 16px', marginBottom: 10 }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '14px 16px', marginBottom: 10 }}>
                         <span style={{ display: 'inline-flex', width: 42, height: 42, borderRadius: 21, background: G.brand + '18', color: G.brand, alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 800, flexShrink: 0 }}>{inicial}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cl.nombre}</p>
@@ -1881,7 +1772,7 @@
                   <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>{editProd ? (editProd.id ? 'Editar producto' : 'Nuevo producto') : 'Productos'}</h1>
                   {!editProd && (
                     <button onClick={function(){ setEditProd({ nombre: '', precio: '', descripcion: '', img: '', categoria: '' }); }}
-                      style={{ marginLeft: 'auto', background: G.brand, border: 'none', borderRadius: 28, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      style={{ marginLeft: 'auto', background: G.brand, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Añadir
                     </button>
                   )}
@@ -1893,27 +1784,27 @@
                     <div>
                       {/* Imagen */}
                       <div style={{ marginBottom: 16 }}>
-                        <div style={{ width: '100%', height: 180, background: G.card, borderRadius: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid ' + G.bdr, marginBottom: 10 }}>
+                        <div style={{ width: '100%', height: 180, background: '#f7f7f7', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid ' + G.bdr, marginBottom: 10 }}>
                           {editProd.img ? <img src={editProd.img} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 16, boxSizing: 'border-box' }} alt="" /> : <span style={{ color: G.muted, fontSize: 13 }}>Sin imagen</span>}
                         </div>
                         <input id="prodImgInput" type="file" accept="image/*" style={{ display: 'none' }}
                           onChange={async function(e){ var f = e.target.files && e.target.files[0]; if (!f) return; var url = await subirImagen(f); if (url) setEditProd(Object.assign({}, editProd, { img: url })); }} />
                         <button onClick={function(){ document.getElementById('prodImgInput').click(); }} disabled={uploadingImg}
-                          style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 999, padding: '11px', fontSize: 13, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '11px', fontSize: 13, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit' }}>
                           {uploadingImg ? 'Subiendo...' : (editProd.img ? 'Cambiar foto' : 'Subir foto')}
                         </button>
                       </div>
                       {/* Campos */}
                       <input value={editProd.nombre} onChange={function(e){ setEditProd(Object.assign({}, editProd, { nombre: e.target.value })); }} placeholder="Nombre"
-                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 999, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }} />
                       <input value={editProd.precio} onChange={function(e){ setEditProd(Object.assign({}, editProd, { precio: e.target.value })); }} placeholder="Precio (€)" type="number"
-                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 999, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }} />
                       <input value={editProd.categoria} onChange={function(e){ setEditProd(Object.assign({}, editProd, { categoria: e.target.value })); }} placeholder="Categoría (ej: Sprays)"
-                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 999, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }} />
                       <textarea value={editProd.descripcion} onChange={function(e){ setEditProd(Object.assign({}, editProd, { descripcion: e.target.value })); }} placeholder="Descripción" rows={3}
-                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 999, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit', resize: 'vertical' }} />
+                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: G.text, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit', resize: 'vertical' }} />
                       <button onClick={guardarProducto} disabled={savingProd || uploadingImg}
-                        style={{ width: '100%', background: G.brand, border: 'none', borderRadius: 22, padding: '14px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ width: '100%', background: G.brand, border: 'none', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
                         {savingProd ? 'Guardando...' : 'Guardar producto'}
                       </button>
                     </div>
@@ -1926,8 +1817,8 @@
                       {!loadingProd && productos.length === 0 && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>No hay productos. Pulsa "Añadir".</p>}
                       {!loadingProd && productos.map(function(p) {
                         return (
-                          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 26, padding: '12px 14px', marginBottom: 10 }}>
-                            <div style={{ width: 50, height: 50, background: G.card, borderRadius: 28, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '12px 14px', marginBottom: 10 }}>
+                            <div style={{ width: 50, height: 50, background: '#f7f7f7', borderRadius: 10, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               {p.img ? <img src={p.img} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }} alt="" /> : <span style={{ fontSize: 18 }}>📦</span>}
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
@@ -1976,7 +1867,7 @@
                     var activo = str === selectedDate;
                     return (
                       <button key={i} onClick={function(){ setSelectedDate(str); }}
-                        style={{ flex: 1, background: activo ? '#1C1C1E' : 'transparent', border: activo ? 'none' : '1px solid ' + G.bdr, borderRadius: 22, padding: '8px 0', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        style={{ flex: 1, background: activo ? '#1C1C1E' : 'transparent', border: activo ? 'none' : '1px solid ' + G.bdr, borderRadius: 14, padding: '8px 0', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                         <span style={{ fontSize: 11, fontWeight: 600, color: activo ? 'rgba(255,255,255,0.7)' : G.muted }}>{DIAS_SEMANA[i]}</span>
                         <span style={{ fontSize: 15, fontWeight: 800, color: activo ? '#fff' : G.text }}>{d.getDate()}</span>
                       </button>
@@ -1987,7 +1878,7 @@
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '14px 0 12px' }}>
                   <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: G.text }}>Agenda</h2>
                   <button onClick={function(){ setShowNuevaCita(!showNuevaCita); setNcDone(false); }}
-                    style={{ background: G.brand, border: 'none', borderRadius: 28, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    style={{ background: G.brand, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Nueva cita
                   </button>
                 </div>
@@ -1998,7 +1889,7 @@
 
                 {/* Panel nueva cita */}
                 {showNuevaCita && (
-                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 26, padding: '16px', marginBottom: 16, marginTop: 4 }}>
+                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 16, marginTop: 4 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                       <p style={{ fontSize: 14, fontWeight: 800, color: G.text, margin: 0 }}>Nueva cita manual</p>
                       <button onClick={function(){ setShowNuevaCita(false); }} style={{ background: G.card2, border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 14, color: G.muted }}>✕</button>
@@ -2006,25 +1897,25 @@
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>NOMBRE DEL CLIENTE</p>
                     <input value={ncNombre} onChange={function(e){ setNcNombre(e.target.value); }} placeholder="Nombre y apellidos"
-                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 28, padding: '10px 12px', fontSize: 16, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }} />
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }} />
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>BARBERO</p>
                     <select value={ncBarbero} onChange={function(e){ setNcBarbero(e.target.value); }}
-                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 28, padding: '10px 12px', fontSize: 14, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }}>
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }}>
                       <option value="">Selecciona barbero</option>
                       {barberos.map(function(b){ return <option key={b.id} value={b.id}>{b.name}</option>; })}
                     </select>
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>SERVICIO</p>
                     <select value={ncServicio} onChange={function(e){ setNcServicio(e.target.value); }}
-                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 28, padding: '10px 12px', fontSize: 14, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }}>
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }}>
                       <option value="">Selecciona servicio</option>
                       {servicios.map(function(s){ return <option key={s.id} value={s.id}>{s.name} — {s.price}€</option>; })}
                     </select>
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>FECHA</p>
                     <input type="date" value={ncFecha} onChange={function(e){ setNcFecha(e.target.value); }}
-                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 28, padding: '10px 12px', fontSize: 14, fontWeight: 700, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }} />
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, fontWeight: 700, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }} />
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 8px' }}>HORA</p>
                     {ncBarbero && ncFecha ? null : <p style={{ fontSize: 11, color: G.muted, margin: '0 0 8px' }}>Elige barbero y fecha primero</p>}
@@ -2041,7 +1932,7 @@
 
                     {ncDone && <p style={{ fontSize: 12, color: G.green, fontWeight: 700, textAlign: 'center', margin: '0 0 10px' }}>✓ Cita creada</p>}
                     <button onClick={crearCita} disabled={!ncNombre || !ncBarbero || !ncServicio || !ncFecha || !ncHora || ncGuardando}
-                      style={{ width: '100%', background: (!ncNombre || !ncBarbero || !ncServicio || !ncFecha || !ncHora) ? G.bdr : G.brand, border: 'none', borderRadius: 999, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      style={{ width: '100%', background: (!ncNombre || !ncBarbero || !ncServicio || !ncFecha || !ncHora) ? G.bdr : G.brand, border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
                       {ncGuardando ? 'Guardando...' : 'Crear cita'}
                     </button>
                   </div>
@@ -2134,8 +2025,8 @@
                       var col = m.color;
                       return (
                         <button key={m.id} onClick={function(){ guardarPago(citaSel, m.id); }} disabled={guardandoPago}
-                          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, background: activo ? col + '14' : G.card, border: '1px solid ' + (activo ? col : G.bdr), borderRadius: 26, padding: '15px 16px', marginBottom: 10, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-                          <span style={{ display: 'inline-flex', width: 40, height: 40, borderRadius: 999, background: col + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, background: activo ? col + '14' : G.card, border: '1px solid ' + (activo ? col : G.bdr), borderRadius: 16, padding: '15px 16px', marginBottom: 10, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                          <span style={{ display: 'inline-flex', width: 40, height: 40, borderRadius: 12, background: col + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                             dangerouslySetInnerHTML={{ __html: m.svg.replace(/COL/g, col) }} />
                           <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: G.text }}>{m.label}</span>
                           {activo && <span style={{ fontSize: 18, color: col, fontWeight: 800 }}>✓</span>}
@@ -2180,9 +2071,9 @@
                 : <div style={{ width: 80, height: 80, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, color: '#fff', fontWeight: 700, margin: '0 auto 12px' }}>{iniciales}</div>
               }
               <p style={{ fontSize: 12, marginTop: 10, marginBottom: 12, textAlign: 'center', color: '#8E8E93' }}>{email}</p>
-              <div style={{ background: G.card, borderRadius: 22, border: '1px solid ' + G.bdr, marginBottom: 18, overflow: 'hidden' }}>
+              <div style={{ background: G.card, borderRadius: 14, border: '1px solid ' + G.bdr, marginBottom: 18, overflow: 'hidden' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: '1px solid ' + G.bdr, cursor: 'pointer' }} onClick={function(){ nav('settings'); }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 28, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + G.brand + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' }} />
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + G.brand + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' }} />
                   <p style={{ fontSize: 14, fontWeight: 500, color: G.text, flex: 1, margin: 0 }}>Ajustes de Cuenta</p>
                   <span style={{ color: G.muted }}>›</span>
                 </div>
@@ -2196,7 +2087,7 @@
                   </span>
                 </GhostBtn>
               )}
-              <button onClick={signOut} style={{ marginTop: 12, width: '100%', background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 22, padding: '12px', fontSize: 13, color: G.red, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+              <button onClick={signOut} style={{ marginTop: 12, width: '100%', background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 14, padding: '12px', fontSize: 13, color: G.red, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
                 Cerrar sesión
               </button>
             </div>
@@ -2215,14 +2106,14 @@
 
           return (
             <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
-              <div style={{ background: '#fff', borderRadius: 32, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', padding: '24px 20px', width: '100%', maxWidth: 340, animation: 'slideUp 0.35s ease' }}>
+              <div style={{ background: '#fff', borderRadius: 24, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', padding: '24px 20px', width: '100%', maxWidth: 340, animation: 'slideUp 0.35s ease' }}>
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <img src="https://i.imgur.com/W5os6Ue.jpeg" style={{ width: 44, height: 44, borderRadius: 999, objectFit: 'cover' }} alt="Gonnie" />
+                    <img src="https://i.imgur.com/W5os6Ue.jpeg" style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover' }} alt="Gonnie" />
                     <div>
                       <p style={{ fontSize: 15, fontWeight: 800, color: '#000', margin: 0 }}>Instala Gonnie</p>
-                      <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Gratis · Sin App Store</p>
+                      <p style={{ fontSize: 11, color: '#888', margin: 0 }}>Gratis · Sin App Store</p>
                     </div>
                   </div>
                   <button onClick={function(){ localStorage.setItem('gonnie_install_dismissed','1'); setVisible(false); }}
@@ -2230,15 +2121,15 @@
                 </div>
 
                 {/* Paso 1 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, borderRadius: 22, padding: '12px 14px', marginBottom: 8 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 28, background: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#f7f7f7', borderRadius: 14, padding: '12px 14px', marginBottom: 8 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" stroke="none">
                       <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
                     </svg>
                   </div>
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#000', margin: '0 0 2px' }}>Toca los tres puntos <b>···</b></p>
-                    <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>En la barra inferior de Safari</p>
+                    <p style={{ fontSize: 11, color: '#888', margin: 0 }}>En la barra inferior de Safari</p>
                   </div>
                 </div>
 
@@ -2247,8 +2138,8 @@
                 </div>
 
                 {/* Paso 2 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, borderRadius: 22, padding: '12px 14px', marginBottom: 8 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 28, background: '#007AFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#f7f7f7', borderRadius: 14, padding: '12px 14px', marginBottom: 8 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#007AFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 2v13M7 7l5-5 5 5"/>
                       <path d="M20 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1v-5"/>
@@ -2256,7 +2147,7 @@
                   </div>
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#000', margin: '0 0 2px' }}>Toca Compartir</p>
-                    <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>El icono de la cajita con flecha</p>
+                    <p style={{ fontSize: 11, color: '#888', margin: 0 }}>El icono de la cajita con flecha</p>
                   </div>
                 </div>
 
@@ -2265,20 +2156,20 @@
                 </div>
 
                 {/* Paso 3 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, borderRadius: 22, padding: '12px 14px', marginBottom: 20 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 28, background: '#34C759', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#f7f7f7', borderRadius: 14, padding: '12px 14px', marginBottom: 20 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#34C759', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/>
                     </svg>
                   </div>
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 700, color: '#000', margin: '0 0 2px' }}>Añadir a pantalla de inicio</p>
-                    <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Toca este botón en el menú</p>
+                    <p style={{ fontSize: 11, color: '#888', margin: 0 }}>Toca este botón en el menú</p>
                   </div>
                 </div>
 
                 <button onClick={function(){ localStorage.setItem('gonnie_install_dismissed','1'); setVisible(false); }}
-                  style={{ width: '100%', background: G.brand, border: 'none', borderRadius: 22, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  style={{ width: '100%', background: G.brand, border: 'none', borderRadius: 14, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
                   Entendido
                 </button>
               </div>
@@ -2332,7 +2223,7 @@
 
           // Pantalla de carga mientras comprueba sesión
           if (authLoading) return (
-            <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#FFFFFF" }}>
+            <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: G.bg }}>
               <div style={{ textAlign: "center" }}>
                 <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: 80, width: "auto", marginBottom: 16, marginLeft: "auto", marginRight: "auto", display: "block" }} alt="Gonnie" />
                 <p style={{ color: G.muted, fontSize: 13 }}>Cargando Gonnie...</p>
@@ -2342,7 +2233,7 @@
 
           // Sin sesión → pantalla de login
           if (!user) return (
-            <div className="flex justify-center bg-black min-h-screen">
+            <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
               <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
                 <LoginScreen />
               </div>
@@ -2351,7 +2242,7 @@
 
           // Con sesión → splash o app
           if (splash) return (
-            <div className="flex justify-center bg-black min-h-screen">
+            <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
               <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
                 <SplashScreen onDone={() => setSplash(false)} />
               </div>
@@ -2359,7 +2250,7 @@
           );
 
           return (
-            <div className="flex justify-center bg-black min-h-screen">
+            <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
               <InstallBanner />
               <div style={{ width: "100%", maxWidth: 420, background: G.bg, height: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
                 <div style={{ flex: 1, minHeight: 0, overflowY: mode === "business" ? "hidden" : "auto" }}>
@@ -2385,7 +2276,7 @@
                   )}
                 </div>
                 {view !== "confirmed" && (
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 68, background: "#FFFFFF", borderTop: `1px solid ${G.bdr}`, boxShadow: "0 -1px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", zIndex: 50 }}>
+                  <div style={{ position: "absolute", bottom: 14, left: 12, right: 12, height: 62, background: G.card, borderRadius: 32, boxShadow: "0 10px 30px -12px rgba(60,42,20,0.25), 0 0 0 1px rgba(26,22,20,0.05)", display: "flex", alignItems: "center", zIndex: 50, padding: "0 10px" }}>
                     {[
                       { id: "home", l: "Inicio", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" /><path d="M9 21V12h6v9"/></svg>' },
                       { id: "explore", l: "Explorar", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>' },
@@ -2394,12 +2285,12 @@
                       { id: "profile", l: "Perfil", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>' },
                     ].map(n => {
                       const active = view === n.id && mode === "customer";
-                      const col = active ? G.brand : "#00A1C9";
+                      const col = active ? "#F8F1E3" : G.text;
                       const svgHtml = n.svg.replace(/FILL/g, col).replace(/<svg /, '<svg stroke="' + col + '" ');
                       return (
-                        <button key={n.id} onClick={() => { if(mode === "business") setMode("customer"); setView(n.id); }} style={{ flex: 1, background: "transparent", border: "none", fontSize: 10, fontWeight: active ? 700 : 500, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", padding: "6px 0", color: col }}>
-                          <span dangerouslySetInnerHTML={{ __html: svgHtml }} />
-                          <span>{n.l}</span>
+                        <button key={n.id} onClick={() => { if(mode === "business") setMode("customer"); setView(n.id); }} style={{ flex: 1, background: "transparent", border: "none", fontSize: 10, fontWeight: 600, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, cursor: "pointer", padding: "6px 0", color: active ? G.text : G.muted, fontFamily: "inherit" }}>
+                          <span style={{ width: 38, height: 38, borderRadius: 20, background: active ? G.brand : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s" }} dangerouslySetInnerHTML={{ __html: svgHtml }} />
+                          <span style={{ fontSize: 9, marginTop: -2, opacity: active ? 1 : 0 }}>{n.l}</span>
                         </button>
                       );
                     })}
@@ -2428,7 +2319,7 @@
           return (
             <div style={{ paddingBottom: 20 }}>
               {avg && (
-                <div style={{ background: G.card, border: "1px solid " + G.bdr, borderRadius: 22, padding: "14px 16px", marginBottom: 14 }}>
+                <div style={{ background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: "14px 16px", marginBottom: 14 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                     <div style={{ textAlign: "center" }}>
                       <p style={{ fontSize: 36, fontWeight: 900, color: G.text, lineHeight: 1, margin: 0 }}>{avg}</p>
@@ -2452,7 +2343,7 @@
                 </div>
               )}
 
-              <button onClick={navReview} style={{ width: "100%", background: G.brand, color: "#fff", border: "none", borderRadius: 999, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 16, fontFamily: "inherit" }}>
+              <button onClick={navReview} style={{ width: "100%", background: G.brand, color: "#fff", border: "none", borderRadius: 12, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 16, fontFamily: "inherit" }}>
                 ✏️ Escribir reseña
               </button>
 
@@ -2467,7 +2358,7 @@
 
               {resenas.map(function(r, i) {
                 return (
-                  <div key={i} style={{ background: G.card, border: "1px solid " + G.bdr, borderRadius: 22, padding: 14, marginBottom: 10 }}>
+                  <div key={i} style={{ background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: 14, marginBottom: 10 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: 0 }}>{r.client_name}</p>
                       <p style={{ fontSize: 13, margin: 0 }}>{"⭐".repeat(r.stars)}</p>
@@ -2551,7 +2442,7 @@
               <textarea value={comment} onChange={function(e){ setComment(e.target.value); }}
                 placeholder="Cuéntanos tu experiencia..."
                 rows={4}
-                style={{ width: "100%", background: G.card, border: "1px solid " + G.bdr, borderRadius: 22, padding: "12px 14px", fontSize: 14, color: G.text, resize: "none", outline: "none", fontFamily: "inherit", boxSizing: "border-box", marginBottom: 20 }}
+                style={{ width: "100%", background: G.card, border: "1px solid " + G.bdr, borderRadius: 14, padding: "12px 14px", fontSize: 14, color: G.text, resize: "none", outline: "none", fontFamily: "inherit", boxSizing: "border-box", marginBottom: 20 }}
               />
 
               <PrimaryBtn onClick={submit} disabled={stars === 0 || saving}>
@@ -2695,7 +2586,7 @@
                       onChange={function(e){ if (!field.disabled) field.setter(e.target.value); }}
                       placeholder={field.placeholder || ''}
                       disabled={field.disabled || false}
-                      style={{ width: '100%', background: field.disabled ? G.card2 : G.card, border: '1px solid ' + G.bdr, borderRadius: 999, padding: '12px 14px', fontSize: 14, color: field.disabled ? G.muted : G.text, outline: 'none', fontFamily: 'inherit', opacity: field.disabled ? 0.6 : 1, boxSizing: 'border-box' }}
+                      style={{ width: '100%', background: field.disabled ? G.card2 : G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: field.disabled ? G.muted : G.text, outline: 'none', fontFamily: 'inherit', opacity: field.disabled ? 0.6 : 1, boxSizing: 'border-box' }}
                     />
                     {field.disabled && <p style={{ fontSize: 10, color: G.muted, marginTop: 4 }}>No se puede cambiar</p>}
                   </div>
@@ -2748,7 +2639,7 @@
                 </div>
                 <p style={{ fontSize: 18, fontWeight: 800, color: G.text, margin: '0 0 8px' }}>Mensaje enviado</p>
                 <p style={{ fontSize: 13, color: G.muted, margin: '0 0 28px', lineHeight: 1.6 }}>Te responderemos en menos de 24h en el email con el que iniciaste sesión.</p>
-                <button onClick={function(){ nav('settings'); }} style={{ background: G.brand, border: 'none', borderRadius: 22, padding: '13px 28px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>Volver</button>
+                <button onClick={function(){ nav('settings'); }} style={{ background: G.brand, border: 'none', borderRadius: 14, padding: '13px 28px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>Volver</button>
               </div>
             );
           }
@@ -2765,7 +2656,7 @@
                 {temas.map(function(t) {
                   return (
                     <button key={t} onClick={function(){ setTipo(t); }}
-                      style={{ background: tipo === t ? G.brand : G.card, border: '1px solid ' + (tipo === t ? G.brand : G.bdr), borderRadius: 999, padding: '12px 16px', fontSize: 13, fontWeight: tipo === t ? 700 : 500, color: tipo === t ? '#fff' : G.text, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                      style={{ background: tipo === t ? G.brand : G.card, border: '1px solid ' + (tipo === t ? G.brand : G.bdr), borderRadius: 12, padding: '12px 16px', fontSize: 13, fontWeight: tipo === t ? 700 : 500, color: tipo === t ? '#fff' : G.text, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
                       {t}
                     </button>
                   );
@@ -2775,10 +2666,10 @@
               {/* Mensaje */}
               <p style={{ fontSize: 12, fontWeight: 700, color: G.text, margin: '0 0 10px' }}>Describe tu problema</p>
               <textarea value={mensaje} onChange={function(e){ setMensaje(e.target.value); }} placeholder="Escribe aquí tu mensaje..."
-                style={{ width: '100%', minHeight: 120, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 22, padding: '12px 14px', fontSize: 16, color: G.text, fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', outline: 'none', lineHeight: 1.6 }} />
+                style={{ width: '100%', minHeight: 120, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '12px 14px', fontSize: 16, color: G.text, fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box', outline: 'none', lineHeight: 1.6 }} />
 
               <button onClick={handleEnviar} disabled={!tipo || !mensaje.trim() || enviando}
-                style={{ width: '100%', marginTop: 16, background: (!tipo || !mensaje.trim()) ? G.bdr : G.brand, border: 'none', borderRadius: 22, padding: '14px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: (!tipo || !mensaje.trim() || enviando) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', transition: 'background 0.2s' }}>
+                style={{ width: '100%', marginTop: 16, background: (!tipo || !mensaje.trim()) ? G.bdr : G.brand, border: 'none', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: (!tipo || !mensaje.trim() || enviando) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', transition: 'background 0.2s' }}>
                 {enviando ? 'Enviando...' : 'Enviar mensaje'}
               </button>
             </div>
@@ -2848,7 +2739,7 @@
 
               {secciones.map(function(s, i) {
                 return (
-                  <div key={i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 22, padding: '14px 16px', marginBottom: 10 }}>
+                  <div key={i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: '0 0 6px' }}>{s.titulo}</p>
                     <p style={{ fontSize: 12, color: G.muted, margin: 0, lineHeight: 1.6 }}>{s.texto}</p>
                   </div>
@@ -2858,16 +2749,16 @@
               {/* Eliminar cuenta */}
               <div style={{ marginTop: 24 }}>
                 {!showDelete ? (
-                  <button onClick={function(){ setShowDelete(true); }} style={{ width: '100%', background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 22, padding: '13px', fontSize: 13, color: G.red, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <button onClick={function(){ setShowDelete(true); }} style={{ width: '100%', background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 14, padding: '13px', fontSize: 13, color: G.red, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                     Eliminar mi cuenta
                   </button>
                 ) : (
-                  <div style={{ background: G.red + '08', border: '1px solid ' + G.red + '30', borderRadius: 22, padding: '16px' }}>
+                  <div style={{ background: G.red + '08', border: '1px solid ' + G.red + '30', borderRadius: 14, padding: '16px' }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: G.red, textAlign: 'center', margin: '0 0 6px' }}>¿Eliminar cuenta?</p>
                     <p style={{ fontSize: 11, color: G.muted, textAlign: 'center', margin: '0 0 14px', lineHeight: 1.5 }}>Se borrarán todas tus citas, puntos y datos. Esta acción no se puede deshacer.</p>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={function(){ setShowDelete(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 28, padding: '10px', fontSize: 13, color: G.muted, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
-                      <button onClick={handleDeleteAccount} disabled={deleting} style={{ flex: 1, background: G.red, border: 'none', borderRadius: 28, padding: '10px', fontSize: 13, color: '#fff', fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                      <button onClick={function(){ setShowDelete(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px', fontSize: 13, color: G.muted, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+                      <button onClick={handleDeleteAccount} disabled={deleting} style={{ flex: 1, background: G.red, border: 'none', borderRadius: 10, padding: '10px', fontSize: 13, color: '#fff', fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
                         {deleting ? 'Eliminando...' : 'Sí, eliminar'}
                       </button>
                     </div>
@@ -2927,7 +2818,7 @@
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
               <Back onBack={function(){ nav('profile'); }} />
               <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 20px' }}>Ajustes</h2>
-               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 26, padding: '24px 16px', marginBottom: 24 }}>
+               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '24px 16px', marginBottom: 24 }}>
                  {photo
                    ? <img src={photo} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid ' + G.brand, marginBottom: 12 }} alt="avatar" />
                    : <div style={{ width: 80, height: 80, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, color: '#fff', fontWeight: 700, marginBottom: 12 }}>{iniciales}</div>
@@ -2936,11 +2827,11 @@
                  <p style={{ fontSize: 12, color: G.muted, margin: 0, textAlign: 'center' }}>{email}</p>
                </div>
 
-              <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 26, overflow: 'hidden' }}>
+              <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, overflow: 'hidden' }}>
                 {opciones.map(function(op, i) {
                   return (
                     <div key={i} onClick={op.action} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderBottom: i < opciones.length - 1 ? '1px solid ' + G.bdr : 'none', cursor: 'pointer' }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 28, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: (op.svg || '').replace(/COL/g, G.brand) }} />
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: (op.svg || '').replace(/COL/g, G.brand) }} />
                       <div style={{ flex: 1 }}>
                         <p style={{ fontSize: 14, fontWeight: 600, color: G.text, margin: '0 0 2px' }}>{op.label}</p>
                         <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{op.desc}</p>
@@ -2988,7 +2879,7 @@
 
         // ─── CONFETTI COMPONENT ───────────────────────────────────────────────────
         function Confetti() {
-          const colors = ['#00A1C9','#FFD700','#FF6B6B','#4ADE80','#C084FC','#FB923C'];
+          const colors = ['#1E3EE6','#8BD5B8','#F5A0B4','#FFA582','#1A1614','#F8F1E3'];
           const pieces = Array.from({ length: 60 }, function(_, i) {
             return {
               id: i,
