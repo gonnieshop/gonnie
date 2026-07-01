@@ -525,8 +525,8 @@
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: 80 }}>
               <div style={{ padding: "16px 18px 12px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2 }}>
-                  <GonnieLogo size={22} />
-                  <p style={{ fontSize: 11, color: "#1C1C1E", margin: 0, paddingLeft: 2 }}>Buenas 👋 {nombre}</p>
+                  <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 11, fontWeight: 700, color: G.muted, margin: 0, letterSpacing: "0.04em" }}>Buenas 👋</p>
+                  <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 26, fontWeight: 700, color: G.text, margin: 0, lineHeight: 1.05 }}>Hola, {nombre}</p>
                 </div>
                 <div style={{ position: "relative", cursor: "pointer" }} onClick={function(){ setShowNotis(true); }}>
                   <div style={{ width: 38, height: 38, borderRadius: "50%", background: G.card, border: `0.5px solid ${G.bdr}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -545,30 +545,31 @@
 
               <div style={{ padding: "0 18px" }}>
                 {/* Caja de Puntos */}
-                <div onClick={() => nav("loyalty")} style={{ background: "linear-gradient(135deg,#EEF1F2,#DDE3E6)", border: `1px solid ${G.brand}30`, borderRadius: 20, padding: "18px 20px", marginBottom: 16, cursor: "pointer", position: "relative" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+                <div onClick={() => nav("loyalty")} style={{ background: G.mint, border: "none", borderRadius: 28, padding: "20px 20px", marginBottom: 16, cursor: "pointer", position: "relative", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: -14, right: -14, width: 96, height: 96, borderRadius: "50%", background: G.card, opacity: 0.55 }} />
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, position: "relative" }}>
                     <div>
                       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
-                        <p style={{ fontSize: 10, color: G.brandD, letterSpacing: "0.08em", textTransform: "uppercase" }}>Gonnie Points</p>
+                        <p style={{ fontSize: 10, color: "#0F2A20", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>Gonnie Points</p>
                         <NewPill />
                       </div>
-                      <p style={{ fontSize: 38, fontWeight: 900, color: G.brand, lineHeight: 1 }}>{puntos.toLocaleString("es-ES")}</p>
-                      <p style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>
+                      <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 42, fontWeight: 700, color: "#0F2A20", lineHeight: 1, margin: "6px 0 4px" }}>{puntos.toLocaleString("es-ES")}</p>
+                      <p style={{ fontSize: 11, color: "#0F2A20", opacity: 0.75, marginTop: 4 }}>
                         Nivel {nivel.nombre} · {ptsSiguiente > 0 ? `${ptsSiguiente} pts para ${getNivel(puntos + ptsSiguiente).nombre}` : "¡Nivel máximo! 🎉"}
                       </p>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", background: `${G.brand}15`, border: `0.5px solid ${G.brand}30`, borderRadius: 14, padding: "10px 14px", textAlign: "center" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", background: G.card, borderRadius: 16, padding: "10px 14px", textAlign: "center" }}>
                       <span dangerouslySetInnerHTML={{ __html: nivel.icono }} />
                       <p style={{ fontSize: 9, fontWeight: 800, color: nivel.color, marginTop: 4 }}>{nivel.nombre.toUpperCase()}</p>
                     </div>
                   </div>
-                  <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 8, height: 5, overflow: "hidden" }}>
-                    <div style={{ width: `${progreso}%`, height: "100%", background: `linear-gradient(90deg,${G.brand},${G.brandL})`, transition: "width 0.8s ease" }} />
+                  <div style={{ background: "rgba(15,42,32,0.15)", borderRadius: 8, height: 6, overflow: "hidden", position: "relative" }}>
+                    <div style={{ width: `${progreso}%`, height: "100%", background: "#1A1614", borderRadius: 8, transition: "width 0.8s ease" }} />
                   </div>
                 </div>
 
                 {/* Próxima Cita */}
-                <div style={{ background: G.card, boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)", borderRadius: 18, padding: "14px 16px", marginBottom: 16 }}>
+                <div style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 24, padding: "16px 16px", marginBottom: 16 }}>
                   {cancelDone && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
                   <AnimCheck type="cross" />
@@ -582,7 +583,7 @@
                       <Pill color="#080B0F" bg={G.green}>{nextAppt.date} · {nextAppt.time}</Pill>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <Av txt={(nextAppt.barberos && nextAppt.barberos.name || "B").slice(0,2).toUpperCase()} size={42} bg="#1A2535" color={G.blue} />
+                      <Av txt={(nextAppt.barberos && nextAppt.barberos.name || "B").slice(0,2).toUpperCase()} size={46} bg={G.rose} color="#3A0F1B" />
                       <div style={{ flex: 1 }}>
                         <p style={{ fontSize: 15, fontWeight: 700, color: G.text }}>{nextAppt.servicios && nextAppt.servicios.name}</p>
                         <p style={{ fontSize: 12, color: G.muted }}>{nextAppt.barberos && nextAppt.barberos.name}</p>
@@ -685,15 +686,15 @@
                 <SLabel>Acciones rápidas</SLabel>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 18 }}>
                   {[
-                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>', label: "Reservar cita", action: () => nav("explore") },
-                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>', label: "Reserva grupal", action: () => nav("explore"), isNew: true },
-                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', label: "Chat barbería", action: () => window.open("https://wa.me/34663528459", "_blank") },
-                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>', label: "Tienda", action: () => nav("shop") },
+                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>', label: "Reservar cita", action: () => nav("explore"), bg: G.coral, fg: "#3A1E10" },
+                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>', label: "Reserva grupal", action: () => nav("explore"), isNew: true, bg: G.mint, fg: "#0F2A20" },
+                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', label: "Chat barbería", action: () => window.open("https://wa.me/34663528459", "_blank"), bg: "#1A1614", fg: "#F8F1E3" },
+                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>', label: "Tienda", action: () => nav("shop"), bg: G.rose, fg: "#3A0F1B" },
                   ].map((a, i) => (
-                    <div key={i} onClick={a.action} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 16, padding: "14px 14px 12px", cursor: "pointer", position: "relative" }}>
+                    <div key={i} onClick={a.action} style={{ background: a.bg, borderRadius: 20, padding: "16px 14px 14px", cursor: "pointer", position: "relative" }}>
                       {a.isNew && <div style={{ position: "absolute", top: 10, right: 10 }}><NewPill /></div>}
-                      <span style={{ color: G.brand, display: "block", marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: a.svg.replace(/strokeWidth/g, 'stroke-width').replace(/<svg /, '<svg stroke="' + G.brand + '" ') }} />
-                      <span style={{ fontSize: 12, fontWeight: 600, color: G.text }}>{a.label}</span>
+                      <span style={{ color: a.fg, display: "block", marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: a.svg.replace(/strokeWidth/g, 'stroke-width').replace(/<svg /, '<svg stroke="' + a.fg + '" ') }} />
+                      <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, color: a.fg }}>{a.label}</span>
                     </div>
                   ))}
                 </div>
@@ -751,35 +752,34 @@
           return idx === -1;
         }
 
-        function BarberiaCard({ b, onSelect }) {
+        const CARD_TREATMENTS = [
+          { bg: "#F8F1E3", fg: G.text, sub: G.muted, tone: "card" },
+          { bg: "#F5A0B4", fg: "#3A0F1B", sub: "#3A0F1B", tone: "rose" },
+          { bg: "#8BD5B8", fg: "#0F2A20", sub: "#0F2A20", tone: "mint" },
+        ];
+
+        function BarberiaCard({ b, onSelect, index = 0 }) {
           const [esFav, setEsFav] = useState(getFavoritos().includes(String(b.id)));
+          const tr = CARD_TREATMENTS[index % CARD_TREATMENTS.length];
+          const isCard = tr.tone === "card";
           return (
-            <div onClick={onSelect} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 18, marginBottom: 12, overflow: "hidden", cursor: "pointer" }}>
-              <div style={{ height: 120, position: "relative", overflow: "hidden" }}>
+            <div onClick={onSelect} style={{ background: tr.bg, border: isCard ? `1px solid ${G.bdr}` : "none", borderRadius: 22, marginBottom: 12, padding: 14, display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }}>
+              <div style={{ width: 64, height: 64, borderRadius: 20, overflow: "hidden", flexShrink: 0, position: "relative" }}>
                 <img src="https://i.imgur.com/W5os6Ue.jpeg" style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Barbería" />
-                <div style={{ position: "absolute", top: 10, right: 10 }}>
-                  <Pill color={estaAbierto() ? "#080B0F" : G.red} bg={estaAbierto() ? G.green : `${G.red}18`}>{estaAbierto() ? "Abierto" : "Cerrado"}</Pill>
-                </div>
               </div>
-              <div style={{ padding: "12px 14px 14px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                  <p style={{ fontSize: 15, fontWeight: 800, color: G.text }}>{b.name}</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill={G.gold} stroke={G.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{b.rating}</span>
-                      {b.total_resenas && <span style={{ fontSize: 11, color: G.muted }}>({b.total_resenas})</span>}
-                    </div>
-                    <button onClick={function(e){ e.stopPropagation(); setEsFav(toggleFavorito(b.id)); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill={esFav ? "#FF3B30" : "none"} stroke={esFav ? "#FF3B30" : G.muted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                      </svg>
-                    </button>
-                  </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                  <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 16, fontWeight: 600, color: tr.fg, margin: 0 }}>{b.name}</p>
+                  <Pill color={estaAbierto() ? tr.fg : "#E5556B"} bg={estaAbierto() ? (isCard ? G.mint : "rgba(0,0,0,0.12)") : "rgba(229,85,107,0.15)"}>{estaAbierto() ? "Abierta" : "Cerrada"}</Pill>
                 </div>
-                <p style={{ fontSize: 11, color: G.muted, marginBottom: 8 }}>📍 {b.city} · {b.hours}</p>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {(b.specialties || []).map(sp => <Pill key={sp}>{sp}</Pill>)}
+                <p style={{ fontSize: 12, color: tr.sub, opacity: isCard ? 1 : 0.75, margin: "2px 0 6px" }}>{b.city} · {b.hours}</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11, color: tr.sub, opacity: isCard ? 1 : 0.85 }}>
+                  <span>★ {b.rating}{b.total_resenas ? ` (${b.total_resenas})` : ""}</span>
+                  <button onClick={function(e){ e.stopPropagation(); setEsFav(toggleFavorito(b.id)); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", marginLeft: "auto" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill={esFav ? "#E5556B" : "none"} stroke={esFav ? "#E5556B" : tr.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -826,21 +826,21 @@
             <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", paddingBottom: 80 }}>
               <h2 style={{ fontSize: 22, fontWeight: 900, color: G.text, marginBottom: 14 }}>Explorar locales</h2>
 
-              <div style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 14, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <div style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 26, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                 <span style={{ color: G.muted }}>🔍</span>
                 <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar barberías..." style={{ background: "transparent", border: "none", outline: "none", color: G.text, fontSize: 16, flex: 1 }} />
               </div>
 
               <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 18, paddingBottom: 4 }}>
                 {tags.map(t => (
-                  <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, background: filter === t ? G.brand : G.card, color: filter === t ? "#080B0F" : G.muted, border: `0.5px solid ${filter === t ? "transparent" : G.bdr}`, borderRadius: 20, padding: "6px 16px", fontSize: 12, fontWeight: filter === t ? 800 : 400, cursor: "pointer" }}>{t}</button>
+                  <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, fontFamily: "'Bricolage Grotesque'", background: filter === t ? G.brand : G.card, color: filter === t ? "#F8F1E3" : G.text, border: `1px solid ${filter === t ? "transparent" : G.bdr}`, borderRadius: 24, padding: "10px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t}</button>
                 ))}
               </div>
 
-              {loading && [1, 2, 3].map(i => <Skeleton key={i} h={140} />)}
+              {loading && [1, 2, 3].map(i => <Skeleton key={i} h={90} r={22} />)}
 
-              {!loading && list.map((b) => (
-                <BarberiaCard key={b.id} b={b} onSelect={() => { setBarberia(b); nav("detail"); }} />
+              {!loading && list.map((b, i) => (
+                <BarberiaCard key={b.id} b={b} index={i} onSelect={() => { setBarberia(b); nav("detail"); }} />
               ))}
             </div>
           );
@@ -926,17 +926,17 @@
                   </a>
                 </div>
 
-                <div style={{ display: "flex", background: G.card2, borderRadius: 12, padding: 3, marginBottom: 18 }}>
+                <div style={{ display: "flex", background: G.card, borderRadius: 24, padding: 4, marginBottom: 18, gap: 4 }}>
                   {[
-                    { id: "barberos", l: "Barberos", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>' },
-                    { id: "servicios", l: "Servicios", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>' },
-                    { id: "resenas", l: "Reseñas", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' },
+                    { id: "barberos", l: "Barberos", svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>' },
+                    { id: "servicios", l: "Servicios", svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>' },
+                    { id: "resenas", l: "Reseñas", svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' },
                   ].map(t => {
                     const active = tab === t.id;
-                    const col = active ? "#FFFFFF" : "#1C1C1E";
+                    const col = active ? "#F8F1E3" : G.text;
                     const svgHtml = t.svg.replace(/<svg /, '<svg stroke="' + col + '" ');
                     return (
-                      <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: active ? G.brand : "transparent", border: "none", borderRadius: 10, padding: "8px 4px", fontSize: 10, fontWeight: 700, cursor: "pointer", color: col, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                      <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, fontFamily: "'Bricolage Grotesque'", background: active ? G.brand : "transparent", border: "none", borderRadius: 20, padding: "9px 4px", fontSize: 12, fontWeight: 600, cursor: "pointer", color: col, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
                         <span dangerouslySetInnerHTML={{ __html: svgHtml }} />
                         <span>{t.l}</span>
                       </button>
@@ -946,22 +946,32 @@
 
                 {loading && <Skeleton h={80} />}
 
-                {tab === "barberos" && !loading && barberos.map((br, idx) => (
-                  <div key={br.id} onClick={() => setSelB(br)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: (selB && selB.id === br.id) ? `${G.brand}10` : G.card, border: `0.5px solid ${(selB && selB.id === br.id) ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
-                    {br.photo_url
-                      ? <img src={br.photo_url} style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} alt={br.name} />
-                      : <Av txt={br.initials || br.name.slice(0,2).toUpperCase()} bg={BARBER_COLORS[idx % 4].bg} color={BARBER_COLORS[idx % 4].color} />
-                    }
-                    <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 700, color: "#1C1C1E", margin: 0 }}>{br.name}</p><p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>{br.role}</p></div>
-                    <p style={{ fontSize: 12, color: "#1C1C1E", fontWeight: 700 }}>⭐ {br.rating}</p>
+                {tab === "barberos" && !loading && (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    {barberos.map((br, idx) => {
+                      const bc = BARBER_COLORS[idx % 4];
+                      const isSel = selB && selB.id === br.id;
+                      return (
+                        <div key={br.id} onClick={() => setSelB(br)} style={{ background: G.card, border: `2px solid ${isSel ? G.brand : "transparent"}`, borderRadius: 20, padding: 14, cursor: "pointer" }}>
+                          {br.photo_url
+                            ? <img src={br.photo_url} style={{ width: "100%", aspectRatio: "1", borderRadius: "50%", objectFit: "cover", marginBottom: 10 }} alt={br.name} />
+                            : <div style={{ width: "100%", aspectRatio: "1", borderRadius: "50%", background: bc.bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                                <svg width="60%" height="60%" viewBox="0 0 70 70"><circle cx="26" cy="30" r="3" fill={bc.color}/><circle cx="46" cy="30" r="3" fill={bc.color}/><path d="M22 44 Q35 54 48 44" stroke={bc.color} strokeWidth="3" fill="none" strokeLinecap="round"/></svg>
+                              </div>
+                          }
+                          <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 600, color: G.text, margin: 0 }}>{br.name}</p>
+                          <p style={{ fontSize: 11, color: G.muted, margin: "2px 0 0" }}>{br.role} · ★ {br.rating}</p>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                )}
 
                 {tab === "servicios" && !loading && servicios.map(sv => (
-                  <div key={sv.id} onClick={() => setSelS(sv)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: (selS && selS.id === sv.id) ? `${G.brand}10` : G.card, border: `0.5px solid ${(selS && selS.id === sv.id) ? G.brand : G.bdr}`, borderRadius: 14, marginBottom: 10, cursor: "pointer" }}>
-                    <span dangerouslySetInnerHTML={{ __html: getSvgIcon(sv.icon || "✂️", selS && selS.id === sv.id ? G.brand : "#1C1C1E") }} />
-                    <div style={{ flex: 1 }}><p style={{ fontSize: 14, fontWeight: 600, color: "#1C1C1E", margin: 0 }}>{sv.name}</p><p style={{ fontSize: 11, color: "#1C1C1E", margin: 0 }}>⏱ {sv.duration_min} min</p></div>
-                    <p style={{ fontSize: 16, fontWeight: 800, color: "#1C1C1E" }}>{sv.price}€</p>
+                  <div key={sv.id} onClick={() => setSelS(sv)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px", background: (selS && selS.id === sv.id) ? G.mint : G.card, border: `1px solid ${(selS && selS.id === sv.id) ? "transparent" : G.bdr}`, borderRadius: 18, marginBottom: 10, cursor: "pointer" }}>
+                    <span dangerouslySetInnerHTML={{ __html: getSvgIcon(sv.icon || "✂️", selS && selS.id === sv.id ? "#0F2A20" : G.text) }} />
+                    <div style={{ flex: 1 }}><p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, color: selS && selS.id === sv.id ? "#0F2A20" : G.text, margin: 0 }}>{sv.name}</p><p style={{ fontSize: 11, color: selS && selS.id === sv.id ? "#0F2A20" : G.muted, margin: 0, opacity: selS && selS.id === sv.id ? 0.7 : 1 }}>⏱ {sv.duration_min} min</p></div>
+                    <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 16, fontWeight: 700, color: selS && selS.id === sv.id ? "#0F2A20" : G.text }}>{sv.price}€</p>
                   </div>
                 ))}
 
@@ -1045,16 +1055,16 @@
           };
 
           return (
-            <div style={{ flex: 1, padding: 18, overflowY: 'auto', paddingBottom: 90 }}>
-              <Back onBack={() => nav("detail")} />
-              <h3 style={{ fontSize: 18, fontWeight: 800, marginTop: 14 }}>Programar Horario</h3>
-              <p style={{ fontSize: 12, color: G.muted }}>{booking.svc.name} con {booking.bar.name}</p>
+            <div style={{ flex: 1, padding: 18, overflowY: 'auto', paddingBottom: 90, background: "#1A1614", color: "#F8F1E3" }}>
+              <button onClick={() => nav("detail")} style={{ background: "rgba(248,241,227,0.08)", border: "none", borderRadius: 20, padding: "8px 14px", fontSize: 12, color: "#F8F1E3", cursor: "pointer", fontFamily: "'Bricolage Grotesque'", fontWeight: 600 }}>← Volver</button>
+              <h3 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 24, fontWeight: 700, marginTop: 16, color: "#F8F1E3" }}>Elige día y hora</h3>
+              <p style={{ fontSize: 13, color: "rgba(248,241,227,0.55)" }}>{booking.svc.name} con {booking.bar.name}</p>
 
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", background: G.card, border: `1px solid ${G.bdr}`, padding: 12, borderRadius: 12, color: G.text, marginTop: 14, marginBottom: 18 }} />
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", background: "rgba(248,241,227,0.06)", border: "1px solid rgba(248,241,227,0.1)", padding: 14, borderRadius: 16, color: "#F8F1E3", marginTop: 14, marginBottom: 18, colorScheme: "dark" }} />
 
-              <SLabel>Horarios Disponibles</SLabel>
-              {date && loadingHoras && <p style={{ fontSize: 12, color: G.muted, margin: '0 0 10px' }}>Comprobando disponibilidad...</p>}
-              {!date && <p style={{ fontSize: 12, color: G.muted, margin: '0 0 10px' }}>Elige primero una fecha</p>}
+              <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Horarios disponibles</p>
+              {date && loadingHoras && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Comprobando disponibilidad...</p>}
+              {!date && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Elige primero una fecha</p>}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 24 }}>
                 {slots.map(function(s) {
                   var ocupado = ocupados.indexOf(s) >= 0;
@@ -1063,10 +1073,10 @@
                     <button key={s} onClick={function(){ if (!ocupado) setSlot(s); }} disabled={ocupado || !date}
                       style={{
                         position: 'relative',
-                        background: ocupado ? '#f0f0f0' : (elegido ? G.brand : G.card),
-                        color: ocupado ? '#bbb' : (elegido ? "#000" : G.text),
-                        border: "1px solid " + (elegido ? G.brand : G.bdr),
-                        padding: 10, borderRadius: 10, fontWeight: 700,
+                        background: ocupado ? 'rgba(248,241,227,0.03)' : (elegido ? G.mint : 'rgba(248,241,227,0.06)'),
+                        color: ocupado ? 'rgba(248,241,227,0.25)' : (elegido ? "#0F2A20" : "#F8F1E3"),
+                        border: "1px solid " + (elegido ? G.mint : "rgba(248,241,227,0.08)"),
+                        padding: 12, borderRadius: 20, fontWeight: 700, fontFamily: "'Bricolage Grotesque'",
                         cursor: ocupado || !date ? "not-allowed" : "pointer",
                         textDecoration: ocupado ? 'line-through' : 'none',
                         opacity: !date ? 0.5 : 1
@@ -1077,26 +1087,26 @@
                 })}
               </div>
 
-              <SLabel>Método de pago</SLabel>
+              <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Método de pago</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 24 }}>
                 {[
-                  { id: "efectivo", label: "Efectivo", color: G.brand, svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>' },
-                  { id: "tarjeta", label: "Tarjeta", color: G.brand, svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>' },
-                  { id: "bizum", label: "Bizum", color: "#00CFB4", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M8 8l8 8M16 8l-8 8"/></svg>' },
+                  { id: "efectivo", label: "Efectivo", color: G.coral, svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>' },
+                  { id: "tarjeta", label: "Tarjeta", color: G.coral, svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>' },
+                  { id: "bizum", label: "Bizum", color: G.mint, svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M8 8l8 8M16 8l-8 8"/></svg>' },
                 ].map(function(m) {
                   var activo = metodoPago === m.id;
                   var col = m.color;
                   return (
                     <button key={m.id} onClick={function(){ setMetodoPago(m.id); }}
-                      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: activo ? col + "14" : G.card, border: "1px solid " + (activo ? col : G.bdr), padding: "12px 6px", borderRadius: 12, cursor: "pointer", fontFamily: "inherit" }}>
-                      <span dangerouslySetInnerHTML={{ __html: m.svg.replace(/COL/g, activo ? col : G.muted) }} />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: activo ? G.text : G.muted }}>{m.label}</span>
+                      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: activo ? col : "rgba(248,241,227,0.06)", border: "1px solid " + (activo ? col : "rgba(248,241,227,0.08)"), padding: "14px 6px", borderRadius: 18, cursor: "pointer", fontFamily: "inherit" }}>
+                      <span dangerouslySetInnerHTML={{ __html: m.svg.replace(/COL/g, activo ? "#1A1614" : "rgba(248,241,227,0.6)") }} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: activo ? "#1A1614" : "rgba(248,241,227,0.7)" }}>{m.label}</span>
                     </button>
                   );
                 })}
               </div>
 
-              <PrimaryBtn disabled={saving || !date || !slot || !metodoPago} onClick={confirm}>{saving ? "Procesando..." : "Confirmar Reserva"}</PrimaryBtn>
+              <PrimaryBtn disabled={saving || !date || !slot || !metodoPago} onClick={confirm} style={{ background: (saving || !date || !slot || !metodoPago) ? "rgba(30,62,230,0.3)" : G.brand }}>{saving ? "Procesando..." : "Confirmar Reserva"}</PrimaryBtn>
             </div>
           );
         }
@@ -1109,17 +1119,20 @@
             return function(){ clearTimeout(t); };
           }, []);
           return (
-            <div style={{ flex: 1, padding: 24, textAlign: "center", paddingTop: 40 }}>
+            <div style={{ flex: 1, padding: 24, textAlign: "center", paddingTop: 40, background: G.mint, minHeight: "100%" }}>
               {showConfetti && <Confetti />}
-              <AnimCheck type="check" />
-              <h2 style={{ fontSize: 22, fontWeight: 900, marginBottom: 8 }}>¡Reserva confirmada!</h2>
-              <p style={{ fontSize: 13, color: G.muted, marginBottom: 24 }}>Te esperamos en GonnieBarbershop</p>
-              <div style={{ background: G.card, padding: 14, borderRadius: 12, textAlign: "left", marginBottom: 24, border: "1px solid " + G.bdr }}>
-                <p style={{ fontSize: 13, margin: "6px 0", color: G.text }}>📅 <b>Fecha:</b> {(appt && appt.date) || "Hoy"}</p>
-                <p style={{ fontSize: 13, margin: "6px 0", color: G.text }}>⏰ <b>Hora:</b> {(appt && appt.time) || "—"}</p>
-                <p style={{ fontSize: 13, margin: "6px 0", color: G.text }}>💰 <b>Importe:</b> {(appt && appt.price) || 0}€</p>
+              <div style={{ width: 140, height: 140, borderRadius: "50%", background: G.card, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+                <AnimCheck type="check" />
               </div>
-              <PrimaryBtn onClick={function(){ nav("home"); }}>Volver al inicio</PrimaryBtn>
+              <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", color: "#0F2A20", textTransform: "uppercase", opacity: 0.7, margin: "0 0 6px" }}>Todo listo</p>
+              <h2 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 30, fontWeight: 700, marginBottom: 8, color: "#0F2A20" }}>¡Reserva confirmada!</h2>
+              <p style={{ fontSize: 14, color: "#0F2A20", opacity: 0.75, marginBottom: 24 }}>Te esperamos en GonnieBarbershop</p>
+              <div style={{ background: G.card, padding: 18, borderRadius: 20, textAlign: "left", marginBottom: 24 }}>
+                <p style={{ fontSize: 14, margin: "8px 0", color: G.text }}>📅 <b>Fecha:</b> {(appt && appt.date) || "Hoy"}</p>
+                <p style={{ fontSize: 14, margin: "8px 0", color: G.text }}>⏰ <b>Hora:</b> {(appt && appt.time) || "—"}</p>
+                <p style={{ fontSize: 14, margin: "8px 0", color: G.text }}>💰 <b>Importe:</b> {(appt && appt.price) || 0}€</p>
+              </div>
+              <button onClick={function(){ nav("home"); }} style={{ width: "100%", background: "#1A1614", color: "#F8F1E3", border: "none", borderRadius: 24, padding: "16px", fontSize: 15, fontWeight: 700, fontFamily: "'Bricolage Grotesque'", cursor: "pointer" }}>Volver al inicio</button>
             </div>
           );
         }
@@ -2065,17 +2078,18 @@
           }, [email]);
           var iniciales = nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
           return (
-            <div style={{ flex: 1, padding: 18, paddingTop: 140 }}>
+            <div style={{ flex: 1, padding: 18, paddingTop: 60, textAlign: "center" }}>
               {photoUrl
-                ? <img src={photoUrl} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid ' + G.brand, display: 'block', margin: '0 auto 12px' }} />
-                : <div style={{ width: 80, height: 80, borderRadius: '50%', background: G.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, color: '#fff', fontWeight: 700, margin: '0 auto 12px' }}>{iniciales}</div>
+                ? <img src={photoUrl} style={{ width: 108, height: 108, borderRadius: '50%', objectFit: 'cover', display: 'block', margin: '0 auto 16px' }} />
+                : <div style={{ width: 108, height: 108, borderRadius: '50%', background: G.rose, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Bricolage Grotesque'", fontSize: 34, color: '#3A0F1B', fontWeight: 700, margin: '0 auto 16px' }}>{iniciales}</div>
               }
-              <p style={{ fontSize: 12, marginTop: 10, marginBottom: 12, textAlign: 'center', color: '#8E8E93' }}>{email}</p>
-              <div style={{ background: G.card, borderRadius: 14, border: '1px solid ' + G.bdr, marginBottom: 18, overflow: 'hidden' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: '1px solid ' + G.bdr, cursor: 'pointer' }} onClick={function(){ nav('settings'); }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: G.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + G.brand + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' }} />
-                  <p style={{ fontSize: 14, fontWeight: 500, color: G.text, flex: 1, margin: 0 }}>Ajustes de Cuenta</p>
-                  <span style={{ color: G.muted }}>›</span>
+              <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 24, fontWeight: 700, color: G.text, margin: 0 }}>{nombre}</p>
+              <p style={{ fontSize: 13, marginTop: 4, marginBottom: 20, color: G.muted }}>{email}</p>
+              <div style={{ background: "#1A1614", borderRadius: 26, marginBottom: 18, overflow: 'hidden', textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px', cursor: 'pointer' }} onClick={function(){ nav('settings'); }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(248,241,227,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8F1E3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' }} />
+                  <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 600, color: '#F8F1E3', flex: 1, margin: 0 }}>Ajustes de cuenta</p>
+                  <span style={{ color: 'rgba(248,241,227,0.4)' }}>›</span>
                 </div>
 
               </div>
@@ -2087,7 +2101,7 @@
                   </span>
                 </GhostBtn>
               )}
-              <button onClick={signOut} style={{ marginTop: 12, width: '100%', background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 14, padding: '12px', fontSize: 13, color: G.red, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+              <button onClick={signOut} style={{ marginTop: 12, width: '100%', background: 'transparent', border: '1px solid rgba(229,85,107,0.3)', borderRadius: 20, padding: '14px', fontSize: 13, color: '#E5556B', cursor: 'pointer', fontFamily: "'Bricolage Grotesque'", fontWeight: 600 }}>
                 Cerrar sesión
               </button>
             </div>
