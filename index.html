@@ -1426,18 +1426,25 @@
                 function fusionarYeasy(base) {
                   var telsExistentes = {};
                   base.forEach(function(c){ if (c.telefono) telsExistentes[c.telefono.replace(/\s/g,'')] = true; });
-                  var extra = YEASY_CLIENTES.filter(function(y){ return !telsExistentes[y.telefono.replace(/\s/g,'')]; });
-                  return base.concat(extra);
+                  return dbGet('clientes_yeasy', '?select=nombre,telefono&order=nombre.asc')
+                    .then(function(yeasyData){
+                      var yeasy = (Array.isArray(yeasyData) ? yeasyData : []).map(function(y){ return { email: null, telefono: y.telefono, nombre: y.nombre, visitas: 0, gastado: 0, ultima: null, importado: true }; });
+                      var extra = yeasy.filter(function(y){ return y.telefono && !telsExistentes[y.telefono.replace(/\s/g,'')]; });
+                      return base.concat(extra);
+                    })
+                    .catch(function(){
+                      var extra = YEASY_CLIENTES.filter(function(y){ return !telsExistentes[y.telefono.replace(/\s/g,'')]; });
+                      return base.concat(extra);
+                    });
                 }
-                if (emails.length === 0) { setClientes(fusionarYeasy(lista)); setLoadingClientes(false); return; }
+                if (emails.length === 0) { fusionarYeasy(lista).then(function(l){ setClientes(l); setLoadingClientes(false); }); return; }
                 dbGet('profiles', '?id=in.(' + emails.map(encodeURIComponent).join(',') + ')&select=id,full_name')
                   .then(function(perfiles) {
                     var pm = {};
                     (perfiles || []).forEach(function(p){ if (p.full_name) pm[p.id] = p.full_name; });
                     lista.forEach(function(cl){ if (cl.email && pm[cl.email]) cl.nombre = pm[cl.email]; });
-                    setClientes(fusionarYeasy(lista));
-                    setLoadingClientes(false);
-                  }).catch(function(){ setClientes(fusionarYeasy(lista)); setLoadingClientes(false); });
+                    fusionarYeasy(lista).then(function(l){ setClientes(l); setLoadingClientes(false); });
+                  }).catch(function(){ fusionarYeasy(lista).then(function(l){ setClientes(l); setLoadingClientes(false); }); });
               })
               .catch(function(){ setLoadingClientes(false); });
           }, [panel]);
