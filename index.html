@@ -148,7 +148,7 @@
           text: "#1A1614", muted: "#6B5F52",
           bdr: "rgba(26,22,20,0.08)",
           green: "#8BD5B8", red: "#E5556B", blue: "#1E3EE6", gold: "#FFA582",
-          mint: "#8BD5B8", rose: "#F5A0B4", coral: "#FFA582", cream: "#F8F1E3", ink: "#1A1614",
+          mint: "#8BD5B8", rose: "#F5A0B4", coral: "#7C83FD", cream: "#F8F1E3", ink: "#1A1614",
         };
 
 
@@ -175,7 +175,7 @@
         const BARBER_COLORS = [
           { bg: "#8BD5B8", color: "#0F2A20" },
           { bg: "#F5A0B4", color: "#3A0F1B" },
-          { bg: "#FFA582", color: "#3A1E10" },
+          { bg: "#7C83FD", color: "#211A66" },
           { bg: "#1A1614", color: "#F8F1E3" },
         ];
 
@@ -686,7 +686,7 @@
                 <SLabel>Acciones rápidas</SLabel>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 18 }}>
                   {[
-                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>', label: "Reservar cita", action: () => nav("explore"), bg: G.coral, fg: "#3A1E10" },
+                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>', label: "Reservar cita", action: () => nav("explore"), bg: G.coral, fg: "#FFFFFF" },
                     { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>', label: "Reserva grupal", action: () => nav("explore"), isNew: true, bg: G.mint, fg: "#0F2A20" },
                     { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', label: "Chat barbería", action: () => window.open("https://wa.me/34663528459", "_blank"), bg: "#1A1614", fg: "#F8F1E3" },
                     { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>', label: "Tienda", action: () => nav("shop"), bg: G.rose, fg: "#3A0F1B" },
@@ -2117,7 +2117,7 @@
                     <p style={{ fontSize: 12, color: "rgba(248,241,227,0.6)", margin: 0 }}>{puntos.toLocaleString("es-ES")} pts · {ptsSiguiente > 0 ? `${ptsSiguiente} para ${getNivel(puntos + ptsSiguiente).nombre}` : "nivel máximo"}</p>
                   </div>
                   <div style={{ width: 44, height: 44, borderRadius: '50%', background: G.coral, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A1E10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
                   </div>
                 </div>
                 <div style={{ marginTop: 14, height: 6, background: "rgba(248,241,227,0.12)", borderRadius: 4, overflow: "hidden" }}>
@@ -2961,7 +2961,7 @@
 
         // ─── CONFETTI COMPONENT ───────────────────────────────────────────────────
         function Confetti() {
-          const colors = ['#1E3EE6','#8BD5B8','#F5A0B4','#FFA582','#1A1614','#F8F1E3'];
+          const colors = ['#1E3EE6','#8BD5B8','#F5A0B4','#7C83FD','#1A1614','#F8F1E3'];
           const pieces = Array.from({ length: 60 }, function(_, i) {
             return {
               id: i,
