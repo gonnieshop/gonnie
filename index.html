@@ -1273,12 +1273,6 @@
 
           return (
             <div style={{ flex: 1, padding: 18, paddingBottom: 80 }}>
-              <div style={{ background: "#1A1614", color: "#F8F1E3", borderRadius: 26, padding: 18, marginBottom: 18 }}>
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(248,241,227,0.5)", textTransform: "uppercase", margin: 0 }}>Gonnie Rewards Club</p>
-                <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 30, fontWeight: 700, margin: "6px 0 4px" }}>{puntos.toLocaleString("es-ES")} pts</p>
-                <p style={{ fontSize: 12, color: "rgba(248,241,227,0.6)", margin: 0 }}>Canjea tus puntos por servicios gratis</p>
-              </div>
-
               {rewards.map((r, i) => (
                 <div key={i} style={{ background: r.claim ? r.bg : G.card, padding: 18, borderRadius: 22, border: r.claim ? "none" : `1px solid ${G.bdr}`, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                   <div>
