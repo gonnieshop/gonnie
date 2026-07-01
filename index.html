@@ -27,161 +27,251 @@
     <style>
       @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+      @keyframes floatOrb {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50%      { transform: translate(30px, -20px) scale(1.05); }
+      }
 
-        /* ═══════════════════════════════════════════════════════════════
-           MODERN DESIGN LAYER — inspirado en apps 2025 (glow, radios XL,
-           tipografía audaz, gradientes sutiles). Sobrescribe con !important
-           los inline styles de React sin tocar el JSX.
-           ═══════════════════════════════════════════════════════════════ */
+      /* ══════════════════════════════════════════════════════════════════
+         DARK GLASSMORPHISM REDESIGN — inspirado en dashboard "Ethereal".
+         Fondo púrpura profundo con orbes de luz, cards de cristal,
+         tipografía blanca, glow cyan en botones de marca.
+         ══════════════════════════════════════════════════════════════════ */
 
-        body {
-            background:
-              radial-gradient(1200px 600px at 100% -10%, rgba(0, 161, 201, 0.10), transparent 60%),
-              radial-gradient(900px 500px at -10% 10%, rgba(139, 92, 246, 0.06), transparent 55%),
-              linear-gradient(180deg, #F4F6FB 0%, #EAEDF5 100%);
-            background-attachment: fixed;
-            color: #0B1220;
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-feature-settings: 'cv02','cv03','cv04','cv11','ss01';
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            letter-spacing: -0.015em;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
+      html, body {
+        background: #0B0B14 !important;
+      }
 
-        /* ─── TIPOGRAFÍA XXL ─── */
-        #root h1 {
-            font-weight: 900 !important;
-            letter-spacing: -0.035em !important;
-            line-height: 1.05 !important;
-        }
-        #root h2 {
-            font-weight: 800 !important;
-            letter-spacing: -0.025em !important;
-        }
-        #root h3, #root h4 {
-            letter-spacing: -0.02em !important;
-            font-weight: 700 !important;
-        }
+      body {
+        position: relative;
+        color: #FFFFFF;
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-feature-settings: 'cv02','cv03','cv04','cv11','ss01';
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        letter-spacing: -0.015em;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
 
-        /* ─── CARDS: RADIOS XL + GLOW SUAVE ─── */
-        #root div[style*="border-radius: 12px"] {
-            border-radius: 18px !important;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -10px rgba(15, 23, 42, 0.10) !important;
-        }
-        #root div[style*="border-radius: 14px"] {
-            border-radius: 20px !important;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px -12px rgba(15, 23, 42, 0.12) !important;
-        }
-        #root div[style*="border-radius: 16px"] {
-            border-radius: 22px !important;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -14px rgba(15, 23, 42, 0.14) !important;
-        }
-        #root div[style*="border-radius: 18px"],
-        #root div[style*="border-radius: 20px"] {
-            border-radius: 24px !important;
-            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04), 0 14px 36px -14px rgba(15, 23, 42, 0.14) !important;
-        }
+      /* Orbes de luz de fondo (aurora púrpura + cyan) */
+      body::before {
+        content: '';
+        position: fixed;
+        top: -20%;
+        right: -20%;
+        width: 700px;
+        height: 700px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, transparent 60%);
+        pointer-events: none;
+        z-index: 0;
+        animation: floatOrb 12s ease-in-out infinite;
+      }
+      body::after {
+        content: '';
+        position: fixed;
+        bottom: -20%;
+        left: -15%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(0, 212, 255, 0.28) 0%, transparent 60%);
+        pointer-events: none;
+        z-index: 0;
+        animation: floatOrb 14s ease-in-out infinite reverse;
+      }
+      #root { position: relative; z-index: 1; }
 
-        /* Anula sombras en avatares, píldoras, iconitos redondos */
-        #root div[style*="border-radius: 50%"],
-        #root div[style*="border-radius:50%"],
-        #root span[style*="border-radius"] {
-            box-shadow: none !important;
-            border-radius: 50% !important;
-        }
-        /* Píldoras (radio 20px con padding pequeño) */
-        #root span[style*="border-radius: 20px"] {
-            border-radius: 999px !important;
-        }
-        /* Iconitos cuadrados pequeños (contenedores de SVG con radio 10) */
-        #root div[style*="border-radius: 10px"] {
-            border-radius: 12px !important;
-        }
+      /* ─── TIPOGRAFÍA XXL AUDAZ ─── */
+      #root h1 {
+        font-weight: 900 !important;
+        letter-spacing: -0.04em !important;
+        line-height: 1.02 !important;
+        color: #FFFFFF !important;
+      }
+      #root h2 {
+        font-weight: 800 !important;
+        letter-spacing: -0.03em !important;
+        color: #FFFFFF !important;
+      }
+      #root h3, #root h4 {
+        letter-spacing: -0.02em !important;
+        font-weight: 700 !important;
+        color: #FFFFFF !important;
+      }
 
-        /* ─── BOTONES ─── */
-        #root button {
-            border-radius: 16px !important;
-            font-weight: 700 !important;
-            letter-spacing: -0.01em !important;
-        }
-        /* Botón primario cyan → glow cyan pronunciado */
-        #root button[style*="#00A1C9"]:not([style*="transparent"]),
-        #root button[style*="rgb(0, 161, 201)"]:not([style*="transparent"]) {
-            border-radius: 18px !important;
-            box-shadow:
-              0 10px 28px -8px rgba(0, 161, 201, 0.55),
-              0 4px 10px -2px rgba(0, 161, 201, 0.25),
-              inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
-            background: linear-gradient(180deg, #14B4DA 0%, #00A1C9 100%) !important;
-        }
-        /* Botón negro (login "Continuar con Google") */
-        #root button[style*="background: rgb(0, 0, 0)"],
-        #root button[style*="background:#000"],
-        #root button[style*="background: #000"] {
-            border-radius: 18px !important;
-            box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.45), 0 4px 10px -4px rgba(0, 0, 0, 0.25) !important;
-        }
+      /* ─── CARDS: CRISTAL GLASSMORPHISM ─── */
+      #root div[style*="border-radius: 12px"],
+      #root div[style*="border-radius: 14px"],
+      #root div[style*="border-radius: 16px"],
+      #root div[style*="border-radius: 18px"],
+      #root div[style*="border-radius: 20px"] {
+        background: rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(24px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.10) !important;
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.08) inset,
+          0 20px 40px -20px rgba(0, 0, 0, 0.6) !important;
+      }
+      #root div[style*="border-radius: 12px"] { border-radius: 18px !important; }
+      #root div[style*="border-radius: 14px"] { border-radius: 20px !important; }
+      #root div[style*="border-radius: 16px"] { border-radius: 24px !important; }
+      #root div[style*="border-radius: 18px"] { border-radius: 26px !important; }
+      #root div[style*="border-radius: 20px"] { border-radius: 28px !important; }
 
-        /* ─── INTERACCIONES ─── */
-        button, [role="button"], a {
-            transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-                        box-shadow 0.25s ease,
-                        filter 0.18s ease,
-                        opacity 0.15s ease !important;
-        }
-        button:hover:not(:disabled), [role="button"]:hover {
-            filter: brightness(1.05);
-            transform: translateY(-1px);
-        }
-        button:active:not(:disabled), [role="button"]:active {
-            transform: translateY(0) scale(0.97);
-            filter: brightness(0.96);
-        }
-        /* Hover en cards */
-        #root div[style*="border-radius: 16px"]:hover,
-        #root div[style*="border-radius: 14px"]:hover {
-            transition: transform 0.2s ease, box-shadow 0.25s ease;
-        }
+      /* Sobrescribir cards con fondo blanco hardcoded (LoginScreen, SplashScreen, etc.) */
+      #root div[style*="background: rgb(255, 255, 255)"],
+      #root div[style*="background: #FFFFFF"],
+      #root div[style*="background: #fff"],
+      #root div[style*="background:#fff"],
+      #root div[style*="background: #f7f7f7"],
+      #root div[style*="background:#f7f7f7"] {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #FFFFFF !important;
+      }
 
-        /* ─── FOCUS RINGS ─── */
-        input:focus, select:focus, textarea:focus {
-            outline: 2px solid #00A1C9 !important;
-            outline-offset: 2px !important;
-            box-shadow: 0 0 0 6px rgba(0, 161, 201, 0.12) !important;
-        }
-        input, select, textarea {
-            transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
-            border-radius: 14px !important;
-        }
-        button:focus-visible, [role="button"]:focus-visible {
-            outline: 2px solid #00A1C9;
-            outline-offset: 3px;
-        }
+      /* Contenedores del login screen que fijan fondo blanco */
+      #root div[style*="minHeight: '100vh'"][style*="background: '#fff'"],
+      #root div[style*="min-height: 100vh"][style*="background: rgb(255, 255, 255)"] {
+        background: transparent !important;
+      }
 
-        /* ─── SCROLLBARS CLAROS ─── */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(17, 24, 39, 0.16);
-            border-radius: 8px;
-            border: 2px solid transparent;
-            background-clip: content-box;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 161, 201, 0.4);
-            background-clip: content-box;
-        }
+      /* ─── AVATARES Y ELEMENTOS REDONDOS: sin blur ─── */
+      #root div[style*="border-radius: 50%"],
+      #root div[style*="border-radius:50%"] {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border-radius: 50% !important;
+        box-shadow: 0 8px 20px -6px rgba(0, 212, 255, 0.3) !important;
+      }
+      /* Píldoras totalmente redondas */
+      #root span[style*="border-radius: 20px"],
+      #root span[style*="border-radius:20px"] {
+        border-radius: 999px !important;
+      }
+      /* Iconitos cuadrados de 10px → 14 */
+      #root div[style*="border-radius: 10px"] {
+        border-radius: 14px !important;
+        background: rgba(0, 212, 255, 0.10) !important;
+        border: 1px solid rgba(0, 212, 255, 0.15) !important;
+        backdrop-filter: none !important;
+      }
 
-        /* ─── VARIOS ─── */
-        ::selection { background: rgba(0, 161, 201, 0.25); color: inherit; }
-        input, select, textarea { color-scheme: light; }
-        img { -webkit-user-drag: none; user-select: none; }
+      /* ─── TEXTOS: forzar blancos y grises adaptados ─── */
+      #root p[style*="color: rgb(28, 28, 30)"],
+      #root p[style*="color: #1C1C1E"],
+      #root p[style*="color: #0B1220"],
+      #root p[style*="color: #000"],
+      #root p[style*="color: rgb(0, 0, 0)"],
+      #root h1[style*="color: '#000'"],
+      #root span[style*="color: rgb(28, 28, 30)"] {
+        color: #FFFFFF !important;
+      }
+      #root p[style*="color: rgb(60, 60, 67)"],
+      #root p[style*="color: #3C3C43"],
+      #root p[style*="color: #6B7280"],
+      #root p[style*="color: #888"],
+      #root p[style*="color: #555"],
+      #root p[style*="color: #bbb"] {
+        color: #8B8FA3 !important;
+      }
 
-        /* SVG icons más nítidos */
-        svg { shape-rendering: geometricPrecision; }
+      /* ─── BOTONES ─── */
+      #root button {
+        border-radius: 16px !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.01em !important;
+      }
+      /* Botón primario cyan → gradiente + glow potente */
+      #root button[style*="#00A1C9"]:not([style*="transparent"]),
+      #root button[style*="#00D4FF"]:not([style*="transparent"]),
+      #root button[style*="rgb(0, 161, 201)"]:not([style*="transparent"]),
+      #root button[style*="rgb(0, 212, 255)"]:not([style*="transparent"]) {
+        background: linear-gradient(135deg, #00D4FF 0%, #0081A3 100%) !important;
+        border-radius: 18px !important;
+        color: #FFFFFF !important;
+        box-shadow:
+          0 14px 36px -10px rgba(0, 212, 255, 0.65),
+          0 4px 12px -2px rgba(0, 212, 255, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+      }
+      /* Botón negro del login → cristal oscuro con glow */
+      #root button[style*="background: rgb(0, 0, 0)"],
+      #root button[style*="background:#000"],
+      #root button[style*="background: '#000'"] {
+        background: rgba(255, 255, 255, 0.08) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5) !important;
+      }
+      /* Ghost buttons */
+      #root button[style*="background: transparent"] {
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #FFFFFF !important;
+      }
+
+      /* ─── INPUTS DARK ─── */
+      #root input, #root select, #root textarea {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.10) !important;
+        color: #FFFFFF !important;
+        border-radius: 14px !important;
+        backdrop-filter: blur(12px);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+      }
+      #root input::placeholder, #root textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+      }
+      #root input:focus, #root select:focus, #root textarea:focus {
+        outline: none !important;
+        border-color: #00D4FF !important;
+        box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.18) !important;
+      }
+      input, select, textarea { color-scheme: dark; }
+
+      /* ─── INTERACCIONES ─── */
+      button, [role="button"], a {
+        transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    box-shadow 0.25s ease, filter 0.18s ease, opacity 0.15s ease !important;
+      }
+      button:hover:not(:disabled), [role="button"]:hover {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+      }
+      button:active:not(:disabled), [role="button"]:active {
+        transform: translateY(0) scale(0.97);
+        filter: brightness(0.94);
+      }
+
+      /* ─── SCROLLBARS ─── */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 212, 255, 0.5);
+        background-clip: content-box;
+      }
+
+      ::selection { background: rgba(0, 212, 255, 0.35); color: #FFFFFF; }
+      img { -webkit-user-drag: none; user-select: none; }
+      svg { shape-rendering: geometricPrecision; }
+
+      /* ─── FEATURE CARDS del login (los mini iconos ⚡🏆✂️) ─── */
+      #root div[style*="background: #f7f7f7"],
+      #root div[style*="background:#f7f7f7"] {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        backdrop-filter: blur(20px);
+      }
     
     /* ─── GONNIE ANIMATIONS ─── */
     @keyframes confettiFall {
@@ -280,13 +370,13 @@
           }
         }
 
-        // ─── PALETA DE COLORES GONNIE ──────────────────────────────────────────
+        // ─── PALETA DE COLORES GONNIE (DARK GLASSMORPHISM) ─────────────────────
         const G = {
-          brand: "#00A1C9", brandD: "#0081A3", brandL: "#33BDD9",
-          bg: "#F5F6FA", card: "#FFFFFF", card2: "#F5F6FA",
-          text: "#0B1220", muted: "#6B7280",
-          bdr: "rgba(17, 24, 39, 0.06)",
-          green: "#10B981", red: "#EF4444", blue: "#3B82F6", gold: "#F59E0B",
+          brand: "#00D4FF", brandD: "#00A1C9", brandL: "#5EE7FF",
+          bg: "#0B0B14", card: "rgba(255,255,255,0.06)", card2: "rgba(255,255,255,0.04)",
+          text: "#FFFFFF", muted: "#8B8FA3",
+          bdr: "rgba(255,255,255,0.10)",
+          green: "#4ADE80", red: "#FB7185", blue: "#60A5FA", gold: "#FBBF24",
         };
 
 
