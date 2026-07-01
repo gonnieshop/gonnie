@@ -752,34 +752,35 @@
           return idx === -1;
         }
 
-        const CARD_TREATMENTS = [
-          { bg: "#F8F1E3", fg: G.text, sub: G.muted, tone: "card" },
-          { bg: "#F5A0B4", fg: "#3A0F1B", sub: "#3A0F1B", tone: "rose" },
-          { bg: "#8BD5B8", fg: "#0F2A20", sub: "#0F2A20", tone: "mint" },
-        ];
-
-        function BarberiaCard({ b, onSelect, index = 0 }) {
+        function BarberiaCard({ b, onSelect }) {
           const [esFav, setEsFav] = useState(getFavoritos().includes(String(b.id)));
-          const tr = CARD_TREATMENTS[index % CARD_TREATMENTS.length];
-          const isCard = tr.tone === "card";
           return (
-            <div onClick={onSelect} style={{ background: tr.bg, border: isCard ? `1px solid ${G.bdr}` : "none", borderRadius: 22, marginBottom: 12, padding: 14, display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }}>
-              <div style={{ width: 64, height: 64, borderRadius: 20, overflow: "hidden", flexShrink: 0, position: "relative" }}>
+            <div onClick={onSelect} style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 18, marginBottom: 12, overflow: "hidden", cursor: "pointer" }}>
+              <div style={{ height: 120, position: "relative", overflow: "hidden" }}>
                 <img src="https://i.imgur.com/W5os6Ue.jpeg" style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Barbería" />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                  <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 16, fontWeight: 600, color: tr.fg, margin: 0 }}>{b.name}</p>
-                  <Pill color={estaAbierto() ? tr.fg : "#E5556B"} bg={estaAbierto() ? (isCard ? G.mint : "rgba(0,0,0,0.12)") : "rgba(229,85,107,0.15)"}>{estaAbierto() ? "Abierta" : "Cerrada"}</Pill>
+                <div style={{ position: "absolute", top: 10, right: 10 }}>
+                  <Pill color={estaAbierto() ? "#080B0F" : G.red} bg={estaAbierto() ? G.green : `${G.red}18`}>{estaAbierto() ? "Abierto" : "Cerrado"}</Pill>
                 </div>
-                <p style={{ fontSize: 12, color: tr.sub, opacity: isCard ? 1 : 0.75, margin: "2px 0 6px" }}>{b.city} · {b.hours}</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11, color: tr.sub, opacity: isCard ? 1 : 0.85 }}>
-                  <span>★ {b.rating}{b.total_resenas ? ` (${b.total_resenas})` : ""}</span>
-                  <button onClick={function(e){ e.stopPropagation(); setEsFav(toggleFavorito(b.id)); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", marginLeft: "auto" }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill={esFav ? "#E5556B" : "none"} stroke={esFav ? "#E5556B" : tr.sub} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                    </svg>
-                  </button>
+              </div>
+              <div style={{ padding: "12px 14px 14px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: G.text }}>{b.name}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill={G.gold} stroke={G.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{b.rating}</span>
+                      {b.total_resenas && <span style={{ fontSize: 11, color: G.muted }}>({b.total_resenas})</span>}
+                    </div>
+                    <button onClick={function(e){ e.stopPropagation(); setEsFav(toggleFavorito(b.id)); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill={esFav ? "#FF3B30" : "none"} stroke={esFav ? "#FF3B30" : G.muted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <p style={{ fontSize: 11, color: G.muted, marginBottom: 8 }}>📍 {b.city} · {b.hours}</p>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {(b.specialties || []).map(sp => <Pill key={sp}>{sp}</Pill>)}
                 </div>
               </div>
             </div>
@@ -826,21 +827,21 @@
             <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", paddingBottom: 80 }}>
               <h2 style={{ fontSize: 22, fontWeight: 900, color: G.text, marginBottom: 14 }}>Explorar locales</h2>
 
-              <div style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 26, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <div style={{ background: G.card, border: `0.5px solid ${G.bdr}`, borderRadius: 14, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                 <span style={{ color: G.muted }}>🔍</span>
                 <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar barberías..." style={{ background: "transparent", border: "none", outline: "none", color: G.text, fontSize: 16, flex: 1 }} />
               </div>
 
               <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 18, paddingBottom: 4 }}>
                 {tags.map(t => (
-                  <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, fontFamily: "'Bricolage Grotesque'", background: filter === t ? G.brand : G.card, color: filter === t ? "#F8F1E3" : G.text, border: `1px solid ${filter === t ? "transparent" : G.bdr}`, borderRadius: 24, padding: "10px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{t}</button>
+                  <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, background: filter === t ? G.brand : G.card, color: filter === t ? "#080B0F" : G.muted, border: `0.5px solid ${filter === t ? "transparent" : G.bdr}`, borderRadius: 20, padding: "6px 16px", fontSize: 12, fontWeight: filter === t ? 800 : 400, cursor: "pointer" }}>{t}</button>
                 ))}
               </div>
 
-              {loading && [1, 2, 3].map(i => <Skeleton key={i} h={90} r={22} />)}
+              {loading && [1, 2, 3].map(i => <Skeleton key={i} h={140} />)}
 
-              {!loading && list.map((b, i) => (
-                <BarberiaCard key={b.id} b={b} index={i} onSelect={() => { setBarberia(b); nav("detail"); }} />
+              {!loading && list.map((b) => (
+                <BarberiaCard key={b.id} b={b} onSelect={() => { setBarberia(b); nav("detail"); }} />
               ))}
             </div>
           );
@@ -1119,20 +1120,43 @@
             return function(){ clearTimeout(t); };
           }, []);
           return (
-            <div style={{ flex: 1, padding: 24, textAlign: "center", paddingTop: 40, background: G.mint, minHeight: "100%" }}>
+            <div style={{ flex: 1, padding: "24px 24px 100px", textAlign: "center", paddingTop: 36, background: G.mint, minHeight: "100%", position: "relative", overflow: "hidden" }}>
               {showConfetti && <Confetti />}
-              <div style={{ width: 140, height: 140, borderRadius: "50%", background: G.card, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
-                <AnimCheck type="check" />
+              <div style={{ position: "absolute", top: 20, right: 30, width: 12, height: 12, borderRadius: 3, background: G.rose, transform: "rotate(20deg)" }} />
+              <div style={{ position: "absolute", top: 60, left: 24, width: 8, height: 8, borderRadius: "50%", background: "#1A1614" }} />
+              <div style={{ position: "absolute", top: 190, right: 10, width: 10, height: 10, borderRadius: "50%", background: G.coral }} />
+              <div style={{ position: "absolute", top: 220, left: 40, width: 14, height: 14, borderRadius: 3, background: G.brand, transform: "rotate(-14deg)" }} />
+              <div style={{ width: 150, height: 150, borderRadius: "50%", background: G.card, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", position: "relative" }}>
+                <svg width="90" height="90" viewBox="0 0 90 90">
+                  <circle cx="32" cy="38" r="4" fill="#1A1614"/>
+                  <circle cx="58" cy="38" r="4" fill="#1A1614"/>
+                  <path d="M26 55 Q45 70 64 55" stroke="#1A1614" strokeWidth="4" fill="none" strokeLinecap="round"/>
+                </svg>
               </div>
               <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", color: "#0F2A20", textTransform: "uppercase", opacity: 0.7, margin: "0 0 6px" }}>Todo listo</p>
-              <h2 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 30, fontWeight: 700, marginBottom: 8, color: "#0F2A20" }}>¡Reserva confirmada!</h2>
-              <p style={{ fontSize: 14, color: "#0F2A20", opacity: 0.75, marginBottom: 24 }}>Te esperamos en GonnieBarbershop</p>
-              <div style={{ background: G.card, padding: 18, borderRadius: 20, textAlign: "left", marginBottom: 24 }}>
-                <p style={{ fontSize: 14, margin: "8px 0", color: G.text }}>📅 <b>Fecha:</b> {(appt && appt.date) || "Hoy"}</p>
-                <p style={{ fontSize: 14, margin: "8px 0", color: G.text }}>⏰ <b>Hora:</b> {(appt && appt.time) || "—"}</p>
-                <p style={{ fontSize: 14, margin: "8px 0", color: G.text }}>💰 <b>Importe:</b> {(appt && appt.price) || 0}€</p>
+              <h2 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 32, fontWeight: 700, marginBottom: 10, color: "#0F2A20", lineHeight: 1.05 }}>Nos vemos<br/>{ (appt && appt.date) ? "el " + appt.date : "pronto" }.</h2>
+              <p style={{ fontSize: 14, color: "#0F2A20", opacity: 0.75, marginBottom: 24, maxWidth: 260, marginLeft: "auto", marginRight: "auto", lineHeight: 1.4 }}>Te esperamos {(appt && appt.date) ? "el " + appt.date : ""} {(appt && appt.time) ? "a las " + appt.time : ""}.</p>
+
+              <div style={{ background: G.card, borderRadius: 22, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, marginBottom: 12, textAlign: "left" }}>
+                <div style={{ width: 38, height: 38, borderRadius: 12, background: G.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1614" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Cuando</p>
+                  <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>{(appt && appt.date) || "Hoy"} · {(appt && appt.time) || "—"}</p>
+                </div>
               </div>
-              <button onClick={function(){ nav("home"); }} style={{ width: "100%", background: "#1A1614", color: "#F8F1E3", border: "none", borderRadius: 24, padding: "16px", fontSize: 15, fontWeight: 700, fontFamily: "'Bricolage Grotesque'", cursor: "pointer" }}>Volver al inicio</button>
+              <div style={{ background: G.card, borderRadius: 22, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, marginBottom: 20, textAlign: "left" }}>
+                <div style={{ width: 38, height: 38, borderRadius: 12, background: G.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1614" strokeWidth="1.8" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Dónde</p>
+                  <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>GonnieBarbershop</p>
+                </div>
+              </div>
+
+              <button onClick={function(){ nav("home"); }} style={{ width: "100%", background: "#1A1614", color: "#F8F1E3", border: "none", borderRadius: 24, padding: "16px", fontSize: 15, fontWeight: 700, fontFamily: "'Bricolage Grotesque'", cursor: "pointer" }}>Añadir al calendario</button>
             </div>
           );
         }
@@ -2060,7 +2084,10 @@
         }
 
         // ─── VISTA 10: PERFIL DE USUARIO ──────────────────────────────────────
-        function ProfileScreen({ setMode, mode, user, nav }) {
+        function ProfileScreen({ setMode, mode, user, nav, puntos = 0 }) {
+          const nivel = getNivel(puntos);
+          const progreso = getProgreso(puntos);
+          const ptsSiguiente = getPtsParaSiguiente(puntos);
           var email = (user && user.email) || '';
           var googleAvatar = (user && user.user_metadata && user.user_metadata.avatar_url) || null;
           var googleName = (user && user.user_metadata && user.user_metadata.full_name) || email || 'Usuario';
@@ -2078,21 +2105,66 @@
           }, [email]);
           var iniciales = nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
           return (
-            <div style={{ flex: 1, padding: 18, paddingTop: 60, textAlign: "center" }}>
-              {photoUrl
-                ? <img src={photoUrl} style={{ width: 108, height: 108, borderRadius: '50%', objectFit: 'cover', display: 'block', margin: '0 auto 16px' }} />
-                : <div style={{ width: 108, height: 108, borderRadius: '50%', background: G.rose, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Bricolage Grotesque'", fontSize: 34, color: '#3A0F1B', fontWeight: 700, margin: '0 auto 16px' }}>{iniciales}</div>
-              }
+            <div style={{ flex: 1, padding: 18, paddingTop: 60, textAlign: "center", overflowY: "auto", paddingBottom: 100 }}>
+              <div style={{ position: "relative", width: 108, height: 108, margin: "0 auto 16px" }}>
+                {photoUrl
+                  ? <img src={photoUrl} style={{ width: 108, height: 108, borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
+                  : <div style={{ width: 108, height: 108, borderRadius: '50%', background: G.rose, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Bricolage Grotesque'", fontSize: 34, color: '#3A0F1B', fontWeight: 700 }}>{iniciales}</div>
+                }
+                <div style={{ position: "absolute", bottom: 0, right: 0, width: 32, height: 32, borderRadius: '50%', background: G.brand, border: `3px solid ${G.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F8F1E3" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 14.66V20a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2h5.34M18 2l4 4-10 10H8v-4z"/></svg>
+                </div>
+              </div>
               <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 24, fontWeight: 700, color: G.text, margin: 0 }}>{nombre}</p>
               <p style={{ fontSize: 13, marginTop: 4, marginBottom: 20, color: G.muted }}>{email}</p>
-              <div style={{ background: "#1A1614", borderRadius: 26, marginBottom: 18, overflow: 'hidden', textAlign: 'left' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px', cursor: 'pointer' }} onClick={function(){ nav('settings'); }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(248,241,227,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8F1E3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' }} />
-                  <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 600, color: '#F8F1E3', flex: 1, margin: 0 }}>Ajustes de cuenta</p>
-                  <span style={{ color: 'rgba(248,241,227,0.4)' }}>›</span>
-                </div>
 
+              <div style={{ background: "#1A1614", color: "#F8F1E3", borderRadius: 26, padding: 18, marginBottom: 16, position: "relative", overflow: "hidden", textAlign: "left" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "rgba(248,241,227,0.5)", textTransform: "uppercase", margin: 0 }}>Nivel actual</p>
+                    <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 32, fontWeight: 700, lineHeight: 1, margin: "6px 0 4px" }}>{nivel.nombre}</p>
+                    <p style={{ fontSize: 12, color: "rgba(248,241,227,0.6)", margin: 0 }}>{puntos.toLocaleString("es-ES")} pts · {ptsSiguiente > 0 ? `${ptsSiguiente} para ${getNivel(puntos + ptsSiguiente).nombre}` : "nivel máximo"}</p>
+                  </div>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: G.coral, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A1E10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+                  </div>
+                </div>
+                <div style={{ marginTop: 14, height: 6, background: "rgba(248,241,227,0.12)", borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{ width: `${progreso}%`, height: "100%", background: G.mint, borderRadius: 4 }} />
+                </div>
               </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16, textAlign: "left" }}>
+                <div style={{ background: G.card, borderRadius: 20, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => nav('loyalty')}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: G.mint, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F2A20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>Mis premios</p>
+                    <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>2 disponibles</p>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                </div>
+                <div style={{ background: G.card, borderRadius: 20, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => nav('appointments')}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: G.rose, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3A0F1B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 8v8M8 12h8"/></svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>Historial de citas</p>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                </div>
+                <div style={{ background: G.card, borderRadius: 20, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={function(){ nav('settings'); }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: G.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={G.text} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>Ajustes</p>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                </div>
+              </div>
+
               {user && user.email === 'reservasgonnie@gmail.com' && (
                 <GhostBtn onClick={function(){ setMode(mode === 'customer' ? 'business' : 'customer'); }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
@@ -2280,7 +2352,7 @@
                       {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
                       {view === "appointments" && <AppointmentsScreen user={user} />}
                       {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
-                      {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} nav={setView} />}
+                      {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} nav={setView} puntos={puntos} />}
                       {view === "settings" && <SettingsScreen nav={setView} user={user} />}
                       {view === "privacy" && <PrivacyScreen nav={setView} user={user} />}
                       {view === "help" && <HelpScreen nav={setView} />}
@@ -2289,7 +2361,7 @@
                     </>
                   )}
                 </div>
-                {view !== "confirmed" && (
+                {true && (
                   <div style={{ position: "absolute", bottom: 14, left: 12, right: 12, height: 62, background: G.card, borderRadius: 32, boxShadow: "0 10px 30px -12px rgba(60,42,20,0.25), 0 0 0 1px rgba(26,22,20,0.05)", display: "flex", alignItems: "center", zIndex: 50, padding: "0 10px" }}>
                     {[
                       { id: "home", l: "Inicio", svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" /><path d="M9 21V12h6v9"/></svg>' },
