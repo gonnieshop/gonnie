@@ -1848,7 +1848,7 @@
                     <div style={{ position: 'relative' }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                       <input value={buscarCliente} onChange={function(e){ setBuscarCliente(e.target.value); }} placeholder="Buscar por nombre o teléfono"
-                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '11px 14px 11px 38px', fontSize: 14, color: G.text, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '11px 14px 11px 38px', fontSize: 16, color: G.text, boxSizing: 'border-box', fontFamily: 'inherit' }} />
                     </div>
                   </div>
                 )}
@@ -1889,7 +1889,7 @@
                 </div>
 
                 {modoMensaje && (
-                  <div style={{ padding: '14px 18px', flexShrink: 0, borderTop: '1px solid ' + G.bdr }}>
+                  <div style={{ padding: '14px 18px 92px', flexShrink: 0, borderTop: '1px solid ' + G.bdr }}>
                     <button disabled={!textoMensaje.trim() || Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length === 0}
                       onClick={function(){
                         var tels = Object.keys(seleccionados).filter(function(k){ return seleccionados[k]; });
