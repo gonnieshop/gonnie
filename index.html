@@ -1314,6 +1314,7 @@
           const [clientes, setClientes] = useState([]);
           const [loadingClientes, setLoadingClientes] = useState(false);
           const [modoMensaje, setModoMensaje] = useState(false);
+          const [buscarCliente, setBuscarCliente] = useState('');
           const [seleccionados, setSeleccionados] = useState({});
           const [textoMensaje, setTextoMensaje] = useState('');
           const [showDesglose, setShowDesglose] = useState(false);
@@ -1825,7 +1826,7 @@
                 {modoMensaje && (
                   <div style={{ padding: '0 18px 14px', flexShrink: 0 }}>
                     <textarea value={textoMensaje} onChange={function(e){ setTextoMensaje(e.target.value); }} placeholder="Escribe tu mensaje... (ej: 2x1 en cortes esta semana 💈)"
-                      rows={3} style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: G.text, boxSizing: 'border-box', fontFamily: 'inherit', resize: 'none', marginBottom: 10 }} />
+                      rows={3} style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 16, color: G.text, boxSizing: 'border-box', fontFamily: 'inherit', resize: 'none', marginBottom: 10 }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <button onClick={function(){
                           var todos = {};
@@ -1842,10 +1843,30 @@
                   </div>
                 )}
 
+                {!loadingClientes && clientes.length > 0 && (
+                  <div style={{ padding: '0 18px 12px', flexShrink: 0 }}>
+                    <div style={{ position: 'relative' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      <input value={buscarCliente} onChange={function(e){ setBuscarCliente(e.target.value); }} placeholder="Buscar por nombre o teléfono"
+                        style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '11px 14px 11px 38px', fontSize: 14, color: G.text, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                    </div>
+                  </div>
+                )}
                 <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
                   {loadingClientes && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
                   {!loadingClientes && clientes.length === 0 && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Aún no hay clientes</p>}
-                  {!loadingClientes && clientes.map(function(cl, i) {
+                  {!loadingClientes && clientes.filter(function(cl){
+                      var q = buscarCliente.trim().toLowerCase();
+                      if (!q) return true;
+                      return (cl.nombre || '').toLowerCase().indexOf(q) !== -1 || (cl.telefono || '').replace(/\s/g,'').indexOf(q.replace(/\s/g,'')) !== -1;
+                    }).length === 0 && (
+                    <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Sin resultados</p>
+                  )}
+                  {!loadingClientes && clientes.filter(function(cl){
+                      var q = buscarCliente.trim().toLowerCase();
+                      if (!q) return true;
+                      return (cl.nombre || '').toLowerCase().indexOf(q) !== -1 || (cl.telefono || '').replace(/\s/g,'').indexOf(q.replace(/\s/g,'')) !== -1;
+                    }).map(function(cl, i) {
                     var inicial = (cl.nombre || '?').charAt(0).toUpperCase();
                     var marcado = !!(cl.telefono && seleccionados[cl.telefono]);
                     return (
