@@ -1313,6 +1313,9 @@
           const [loading, setLoading] = useState(true);
           const [clientes, setClientes] = useState([]);
           const [loadingClientes, setLoadingClientes] = useState(false);
+          const [modoMensaje, setModoMensaje] = useState(false);
+          const [seleccionados, setSeleccionados] = useState({});
+          const [textoMensaje, setTextoMensaje] = useState('');
           const [showDesglose, setShowDesglose] = useState(false);
           const [citaSel, setCitaSel] = useState(null);
           const [guardandoPago, setGuardandoPago] = useState(false);
@@ -1808,26 +1811,79 @@
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
                 <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <button onClick={function(){ setPanel('menu'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
-                  <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>Clientes</h1>
-                  {!loadingClientes && <span style={{ fontSize: 13, color: G.muted, marginLeft: 'auto' }}>{clientes.length}</span>}
+                  <button onClick={function(){ if (modoMensaje) { setModoMensaje(false); setSeleccionados({}); } else { setPanel('menu'); } }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
+                  <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>{modoMensaje ? 'Mensaje masivo' : 'Clientes'}</h1>
+                  {!loadingClientes && !modoMensaje && <span style={{ fontSize: 13, color: G.muted, marginLeft: 'auto' }}>{clientes.length}</span>}
+                  {!loadingClientes && !modoMensaje && clientes.length > 0 && (
+                    <button onClick={function(){ setModoMensaje(true); }}
+                      style={{ background: G.brand, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                      Mensaje masivo
+                    </button>
+                  )}
                 </div>
+
+                {modoMensaje && (
+                  <div style={{ padding: '0 18px 14px', flexShrink: 0 }}>
+                    <textarea value={textoMensaje} onChange={function(e){ setTextoMensaje(e.target.value); }} placeholder="Escribe tu mensaje... (ej: 2x1 en cortes esta semana 💈)"
+                      rows={3} style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '12px 14px', fontSize: 14, color: G.text, boxSizing: 'border-box', fontFamily: 'inherit', resize: 'none', marginBottom: 10 }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <button onClick={function(){
+                          var todos = {};
+                          var todosMarcados = clientes.every(function(cl){ return cl.telefono && seleccionados[cl.telefono]; });
+                          if (!todosMarcados) { clientes.forEach(function(cl){ if (cl.telefono) todos[cl.telefono] = true; }); }
+                          setSeleccionados(todos);
+                        }}
+                        style={{ background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 10, padding: '8px 12px', fontSize: 12, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        {clientes.every(function(cl){ return cl.telefono && seleccionados[cl.telefono]; }) ? 'Ninguno' : 'Todos'}
+                      </button>
+                      <span style={{ fontSize: 12, color: G.muted }}>{Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length} seleccionados</span>
+                    </div>
+                    <p style={{ fontSize: 11, color: G.muted, margin: '10px 0 0', lineHeight: 1.5 }}>WhatsApp no permite enviar a varios a la vez: pulsa "Enviar" en cada cliente y confirma el envío en WhatsApp.</p>
+                  </div>
+                )}
+
                 <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
                   {loadingClientes && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
                   {!loadingClientes && clientes.length === 0 && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Aún no hay clientes</p>}
                   {!loadingClientes && clientes.map(function(cl, i) {
                     var inicial = (cl.nombre || '?').charAt(0).toUpperCase();
+                    var marcado = !!(cl.telefono && seleccionados[cl.telefono]);
                     return (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '14px 16px', marginBottom: 10 }}>
+                      <div key={i} onClick={modoMensaje && cl.telefono ? function(){ setSeleccionados(Object.assign({}, seleccionados, { [cl.telefono]: !seleccionados[cl.telefono] })); } : undefined}
+                        style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, border: '1px solid ' + (marcado ? G.brand : G.bdr), borderRadius: 16, padding: '14px 16px', marginBottom: 10, cursor: modoMensaje && cl.telefono ? 'pointer' : 'default', opacity: modoMensaje && !cl.telefono ? 0.5 : 1 }}>
+                        {modoMensaje && (
+                          <span style={{ width: 20, height: 20, borderRadius: 6, border: '2px solid ' + (marcado ? G.brand : G.bdr), background: marcado ? G.brand : 'transparent', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {marcado && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                          </span>
+                        )}
                         <span style={{ display: 'inline-flex', width: 42, height: 42, borderRadius: 21, background: G.brand + '18', color: G.brand, alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 800, flexShrink: 0 }}>{inicial}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cl.nombre}</p>
                           <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{cl.importado ? (cl.telefono || 'Importado de Yeasy') : (cl.visitas + ' ' + (cl.visitas === 1 ? 'visita' : 'visitas') + ' · ' + cl.gastado + '€ gastados')}</p>
                         </div>
+                        {modoMensaje && !cl.telefono && <span style={{ fontSize: 10, color: G.muted }}>Sin tfno</span>}
                       </div>
                     );
                   })}
                 </div>
+
+                {modoMensaje && (
+                  <div style={{ padding: '14px 18px', flexShrink: 0, borderTop: '1px solid ' + G.bdr }}>
+                    <button disabled={!textoMensaje.trim() || Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length === 0}
+                      onClick={function(){
+                        var tels = Object.keys(seleccionados).filter(function(k){ return seleccionados[k]; });
+                        tels.forEach(function(tel, idx){
+                          setTimeout(function(){
+                            window.open('https://wa.me/' + tel.replace(/[^\d+]/g,'').replace('+','') + '?text=' + encodeURIComponent(textoMensaje), '_blank');
+                          }, idx * 350);
+                        });
+                      }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: (!textoMensaje.trim() || Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length === 0) ? G.card2 : '#25D366', border: (!textoMensaje.trim() || Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length === 0) ? '1px solid ' + G.bdr : 'none', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 700, color: (!textoMensaje.trim() || Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length === 0) ? G.muted : '#fff', cursor: (!textoMensaje.trim() || Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length === 0) ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.3A9 9 0 003.3 17.4L2 22l4.7-1.3a9 9 0 0010.9-14.4zM12 20a7.1 7.1 0 01-3.6-1l-.3-.1-2.7.7.7-2.6-.2-.3A7.1 7.1 0 1112 20z"/></svg>
+                      Enviar a {Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length} por WhatsApp
+                    </button>
+                  </div>
+                )}
               </div>
             );
           }
