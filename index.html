@@ -133,8 +133,8 @@
           return await supabaseClient.auth.signInWithPassword({ email: email, password: password });
         }
 
-        async function signUpWithPassword(email, password) {
-          return await supabaseClient.auth.signUp({ email: email, password: password });
+        async function signUpWithPassword(email, password, phone) {
+          return await supabaseClient.auth.signUp({ email: email, password: password, options: { data: { phone: phone } } });
         }
 
         async function signOut() {
@@ -248,9 +248,10 @@
           const [loading, setLoading] = useState(false);
           const [phase, setPhase] = useState('logo'); // 'logo' | 'content'
           const [showEmail, setShowEmail] = useState(false);
-          const [isSignup, setIsSignup] = useState(false);
+          const [isSignup, setIsSignup] = useState(true);
           const [email, setEmail] = useState('');
           const [password, setPassword] = useState('');
+          const [phone, setPhone] = useState('');
           const [authError, setAuthError] = useState('');
           const [checkEmail, setCheckEmail] = useState(false);
 
@@ -318,21 +319,26 @@
                 {!showEmail && (
                   <button onClick={function(){ setShowEmail(true); }}
                     style={{ width: '100%', background: '#fff', color: '#000', border: '1px solid #ddd', borderRadius: 16, padding: '16px 20px', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginBottom: 14, fontFamily: 'inherit' }}>
-                    Continuar con email
+                    Regístrate
                   </button>
                 )}
 
                 {showEmail && !checkEmail && (
                   <div style={{ marginBottom: 14 }}>
                     <input type="email" value={email} onChange={function(e){ setEmail(e.target.value); }} placeholder="tu@email.com" autoCapitalize="none" autoCorrect="off"
-                      style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: 16, padding: '16px 18px', fontSize: 16, marginBottom: 10, fontFamily: 'inherit' }} />
+                      style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: 16, padding: '16px 18px', fontSize: 16, marginBottom: 10, fontFamily: 'inherit', background: '#fff', color: '#000', colorScheme: 'light' }} />
+                    {isSignup && (
+                      <input type="tel" value={phone} onChange={function(e){ setPhone(e.target.value); }} placeholder="Teléfono" autoCapitalize="none" autoCorrect="off"
+                        style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: 16, padding: '16px 18px', fontSize: 16, marginBottom: 10, fontFamily: 'inherit', background: '#fff', color: '#000', colorScheme: 'light' }} />
+                    )}
                     <input type="password" value={password} onChange={function(e){ setPassword(e.target.value); }} placeholder="Contraseña" autoCapitalize="none" autoCorrect="off"
-                      style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: 16, padding: '16px 18px', fontSize: 16, marginBottom: 10, fontFamily: 'inherit' }} />
+                      style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: 16, padding: '16px 18px', fontSize: 16, marginBottom: 10, fontFamily: 'inherit', background: '#fff', color: '#000', colorScheme: 'light' }} />
                     {authError && <p style={{ fontSize: 12, color: '#e33', margin: '0 0 10px' }}>{authError}</p>}
                     <button onClick={async function() {
                         if (!email || email.indexOf('@') === -1 || password.length < 6) { setAuthError('Introduce un email válido y una contraseña de al menos 6 caracteres.'); return; }
+                        if (isSignup && !phone) { setAuthError('Introduce tu teléfono.'); return; }
                         setAuthError(''); setLoading(true);
-                        var res = isSignup ? await signUpWithPassword(email, password) : await signInWithPassword(email, password);
+                        var res = isSignup ? await signUpWithPassword(email, password, phone) : await signInWithPassword(email, password);
                         setLoading(false);
                         if (res.error) { setAuthError(res.error.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos.' : res.error.message); return; }
                         if (isSignup && res.data && res.data.user && !res.data.session) { setCheckEmail(true); }
@@ -351,7 +357,7 @@
 
                 {checkEmail && (
                   <p style={{ fontSize: 13, color: '#555', textAlign: 'center', margin: '0 0 14px', lineHeight: 1.5 }}>
-                    Te hemos enviado un enlace de confirmación a <strong>{email}</strong>.<br/>Veríficalo desde tu correo para entrar.
+                    Te hemos enviado un enlace de confirmación a <strong>{email}</strong>.<br/>Vérifícalo desde tu correo para entrar.
                   </p>
                 )}
 
