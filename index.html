@@ -129,6 +129,13 @@
           });
         }
 
+        async function signInWithMagicLink(email) {
+          return await supabaseClient.auth.signInWithOtp({
+            email: email,
+            options: { emailRedirectTo: "https://www.gonnie.app" }
+          });
+        }
+
         async function signOut() {
           await supabaseClient.auth.signOut();
         }
@@ -239,6 +246,9 @@
         function LoginScreen() {
           const [loading, setLoading] = useState(false);
           const [phase, setPhase] = useState('logo'); // 'logo' | 'content'
+          const [showEmail, setShowEmail] = useState(false);
+          const [email, setEmail] = useState('');
+          const [linkSent, setLinkSent] = useState(false);
 
           useEffect(function() {
             var t = setTimeout(function() { setPhase('content'); }, 1800);
@@ -300,6 +310,37 @@
                   </svg>
                   {loading ? 'Redirigiendo...' : 'Continuar con Google'}
                 </button>
+
+                {!showEmail && (
+                  <button onClick={function(){ setShowEmail(true); }}
+                    style={{ width: '100%', background: '#fff', color: '#000', border: '1px solid #ddd', borderRadius: 16, padding: '16px 20px', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginBottom: 14, fontFamily: 'inherit' }}>
+                    Continuar con email
+                  </button>
+                )}
+
+                {showEmail && !linkSent && (
+                  <div style={{ marginBottom: 14 }}>
+                    <input type="email" value={email} onChange={function(e){ setEmail(e.target.value); }} placeholder="tu@email.com" autoCapitalize="none" autoCorrect="off"
+                      style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: 16, padding: '16px 18px', fontSize: 16, marginBottom: 10, fontFamily: 'inherit' }} />
+                    <button onClick={async function() {
+                        if (!email || email.indexOf('@') === -1) return;
+                        setLoading(true);
+                        await signInWithMagicLink(email);
+                        setLoading(false);
+                        setLinkSent(true);
+                      }} disabled={loading}
+                      style={{ width: '100%', background: '#000', color: '#fff', border: 'none', borderRadius: 16, padding: '16px 20px', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, fontFamily: 'inherit' }}>
+                      {loading ? 'Enviando...' : 'Enviar enlace mágico'}
+                    </button>
+                  </div>
+                )}
+
+                {linkSent && (
+                  <p style={{ fontSize: 13, color: '#555', textAlign: 'center', margin: '0 0 14px', lineHeight: 1.5 }}>
+                    Te hemos enviado un enlace a <strong>{email}</strong>.<br/>Ábrelo desde tu correo para entrar.
+                  </p>
+                )}
+
                 <p style={{ fontSize: 11, color: '#bbb', textAlign: 'center', margin: 0 }}>Al continuar aceptas los términos de uso · Gratis para clientes</p>
               </div>
             </div>
