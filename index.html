@@ -528,7 +528,7 @@
           );
         }
 
-        function HomeScreen({ nav, user, puntos = 0 }) {
+        function HomeScreen({ nav, user, puntos = 0, setGroupMode }) {
           const nivel = getNivel(puntos);
           const progreso = getProgreso(puntos);
           const ptsSiguiente = getPtsParaSiguiente(puntos);
@@ -760,7 +760,7 @@
                 ) : (
                   <div style={{ textAlign: "center", padding: "10px 0" }}>
                     <p style={{ fontSize: 13, color: G.muted }}>No tienes citas próximas</p>
-                    <button onClick={function(){ nav("explore"); }} style={{ marginTop: 8, background: "transparent", border: "none", color: G.brand, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Reservar ahora →</button>
+                    <button onClick={function(){ setGroupMode(false); nav("explore"); }} style={{ marginTop: 8, background: "transparent", border: "none", color: G.brand, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Reservar ahora →</button>
                   </div>
                 )}
                 </div>
@@ -769,8 +769,8 @@
                 <SLabel>Acciones rápidas</SLabel>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 18 }}>
                   {[
-                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>', label: "Reservar cita", action: () => nav("explore"), bg: G.coral, fg: "#FFFFFF" },
-                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>', label: "Reserva grupal", action: () => nav("explore"), isNew: true, bg: G.mint, fg: "#0F2A20" },
+                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>', label: "Reservar cita", action: () => { setGroupMode(false); nav("explore"); }, bg: G.coral, fg: "#FFFFFF" },
+                    { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>', label: "Reserva grupal", action: () => { setGroupMode(true); nav("explore"); }, isNew: true, bg: G.mint, fg: "#0F2A20" },
                     { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', label: "Chat barbería", action: () => window.open("https://wa.me/34663528459", "_blank"), bg: "#1A1614", fg: "#F8F1E3" },
                     { svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>', label: "Tienda", action: () => nav("shop"), bg: G.rose, fg: "#3A0F1B" },
                   ].map((a, i) => (
@@ -1066,9 +1066,11 @@
         }
 
         // ─── VISTA 4: AGENDA Y TURNOS (BOOKING SCREEN) ────────────────────────
-        function BookingScreen({ booking, nav, setConfirmedAppt, setPuntos, user }) {
+        function BookingScreen({ booking, nav, setConfirmedAppt, setPuntos, user, groupMode, setGroupMode }) {
           const [date, setDate] = useState("");
           const [slot, setSlot] = useState("");
+          const [slot2, setSlot2] = useState("");
+          const [nombre2, setNombre2] = useState("");
           const [saving, setSaving] = useState(false);
           const [metodoPago, setMetodoPago] = useState("");
           const [ocupados, setOcupados] = useState([]);
@@ -1080,6 +1082,7 @@
             if (!date) { setOcupados([]); return; }
             setLoadingHoras(true);
             setSlot("");
+            setSlot2("");
             dbGet("appointments", "?date=eq." + date + "&barbero_id=eq." + booking.bar.id + "&status=neq.cancelled&select=time")
               .then(function(data){
                 var arr = Array.isArray(data) ? data : [];
@@ -1091,6 +1094,8 @@
 
           const confirm = async () => {
             if (!date || !slot) return alert("Selecciona fecha y hora");
+            if (groupMode && !slot2) return alert("Selecciona también la hora para la segunda persona");
+            if (groupMode && slot2 === slot) return alert("Elige dos horas diferentes para cada persona");
             setSaving(true);
             try {
              const payload = {
@@ -1105,9 +1110,28 @@
   payment_method: metodoPago || null,
   points_earned: Math.floor(booking.svc.price * 2)
 };
-             
+
               await dbInsert("appointments", payload);
-              setConfirmedAppt(payload);
+
+              var payload2 = null;
+              if (groupMode) {
+                payload2 = {
+                  barberia_id: booking.barberia.id,
+                  barbero_id: booking.bar.id,
+                  servicio_id: booking.svc.id,
+                  client_name: nombre2 || "Acompañante",
+                  client_email: (user && user.email) || "",
+                  date,
+                  time: slot2,
+                  price: booking.svc.price,
+                  payment_method: metodoPago || null,
+                  points_earned: 0
+                };
+                await dbInsert("appointments", payload2);
+              }
+
+              setConfirmedAppt(groupMode ? Object.assign({}, payload, { time2: slot2, nombre2: nombre2 || "Acompañante" }) : payload);
+
               // Enviar emails de confirmación
               await sendConfirmationEmail({
                 barberia: (booking.barberia && booking.barberia.name) || "GonnieBarbershop",
@@ -1119,11 +1143,27 @@
                 cliente: (user && user.user_metadata && user.user_metadata.full_name) || (user && user.email) || "Cliente",
                 email_cliente: (user && user.email) || "",
               });
+              if (groupMode) {
+                await sendConfirmationEmail({
+                  barberia: (booking.barberia && booking.barberia.name) || "GonnieBarbershop",
+                  barbero: (booking.bar && booking.bar.name) || "Barbero",
+                  servicio: (booking.svc && booking.svc.name) || "Servicio",
+                  fecha: date,
+                  hora: slot2,
+                  precio: (booking.svc && booking.svc.price) || 0,
+                  cliente: nombre2 || "Acompañante",
+                  email_cliente: (user && user.email) || "",
+                });
+              }
               setPuntos(prev => prev + Math.floor(((booking.svc && booking.svc.price) || 0) * 2));
+              if (setGroupMode) setGroupMode(false);
               nav("confirmed");
             } catch (e) {
               // Si falla la tabla simulada, igual avanza para experiencia fluida
-              setConfirmedAppt({ ...booking, date, time: slot, price: booking.svc.price });
+              setConfirmedAppt(groupMode
+                ? { ...booking, date, time: slot, time2: slot2, nombre2: nombre2 || "Acompañante", price: booking.svc.price }
+                : { ...booking, date, time: slot, price: booking.svc.price });
+              if (setGroupMode) setGroupMode(false);
               nav("confirmed");
             } finally { setSaving(false); }
           };
@@ -1131,17 +1171,23 @@
           return (
             <div style={{ flex: 1, padding: 18, overflowY: 'auto', paddingBottom: 90, background: "#1A1614", color: "#F8F1E3" }}>
               <button onClick={() => nav("detail")} style={{ background: "rgba(248,241,227,0.08)", border: "none", borderRadius: 20, padding: "8px 14px", fontSize: 12, color: "#F8F1E3", cursor: "pointer", fontFamily: "'Bricolage Grotesque'", fontWeight: 600 }}>← Volver</button>
+              {groupMode && (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: G.mint, color: "#0F2A20", borderRadius: 20, padding: "6px 12px", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", marginLeft: 10 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F2A20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
+                  Reserva grupal
+                </div>
+              )}
               <h3 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 24, fontWeight: 700, marginTop: 16, color: "#F8F1E3" }}>Elige día y hora</h3>
               <p style={{ fontSize: 13, color: "rgba(248,241,227,0.55)" }}>{booking.svc.name} con {booking.bar.name}</p>
 
               <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", background: "rgba(248,241,227,0.06)", border: "1px solid rgba(248,241,227,0.1)", padding: 14, borderRadius: 16, color: "#F8F1E3", marginTop: 14, marginBottom: 18, colorScheme: "dark" }} />
 
-              <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Horarios disponibles</p>
+              <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>{groupMode ? "Tu horario" : "Horarios disponibles"}</p>
               {date && loadingHoras && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Comprobando disponibilidad...</p>}
               {!date && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Elige primero una fecha</p>}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 24 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: groupMode ? 20 : 24 }}>
                 {slots.map(function(s) {
-                  var ocupado = ocupados.indexOf(s) >= 0;
+                  var ocupado = ocupados.indexOf(s) >= 0 || (groupMode && slot2 === s);
                   var elegido = slot === s;
                   return (
                     <button key={s} onClick={function(){ if (!ocupado) setSlot(s); }} disabled={ocupado || !date}
@@ -1161,7 +1207,40 @@
                 })}
               </div>
 
-              <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Método de pago</p>
+              {groupMode && (
+                <div style={{ marginBottom: 24, paddingTop: 4, borderTop: "1px solid rgba(248,241,227,0.1)" }}>
+                  <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", margin: "18px 0 10px" }}>Acompañante</p>
+                  <input type="text" value={nombre2} onChange={e => setNombre2(e.target.value)} placeholder="Nombre del acompañante (opcional)"
+                    style={{ width: "100%", background: "rgba(248,241,227,0.06)", border: "1px solid rgba(248,241,227,0.1)", padding: 14, borderRadius: 16, color: "#F8F1E3", marginBottom: 14, fontFamily: "inherit", fontSize: 14 }} />
+
+                  <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Su horario</p>
+                  {!date && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Elige primero una fecha</p>}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
+                    {slots.map(function(s) {
+                      var ocupado2 = ocupados.indexOf(s) >= 0 || slot === s;
+                      var elegido2 = slot2 === s;
+                      return (
+                        <button key={"p2-" + s} onClick={function(){ if (!ocupado2) setSlot2(s); }} disabled={ocupado2 || !date}
+                          style={{
+                            position: 'relative',
+                            background: ocupado2 ? 'rgba(248,241,227,0.03)' : (elegido2 ? G.coral : 'rgba(248,241,227,0.06)'),
+                            color: ocupado2 ? 'rgba(248,241,227,0.25)' : (elegido2 ? "#FFFFFF" : "#F8F1E3"),
+                            border: "1px solid " + (elegido2 ? G.coral : "rgba(248,241,227,0.08)"),
+                            padding: 12, borderRadius: 20, fontWeight: 700, fontFamily: "'Bricolage Grotesque'",
+                            cursor: ocupado2 || !date ? "not-allowed" : "pointer",
+                            textDecoration: ocupado2 ? 'line-through' : 'none',
+                            opacity: !date ? 0.5 : 1
+                          }}>
+                          {s}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p style={{ fontSize: 11, color: "rgba(248,241,227,0.4)", margin: "6px 0 0" }}>La hora de tu acompañante debe ser distinta a la tuya.</p>
+                </div>
+              )}
+
+              <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Método de pago{groupMode ? " (para ambas reservas)" : ""}</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 24 }}>
                 {[
                   { id: "efectivo", label: "Efectivo", color: G.coral, svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>' },
@@ -1180,7 +1259,7 @@
                 })}
               </div>
 
-              <PrimaryBtn disabled={saving || !date || !slot || !metodoPago} onClick={confirm} style={{ background: (saving || !date || !slot || !metodoPago) ? "rgba(30,62,230,0.3)" : G.brand }}>{saving ? "Procesando..." : "Confirmar Reserva"}</PrimaryBtn>
+              <PrimaryBtn disabled={saving || !date || !slot || !metodoPago || (groupMode && (!slot2 || slot2 === slot))} onClick={confirm} style={{ background: (saving || !date || !slot || !metodoPago || (groupMode && (!slot2 || slot2 === slot))) ? "rgba(30,62,230,0.3)" : G.brand }}>{saving ? "Procesando..." : (groupMode ? "Confirmar las 2 reservas" : "Confirmar Reserva")}</PrimaryBtn>
             </div>
           );
         }
@@ -1215,10 +1294,21 @@
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1614" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Cuando</p>
+                  <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{(appt && appt.time2) ? "Tú" : "Cuando"}</p>
                   <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>{(appt && appt.date) || "Hoy"} · {(appt && appt.time) || "—"}</p>
                 </div>
               </div>
+              {appt && appt.time2 && (
+                <div style={{ background: G.card, borderRadius: 22, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, marginBottom: 12, textAlign: "left" }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: G.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1614" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{appt.nombre2 || "Acompañante"}</p>
+                    <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>{(appt && appt.date) || "Hoy"} · {appt.time2}</p>
+                  </div>
+                </div>
+              )}
               <div style={{ background: G.card, borderRadius: 22, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, marginBottom: 20, textAlign: "left" }}>
                 <div style={{ width: 38, height: 38, borderRadius: 12, background: G.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1614" strokeWidth="1.8" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -2504,6 +2594,7 @@
           const [booking, setBooking] = useState(null);
           const [confirmedAppt, setConfirmedAppt] = useState(null);
           const [puntos, setPuntos] = useState(0);
+          const [groupMode, setGroupMode] = useState(false);
 
           // Cargar puntos reales del usuario desde Supabase
           const cargarPuntos = async (email) => {
@@ -2575,11 +2666,11 @@
                     <BusinessScreen />
                   ) : (
                     <>
-                      {view === "home" && <HomeScreen nav={setView} user={user} puntos={puntos} />}
+                      {view === "home" && <HomeScreen nav={setView} user={user} puntos={puntos} setGroupMode={setGroupMode} />}
                       {view === "shop" && <ShopScreen nav={setView} />}
                       {view === "explore" && <ExploreScreen nav={setView} setBarberia={setBarberia} />}
                       {view === "detail" && <DetailScreen barberia={barberia} nav={setView} setBooking={setBooking} />}
-                      {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} setPuntos={setPuntos} user={user} />}
+                      {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} setPuntos={setPuntos} user={user} groupMode={groupMode} setGroupMode={setGroupMode} />}
                       {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
                       {view === "appointments" && <AppointmentsScreen user={user} />}
                       {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
