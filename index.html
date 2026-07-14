@@ -1075,7 +1075,17 @@
           const [metodoPago, setMetodoPago] = useState("");
           const [ocupados, setOcupados] = useState([]);
           const [loadingHoras, setLoadingHoras] = useState(false);
+          const [blocked, setBlocked] = useState(false);
+          const [checkingBlocked, setCheckingBlocked] = useState(true);
           const slots = ["10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00","20:30"];
+
+          // Comprobar si esta cuenta tiene bloqueado el poder reservar
+          useEffect(function() {
+            if (!user || !user.email) { setCheckingBlocked(false); return; }
+            dbGet("usuarios_bloqueados", "?email=eq." + encodeURIComponent(user.email) + "&select=id")
+              .then(function(data){ setBlocked(Array.isArray(data) && data.length > 0); setCheckingBlocked(false); })
+              .catch(function(){ setCheckingBlocked(false); });
+          }, [user]);
 
           // Cargar horas ya reservadas para la fecha y barbero elegidos
           useEffect(function() {
@@ -1093,6 +1103,7 @@
           }, [date]);
 
           const confirm = async () => {
+            if (blocked) return alert("No puedes reservar en este momento. Contacta con la barbería.");
             if (!date || !slot) return alert("Selecciona fecha y hora");
             if (groupMode && !slot2) return alert("Selecciona también la hora para la segunda persona");
             if (groupMode && slot2 === slot) return alert("Elige dos horas diferentes para cada persona");
@@ -1167,6 +1178,27 @@
               nav("confirmed");
             } finally { setSaving(false); }
           };
+
+          if (checkingBlocked) {
+            return (
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#1A1614" }}>
+                <p style={{ color: "rgba(248,241,227,0.5)", fontSize: 13 }}>Cargando...</p>
+              </div>
+            );
+          }
+
+          if (blocked) {
+            return (
+              <div style={{ flex: 1, padding: 24, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", background: "#1A1614", color: "#F8F1E3" }}>
+                <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(229,85,107,0.15)", border: "2px solid " + G.red, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={G.red} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/></svg>
+                </div>
+                <h3 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 20, fontWeight: 700, marginBottom: 10, color: "#F8F1E3" }}>No podemos completar tu reserva</h3>
+                <p style={{ fontSize: 14, color: "rgba(248,241,227,0.6)", maxWidth: 280, lineHeight: 1.5, marginBottom: 26 }}>Esta cuenta no puede reservar citas en este momento. Si crees que es un error, contacta directamente con la barbería.</p>
+                <button onClick={() => nav("home")} style={{ background: "rgba(248,241,227,0.08)", border: "none", borderRadius: 20, padding: "12px 22px", fontSize: 13, color: "#F8F1E3", cursor: "pointer", fontFamily: "'Bricolage Grotesque'", fontWeight: 600 }}>Volver al inicio</button>
+              </div>
+            );
+          }
 
           return (
             <div style={{ flex: 1, padding: 18, overflowY: 'auto', paddingBottom: 90, background: "#1A1614", color: "#F8F1E3" }}>
@@ -1480,6 +1512,9 @@
           const [guardandoCliente, setGuardandoCliente] = useState(false);
           const [borrandoTel, setBorrandoTel] = useState(null);
           const [reloadClientesTick, setReloadClientesTick] = useState(0);
+          const [bloqueados, setBloqueados] = useState([]);
+          const [loadingBloqueados, setLoadingBloqueados] = useState(false);
+          const [bloqueando, setBloqueando] = useState(null);
           const [seleccionados, setSeleccionados] = useState({});
           const [textoMensaje, setTextoMensaje] = useState('');
           const [showDesglose, setShowDesglose] = useState(false);
@@ -1617,6 +1652,40 @@
               })
               .catch(function(){ setLoadingClientes(false); });
           }, [panel, reloadClientesTick]);
+
+          // Cargar clientes bloqueados (junto con la lista de clientes)
+          useEffect(function() {
+            if (panel !== 'clientes') return;
+            setLoadingBloqueados(true);
+            dbGet('usuarios_bloqueados', '?select=email')
+              .then(function(data){
+                setBloqueados((Array.isArray(data) ? data : []).map(function(b){ return b.email; }));
+                setLoadingBloqueados(false);
+              })
+              .catch(function(){ setLoadingBloqueados(false); });
+          }, [panel, reloadClientesTick]);
+
+          function estaBloqueado(email) {
+            return !!email && bloqueados.indexOf(email) !== -1;
+          }
+
+          function toggleBloqueo(cl) {
+            if (!cl.email) return;
+            var bloqueadoActual = estaBloqueado(cl.email);
+            if (bloqueadoActual) {
+              if (!window.confirm('¿Desbloquear a ' + cl.nombre + '? Podrá volver a reservar citas.')) return;
+              setBloqueando(cl.email);
+              dbDelete('usuarios_bloqueados', '?email=eq.' + encodeURIComponent(cl.email))
+                .then(function(){ setBloqueados(function(prev){ return prev.filter(function(e){ return e !== cl.email; }); }); setBloqueando(null); })
+                .catch(function(){ setBloqueando(null); alert('No se pudo desbloquear'); });
+            } else {
+              if (!window.confirm('¿Bloquear a ' + cl.nombre + '? No podrá reservar nuevas citas en la app.')) return;
+              setBloqueando(cl.email);
+              dbInsert('usuarios_bloqueados', { email: cl.email, motivo: null })
+                .then(function(){ setBloqueados(function(prev){ return prev.concat([cl.email]); }); setBloqueando(null); })
+                .catch(function(){ setBloqueando(null); alert('No se pudo bloquear'); });
+            }
+          }
 
           // Cargar productos (al abrir el panel de productos)
           useEffect(function() {
@@ -2060,6 +2129,7 @@
                     }).map(function(cl, i) {
                     var inicial = (cl.nombre || '?').charAt(0).toUpperCase();
                     var marcado = !!(cl.telefono && seleccionados[cl.telefono]);
+                    var bloqueadoCl = estaBloqueado(cl.email);
                     return (
                       <div key={i} onClick={modoMensaje && cl.telefono ? function(){ setSeleccionados(Object.assign({}, seleccionados, { [cl.telefono]: !seleccionados[cl.telefono] })); } : undefined}
                         style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, border: '1px solid ' + (marcado ? G.brand : G.bdr), borderRadius: 16, padding: '14px 16px', marginBottom: 10, cursor: modoMensaje && cl.telefono ? 'pointer' : 'default', opacity: modoMensaje && !cl.telefono ? 0.5 : 1 }}>
@@ -2070,10 +2140,21 @@
                         )}
                         <span style={{ display: 'inline-flex', width: 42, height: 42, borderRadius: 21, background: G.brand + '18', color: G.brand, alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 800, flexShrink: 0 }}>{inicial}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cl.nombre}</p>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cl.nombre}</span>
+                            {bloqueadoCl && <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: G.red, padding: '2px 6px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.03em', flexShrink: 0 }}>Bloqueado</span>}
+                          </p>
                           <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{cl.importado ? (cl.telefono || 'Importado de Yeasy') : (cl.visitas + ' ' + (cl.visitas === 1 ? 'visita' : 'visitas') + ' · ' + cl.gastado + '€ gastados')}</p>
                         </div>
                         {modoMensaje && !cl.telefono && <span style={{ fontSize: 10, color: G.muted }}>Sin tfno</span>}
+                        {!modoMensaje && cl.email && (
+                          <button onClick={function(e){ e.stopPropagation(); toggleBloqueo(cl); }}
+                            disabled={bloqueando === cl.email}
+                            title={bloqueadoCl ? 'Desbloquear cliente' : 'Bloquear cliente'}
+                            style={{ background: 'transparent', border: 'none', cursor: bloqueando === cl.email ? 'not-allowed' : 'pointer', padding: 6, color: bloqueadoCl ? G.red : G.muted, flexShrink: 0, display: 'flex', alignItems: 'center', opacity: bloqueando === cl.email ? 0.5 : 1 }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/></svg>
+                          </button>
+                        )}
                         {!modoMensaje && cl.importado && cl.id && (
                           <button onClick={function(e){
                               e.stopPropagation();
