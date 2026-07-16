@@ -11,6 +11,15 @@
     <meta name="theme-color" content="#FFFFFF" />
     <title>Gonnie App</title>
 
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Gonnie — Tu barbería, en tu bolsillo" />
+    <meta property="og:description" content="Reserva, acumula puntos y gestiona tus citas en segundos." />
+    <meta property="og:image" content="https://i.imgur.com/22GIzhb.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Gonnie — Tu barbería, en tu bolsillo" />
+    <meta name="twitter:description" content="Reserva, acumula puntos y gestiona tus citas en segundos." />
+    <meta name="twitter:image" content="https://i.imgur.com/22GIzhb.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
@@ -88,23 +97,43 @@
         // ─── CONFIGURACIÓN DE SUPABASE ──────────────────────────────────────────
         const SUPABASE_URL = "https://fnjqzcnufkhrfzxfallj.supabase.co";
         const SUPABASE_KEY = "sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-";
+        // Cuenta con acceso al Modo Negocio. Debe coincidir EXACTAMENTE con el
+        // email admin usado en las políticas RLS de Supabase (is_admin()).
+        const ADMIN_EMAIL = "reservasgonnie@gmail.com";
 
-        const DB_HEADERS = {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json",
-          Prefer: "return=representation",
-        };
+        // ─── SUPABASE AUTH CLIENT ───────────────────────────────────────────────
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Devuelve el token de la sesión activa (para que Supabase sepa QUIÉN hace
+        // cada petición y las políticas de seguridad por fila funcionen). Si no hay
+        // sesión, cae de vuelta a la clave pública (igual que antes).
+        async function getAuthToken() {
+          try {
+            const { data } = await supabaseClient.auth.getSession();
+            if (data && data.session && data.session.access_token) return data.session.access_token;
+          } catch (e) {}
+          return SUPABASE_KEY;
+        }
+
+        async function getDbHeaders() {
+          const token = await getAuthToken();
+          return {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Prefer: "return=representation",
+          };
+        }
 
         async function dbGet(table, query = "") {
-          const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, { headers: DB_HEADERS });
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, { headers: await getDbHeaders() });
           if (!res.ok) throw new Error(await res.text());
           return res.json();
         }
 
         async function dbInsert(table, data) {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-            method: "POST", headers: DB_HEADERS, body: JSON.stringify(data),
+            method: "POST", headers: await getDbHeaders(), body: JSON.stringify(data),
           });
           if (!res.ok) throw new Error(await res.text());
           return res.json();
@@ -112,14 +141,11 @@
 
         async function dbDelete(table, query = "") {
           const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
-            method: "DELETE", headers: DB_HEADERS,
+            method: "DELETE", headers: await getDbHeaders(),
           });
           if (!res.ok) throw new Error(await res.text());
           return res.json();
         }
-
-        // ─── SUPABASE AUTH CLIENT ───────────────────────────────────────────────
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function signInWithGoogle() {
           await supabaseClient.auth.signInWithOAuth({
@@ -254,6 +280,9 @@
           const [phone, setPhone] = useState('');
           const [authError, setAuthError] = useState('');
           const [checkEmail, setCheckEmail] = useState(false);
+          const [forgotMode, setForgotMode] = useState(false);
+          const [resetSent, setResetSent] = useState(false);
+          const [resetLoading, setResetLoading] = useState(false);
 
           useEffect(function() {
             var t = setTimeout(function() { setPhase('content'); }, 1800);
@@ -323,7 +352,7 @@
                   </button>
                 )}
 
-                {showEmail && !checkEmail && (
+                {showEmail && !checkEmail && !forgotMode && (
                   <div style={{ marginBottom: 14 }}>
                     <input type="email" value={email} onChange={function(e){ setEmail(e.target.value); }} placeholder="tu@email.com" autoCapitalize="none" autoCorrect="off"
                       style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: 16, padding: '16px 18px', fontSize: 16, marginBottom: 10, fontFamily: 'inherit', background: '#fff', color: '#000', colorScheme: 'light' }} />
@@ -346,6 +375,13 @@
                       style={{ width: '100%', background: '#000', color: '#fff', border: 'none', borderRadius: 16, padding: '16px 20px', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, fontFamily: 'inherit', marginBottom: 10 }}>
                       {loading ? 'Cargando...' : (isSignup ? 'Crear cuenta' : 'Iniciar sesión')}
                     </button>
+                    {!isSignup && (
+                      <p style={{ fontSize: 13, color: '#888', textAlign: 'center', margin: '0 0 10px' }}>
+                        <span onClick={function(){ setForgotMode(true); setAuthError(''); }} style={{ color: '#000', fontWeight: 700, cursor: 'pointer' }}>
+                          ¿Olvidaste tu contraseña?
+                        </span>
+                      </p>
+                    )}
                     <p style={{ fontSize: 13, color: '#888', textAlign: 'center', margin: 0 }}>
                       {isSignup ? '¿Ya tienes cuenta? ' : '¿No tienes cuenta? '}
                       <span onClick={function(){ setIsSignup(!isSignup); setAuthError(''); }} style={{ color: '#000', fontWeight: 700, cursor: 'pointer' }}>
@@ -353,6 +389,35 @@
                       </span>
                     </p>
                   </div>
+                )}
+
+                {showEmail && forgotMode && !resetSent && (
+                  <div style={{ marginBottom: 14 }}>
+                    <p style={{ fontSize: 13, color: '#555', margin: '0 0 14px', lineHeight: 1.5 }}>Introduce tu email y te enviaremos un enlace para crear una contraseña nueva.</p>
+                    <input type="email" value={email} onChange={function(e){ setEmail(e.target.value); }} placeholder="tu@email.com" autoCapitalize="none" autoCorrect="off"
+                      style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: 16, padding: '16px 18px', fontSize: 16, marginBottom: 10, fontFamily: 'inherit', background: '#fff', color: '#000', colorScheme: 'light' }} />
+                    {authError && <p style={{ fontSize: 12, color: '#e33', margin: '0 0 10px' }}>{authError}</p>}
+                    <button onClick={async function() {
+                        if (!email || email.indexOf('@') === -1) { setAuthError('Introduce un email válido.'); return; }
+                        setAuthError(''); setResetLoading(true);
+                        var res = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+                        setResetLoading(false);
+                        if (res.error) { setAuthError(res.error.message); return; }
+                        setResetSent(true);
+                      }} disabled={resetLoading}
+                      style={{ width: '100%', background: '#000', color: '#fff', border: 'none', borderRadius: 16, padding: '16px 20px', fontSize: 15, fontWeight: 700, cursor: resetLoading ? 'not-allowed' : 'pointer', opacity: resetLoading ? 0.6 : 1, fontFamily: 'inherit', marginBottom: 10 }}>
+                      {resetLoading ? 'Enviando...' : 'Enviar enlace'}
+                    </button>
+                    <p style={{ fontSize: 13, color: '#888', textAlign: 'center', margin: 0 }}>
+                      <span onClick={function(){ setForgotMode(false); setAuthError(''); }} style={{ color: '#000', fontWeight: 700, cursor: 'pointer' }}>← Volver a iniciar sesión</span>
+                    </p>
+                  </div>
+                )}
+
+                {resetSent && (
+                  <p style={{ fontSize: 13, color: '#555', textAlign: 'center', margin: '0 0 14px', lineHeight: 1.5 }}>
+                    Te hemos enviado un enlace a <strong>{email}</strong> para crear tu nueva contraseña.
+                  </p>
                 )}
 
                 {checkEmail && (
@@ -363,6 +428,49 @@
 
                 <p style={{ fontSize: 11, color: '#bbb', textAlign: 'center', margin: 0 }}>Al continuar aceptas los términos de uso · Gratis para clientes</p>
               </div>
+            </div>
+          );
+        }
+
+        // ─── PANTALLA: NUEVA CONTRASEÑA (tras enlace de recuperación) ──────────
+        function NewPasswordScreen({ onDone }) {
+          const [password, setPassword] = useState('');
+          const [password2, setPassword2] = useState('');
+          const [error, setError] = useState('');
+          const [saving, setSaving] = useState(false);
+          const [done, setDone] = useState(false);
+
+          async function handleSave() {
+            if (password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres.'); return; }
+            if (password !== password2) { setError('Las contraseñas no coinciden.'); return; }
+            setError(''); setSaving(true);
+            const res = await supabaseClient.auth.updateUser({ password: password });
+            setSaving(false);
+            if (res.error) { setError(res.error.message); return; }
+            setDone(true);
+            setTimeout(function(){ onDone(); }, 1200);
+          }
+
+          return (
+            <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 28px 48px' }}>
+              <h1 style={{ fontSize: 26, fontWeight: 800, color: '#000', margin: '0 0 10px' }}>Crea una nueva contraseña</h1>
+              <p style={{ fontSize: 14, color: '#888', margin: '0 0 28px', lineHeight: 1.5 }}>Ya has verificado tu identidad por email. Elige una contraseña nueva para tu cuenta.</p>
+
+              {!done ? (
+                <>
+                  <input type="password" value={password} onChange={function(e){ setPassword(e.target.value); }} placeholder="Nueva contraseña" autoCapitalize="none" autoCorrect="off"
+                    style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: 16, padding: '16px 18px', fontSize: 16, marginBottom: 10, fontFamily: 'inherit', background: '#fff', color: '#000', colorScheme: 'light' }} />
+                  <input type="password" value={password2} onChange={function(e){ setPassword2(e.target.value); }} placeholder="Repite la contraseña" autoCapitalize="none" autoCorrect="off"
+                    style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #ddd', borderRadius: 16, padding: '16px 18px', fontSize: 16, marginBottom: 10, fontFamily: 'inherit', background: '#fff', color: '#000', colorScheme: 'light' }} />
+                  {error && <p style={{ fontSize: 12, color: '#e33', margin: '0 0 10px' }}>{error}</p>}
+                  <button onClick={handleSave} disabled={saving}
+                    style={{ width: '100%', background: '#000', color: '#fff', border: 'none', borderRadius: 16, padding: '16px 20px', fontSize: 15, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, fontFamily: 'inherit' }}>
+                    {saving ? 'Guardando...' : 'Guardar contraseña'}
+                  </button>
+                </>
+              ) : (
+                <p style={{ fontSize: 14, color: '#0a0', fontWeight: 600, textAlign: 'center' }}>✓ Contraseña actualizada. Entrando...</p>
+              )}
             </div>
           );
         }
@@ -708,7 +816,7 @@
                       {showReschedule && (
                         <div style={{ background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '14px' }}>
                           <p style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 10 }}>Selecciona nueva fecha y hora</p>
-                          <input type="date" value={rescheduleDate} onChange={function(e){ setRescheduleDate(e.target.value); }}
+                          <input type="date" value={rescheduleDate} onChange={function(e){ setRescheduleDate(e.target.value); }} min={new Date().toISOString().split('T')[0]}
                             style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '9px 12px', borderRadius: 10, color: G.text, fontSize: 13, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 700 }} />
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 12 }}>
                             {slots.map(function(s) {
@@ -731,12 +839,7 @@
                               try {
                                 await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/appointments?id=eq.' + nextAppt.id, {
                                   method: 'PATCH',
-                                  headers: {
-                                    'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
-                                    'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-',
-                                    'Content-Type': 'application/json',
-                                    'Prefer': 'return=minimal'
-                                  },
+                                  headers: Object.assign({}, await getDbHeaders(), { 'Prefer': 'return=minimal' }),
                                   body: JSON.stringify({ date: rescheduleDate, time: rescheduleSlot })
                                 });
                                 setNextAppt(Object.assign({}, nextAppt, { date: rescheduleDate, time: rescheduleSlot }));
@@ -1212,7 +1315,7 @@
               <h3 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 24, fontWeight: 700, marginTop: 16, color: "#F8F1E3" }}>Elige día y hora</h3>
               <p style={{ fontSize: 13, color: "rgba(248,241,227,0.55)" }}>{booking.svc.name} con {booking.bar.name}</p>
 
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: "100%", background: "rgba(248,241,227,0.06)", border: "1px solid rgba(248,241,227,0.1)", padding: 14, borderRadius: 16, color: "#F8F1E3", marginTop: 14, marginBottom: 18, colorScheme: "dark" }} />
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ width: "100%", background: "rgba(248,241,227,0.06)", border: "1px solid rgba(248,241,227,0.1)", padding: 14, borderRadius: 16, color: "#F8F1E3", marginTop: 14, marginBottom: 18, colorScheme: "dark" }} />
 
               <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>{groupMode ? "Tu horario" : "Horarios disponibles"}</p>
               {date && loadingHoras && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Comprobando disponibilidad...</p>}
@@ -1564,7 +1667,7 @@
             try {
               await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/appointments', {
                 method: 'POST',
-                headers: { 'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-', 'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-', 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                headers: Object.assign({}, await getDbHeaders(), { 'Prefer': 'return=minimal' }),
                 body: JSON.stringify({ client_email: 'manual@gonnie.app', cliente: ncNombre, barbero_id: ncBarbero, servicio_id: ncServicio, date: ncFecha, time: ncHora, status: 'confirmed', precio: serv ? serv.price : 0, barberia: 'Gonnie Barbershop' })
               });
               setNcDone(true);
@@ -1709,7 +1812,7 @@
               var nombreArchivo = 'prod_' + Date.now() + '.' + ext;
               var res = await fetch(SUPABASE_URL + '/storage/v1/object/productos/' + nombreArchivo, {
                 method: 'POST',
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': file.type || 'image/jpeg' },
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (await getAuthToken()), 'Content-Type': file.type || 'image/jpeg' },
                 body: file
               });
               setUploadingImg(false);
@@ -1732,11 +1835,11 @@
               };
               if (editProd.id) {
                 await fetch(SUPABASE_URL + '/rest/v1/productos?id=eq.' + editProd.id, {
-                  method: 'PATCH', headers: { ...DB_HEADERS }, body: JSON.stringify(payload)
+                  method: 'PATCH', headers: await getDbHeaders(), body: JSON.stringify(payload)
                 });
               } else {
                 await fetch(SUPABASE_URL + '/rest/v1/productos', {
-                  method: 'POST', headers: { ...DB_HEADERS }, body: JSON.stringify(payload)
+                  method: 'POST', headers: await getDbHeaders(), body: JSON.stringify(payload)
                 });
               }
               await recargarProductos();
@@ -1750,7 +1853,7 @@
             if (!confirm('¿Borrar "' + prod.nombre + '"?')) return;
             try {
               await fetch(SUPABASE_URL + '/rest/v1/productos?id=eq.' + prod.id, {
-                method: 'DELETE', headers: { ...DB_HEADERS }
+                method: 'DELETE', headers: await getDbHeaders()
               });
               await recargarProductos();
             } catch(e) { alert('Error al borrar'); }
@@ -1764,7 +1867,7 @@
             try {
               await fetch(SUPABASE_URL + '/rest/v1/appointments?id=eq.' + encodeURIComponent(cita.id), {
                 method: 'PATCH',
-                headers: { ...DB_HEADERS },
+                headers: await getDbHeaders(),
                 body: JSON.stringify({ payment_method: metodo })
               });
               // Reflejar al instante en la lista local
@@ -2567,7 +2670,7 @@
                 </div>
               </div>
 
-              {user && user.email === 'reservasgonnie@gmail.com' && (
+              {user && user.email === ADMIN_EMAIL && (
                 <GhostBtn onClick={function(){ setMode(mode === 'customer' ? 'business' : 'customer'); }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                     <span dangerouslySetInnerHTML={{ __html: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + G.muted + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9"/><path d="M3 9h18"/><path d="M9 22V12h6v10"/></svg>' }} />
@@ -2676,6 +2779,7 @@
           const [confirmedAppt, setConfirmedAppt] = useState(null);
           const [puntos, setPuntos] = useState(0);
           const [groupMode, setGroupMode] = useState(false);
+          const [passwordRecovery, setPasswordRecovery] = useState(false);
 
           // Cargar puntos reales del usuario desde Supabase
           const cargarPuntos = async (email) => {
@@ -2700,6 +2804,7 @@
             });
             // Escuchar cambios de sesión en tiempo real
             const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+              if (_event === 'PASSWORD_RECOVERY') { setPasswordRecovery(true); setAuthLoading(false); }
               setUser((session && session.user) || null);
               if (session && session.user) {
                 window.__gonnieEmail = session.user.email;
@@ -2716,6 +2821,15 @@
               <div style={{ textAlign: "center" }}>
                 <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: 80, width: "auto", marginBottom: 16, marginLeft: "auto", marginRight: "auto", display: "block" }} alt="Gonnie" />
                 <p style={{ color: G.muted, fontSize: 13 }}>Cargando Gonnie...</p>
+              </div>
+            </div>
+          );
+
+          // Recuperación de contraseña → pedir contraseña nueva antes de entrar
+          if (passwordRecovery) return (
+            <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
+              <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
+                <NewPasswordScreen onDone={() => setPasswordRecovery(false)} />
               </div>
             </div>
           );
@@ -2743,7 +2857,7 @@
               <InstallBanner />
               <div style={{ width: "100%", maxWidth: 420, background: G.bg, height: "100vh", position: "relative", display: "flex", flexDirection: "column" }}>
                 <div style={{ flex: 1, minHeight: 0, overflowY: mode === "business" ? "hidden" : "auto" }}>
-                  {mode === "business" ? (
+                  {mode === "business" && user && user.email === ADMIN_EMAIL ? (
                     <BusinessScreen />
                   ) : (
                     <>
@@ -2758,6 +2872,7 @@
                       {view === "profile" && <ProfileScreen setMode={setMode} mode={mode} user={user} nav={setView} puntos={puntos} />}
                       {view === "settings" && <SettingsScreen nav={setView} user={user} />}
                       {view === "privacy" && <PrivacyScreen nav={setView} user={user} />}
+                      {view === "terms" && <TermsScreen nav={setView} />}
                       {view === "help" && <HelpScreen nav={setView} />}
                       {view === "editprofile" && <EditProfileScreen nav={setView} user={user} />}
                       {view === "review" && <ReviewScreen barberia={barberia} nav={setView} user={user} />}
@@ -2953,7 +3068,7 @@
             method: 'POST',
             headers: {
               'apikey': SUPABASE_KEY,
-              'Authorization': 'Bearer ' + SUPABASE_KEY,
+              'Authorization': 'Bearer ' + (await getAuthToken()),
               'Content-Type': file.type || 'image/jpeg',
               'x-upsert': 'true',
             },
@@ -2974,7 +3089,7 @@
           if (Array.isArray(existing) && existing.length > 0) {
             await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
               method: 'PATCH',
-              headers: { ...DB_HEADERS },
+              headers: await getDbHeaders(),
               body: JSON.stringify(data)
             });
           } else {
@@ -3165,6 +3280,56 @@
           );
         }
 
+        function TermsScreen({ nav }) {
+          var secciones = [
+            {
+              titulo: '👤 Sobre la cuenta',
+              texto: 'Para reservar necesitas crear una cuenta con datos reales (email y, si quieres, nombre y teléfono). Eres responsable de mantener tu contraseña segura y de la actividad que ocurra desde tu cuenta.'
+            },
+            {
+              titulo: '📅 Reservas',
+              texto: 'Al reservar, te comprometes a acudir en la fecha y hora elegidas. Las citas están sujetas a la disponibilidad del barbero. La barbería puede reprogramar o cancelar una cita si surge un imprevisto, avisándote con la mayor antelación posible.'
+            },
+            {
+              titulo: '🚫 Cancelaciones y no-shows',
+              texto: 'Puedes cancelar o reprogramar tu cita desde la app. Las inasistencias repetidas sin cancelar podrán suponer restricciones para reservar en el futuro.'
+            },
+            {
+              titulo: '💳 Pagos',
+              texto: 'El pago del servicio se realiza en la barbería, en el método que selecciones al reservar (efectivo, tarjeta o Bizum). La app no procesa ni almacena datos de pago.'
+            },
+            {
+              titulo: '⭐ Puntos y reseñas',
+              texto: 'Los puntos de fidelidad no tienen valor monetario fuera de la app y pueden ajustarse o eliminarse en cualquier momento. Las reseñas deben reflejar tu experiencia real y ser respetuosas.'
+            },
+            {
+              titulo: '🔄 Cambios en estas condiciones',
+              texto: 'Podemos actualizar estos términos según evolucione la app. Si hay cambios importantes, te lo indicaremos dentro de la propia aplicación.'
+            },
+            {
+              titulo: '✉️ Contacto',
+              texto: 'Cualquier duda sobre estas condiciones: reservasgonnie@gmail.com'
+            },
+          ];
+
+          return (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
+              <Back onBack={function(){ nav('settings'); }} />
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: G.text, margin: '14px 0 4px' }}>Términos de uso</h2>
+              <p style={{ fontSize: 12, color: G.muted, margin: '0 0 20px' }}>Condiciones para usar Gonnie</p>
+
+              {secciones.map(function(s, i) {
+                return (
+                  <div key={i} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: G.text, margin: '0 0 6px' }}>{s.titulo}</p>
+                    <p style={{ fontSize: 12, color: G.muted, margin: 0, lineHeight: 1.6 }}>{s.texto}</p>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        }
+
         function PrivacyScreen({ nav, user }) {
           const [showDelete, setShowDelete] = useState(false);
           const [deleting, setDeleting] = useState(false);
@@ -3175,11 +3340,12 @@
             try {
               const email = user && user.email;
               if (email) {
+                const authHeaders = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (await getAuthToken()) };
                 await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/appointments?client_email=eq.' + encodeURIComponent(email), {
-                  method: 'DELETE', headers: { 'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-', 'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-' }
+                  method: 'DELETE', headers: authHeaders
                 });
                 await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/profiles?id=eq.' + encodeURIComponent(email), {
-                  method: 'DELETE', headers: { 'apikey': 'sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-', 'Authorization': 'Bearer sb_publishable_PHk3rHljiDKOQ5ByIoME0Q_jPa2Ldd-' }
+                  method: 'DELETE', headers: authHeaders
                 });
               }
               await supabaseClient.auth.signOut();
@@ -3190,19 +3356,27 @@
           var secciones = [
             {
               titulo: '📋 Datos que recogemos',
-              texto: 'Email y nombre (a través de Google), historial de citas, puntos acumulados y preferencias guardadas en el dispositivo (favoritos).'
+              texto: 'Email y nombre (a través de Google o al registrarte), teléfono si lo añades, historial de citas, puntos acumulados y preferencias guardadas en el dispositivo (favoritos).'
             },
             {
               titulo: '🎯 Para qué los usamos',
-              texto: 'Gestionar tus reservas, calcular tus puntos de fidelización y enviarte notificaciones sobre tus citas si las activas.'
+              texto: 'Gestionar tus reservas, calcular tus puntos de fidelización, y contactarte por email sobre tus citas (confirmaciones, cambios o cancelaciones).'
             },
             {
               titulo: '🤝 Con quién se comparten',
-              texto: 'Supabase (base de datos segura), Firebase (notificaciones push) y Google (inicio de sesión). Nunca vendemos tus datos a terceros.'
+              texto: 'Supabase (base de datos segura) y Google (inicio de sesión, si eliges entrar con Google). Nunca vendemos tus datos a terceros.'
+            },
+            {
+              titulo: '⏳ Cuánto tiempo los conservamos',
+              texto: 'Mientras tu cuenta esté activa. Si la eliminas, borramos tus citas y tu perfil de forma inmediata y permanente (ver más abajo).'
+            },
+            {
+              titulo: '⚖️ Tus derechos',
+              texto: 'Puedes acceder, corregir o eliminar tus datos cuando quieras desde esta misma pantalla, o escribiéndonos. También puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es) si consideras que no hemos gestionado tus datos correctamente.'
             },
             {
               titulo: '📱 Almacenamiento local',
-              texto: 'Guardamos en tu dispositivo tus barberías favoritas y si ya has visto el mensaje de instalación. Puedes borrarlos limpiando los datos del sitio en Safari.'
+              texto: 'Guardamos en tu dispositivo tus barberías favoritas y si ya has visto el mensaje de instalación. Puedes borrarlos limpiando los datos del sitio en tu navegador.'
             },
             {
               titulo: '✉️ Contacto',
@@ -3265,16 +3439,6 @@
           const [photo, setPhoto] = useState(googleAvatar);
           const [displayName, setDisplayName] = useState(googleName);
 
-          // ── Estado del botón de notificaciones ──
-          // 'unknown' | 'requesting' | 'granted' | 'denied'
-          const [pushStatus, setPushStatus] = useState(function() {
-            if (typeof Notification === 'undefined') return 'unsupported';
-            if (Notification.permission === 'granted') return 'granted';
-            if (Notification.permission === 'denied')  return 'denied';
-            return 'unknown';
-          });
-          const [pushLog, setPushLog] = useState('');
-
           useEffect(function() {
             if (!email) return;
             dbGet('profiles', '?id=eq.' + encodeURIComponent(email) + '&select=photo_url,full_name')
@@ -3286,22 +3450,14 @@
               }).catch(function(){});
           }, [email]);
 
-          async function handleActivarNotificaciones() {
-            setPushStatus('unsupported');
-            setPushLog('Las notificaciones push no están disponibles en esta versión.');
-          }
-
           var iniciales = displayName.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
           var opciones = [
             { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/></svg>', label: 'Perfil', desc: 'Foto, nombre, teléfono, fecha de nacimiento', action: function(){ nav('editprofile'); } },
 
             { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>', label: 'Privacidad', desc: 'Gestiona tus datos', action: function(){ nav('privacy'); } },
+            { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>', label: 'Términos de uso', desc: 'Condiciones de la app', action: function(){ nav('terms'); } },
             { svg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>', label: 'Ayuda y soporte', desc: 'Contacta con Gonnie', action: function(){ nav('help'); } },
           ];
-
-          // Etiqueta y color del botón de notificaciones según estado
-          var pushLabel = { unknown: 'Activar notificaciones', requesting: 'Activando…', granted: '✓ Notificaciones activas', denied: 'Permiso denegado — actívalas en Ajustes del sistema' };
-          var pushColor = { unknown: G.brand, requesting: G.brand, granted: G.green, denied: G.red };
 
           return (
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', paddingBottom: 80 }}>
@@ -3340,7 +3496,7 @@
           // 1. Marcar como cancelada en Supabase
           var res = await fetch(SUPABASE_URL + '/rest/v1/appointments?id=eq.' + apptId, {
             method: 'PATCH',
-            headers: DB_HEADERS,
+            headers: await getDbHeaders(),
             body: JSON.stringify({ status: 'cancelled' })
           });
           if (!res.ok) throw new Error('Error al cancelar: ' + await res.text());
