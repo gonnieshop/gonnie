@@ -375,13 +375,11 @@
                       style={{ width: '100%', background: '#000', color: '#fff', border: 'none', borderRadius: 16, padding: '16px 20px', fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, fontFamily: 'inherit', marginBottom: 10 }}>
                       {loading ? 'Cargando...' : (isSignup ? 'Crear cuenta' : 'Iniciar sesión')}
                     </button>
-                    {!isSignup && (
-                      <p style={{ fontSize: 13, color: '#888', textAlign: 'center', margin: '0 0 10px' }}>
-                        <span onClick={function(){ setForgotMode(true); setAuthError(''); }} style={{ color: '#000', fontWeight: 700, cursor: 'pointer' }}>
-                          ¿Olvidaste tu contraseña?
-                        </span>
-                      </p>
-                    )}
+                    <p style={{ fontSize: 13, color: '#888', textAlign: 'center', margin: '0 0 10px' }}>
+                      <span onClick={function(){ setForgotMode(true); setAuthError(''); }} style={{ color: '#000', fontWeight: 700, cursor: 'pointer' }}>
+                        ¿Olvidaste tu contraseña?
+                      </span>
+                    </p>
                     <p style={{ fontSize: 13, color: '#888', textAlign: 'center', margin: 0 }}>
                       {isSignup ? '¿Ya tienes cuenta? ' : '¿No tienes cuenta? '}
                       <span onClick={function(){ setIsSignup(!isSignup); setAuthError(''); }} style={{ color: '#000', fontWeight: 700, cursor: 'pointer' }}>
