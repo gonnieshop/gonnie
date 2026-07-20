@@ -868,7 +868,7 @@
                           <p style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 10 }}>Selecciona nueva fecha y hora</p>
                           <div style={{ width: '100%', overflow: 'hidden', borderRadius: 10, marginBottom: 10 }}>
                             <input type="date" value={rescheduleDate} onChange={function(e){ setRescheduleDate(e.target.value); }} min={new Date().toISOString().split('T')[0]}
-                              style={{ width: '100%', maxWidth: '100%', display: 'block', background: G.card, border: '1px solid ' + G.bdr, padding: '9px 12px', borderRadius: 10, color: G.text, fontSize: 16, textAlign: 'left', boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 700 }} />
+                              style={{ width: '100%', maxWidth: '100%', display: 'block', WebkitAppearance: 'none', appearance: 'none', background: G.card, border: '1px solid ' + G.bdr, padding: '9px 12px', borderRadius: 10, color: G.text, fontSize: 16, textAlign: 'left', boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 700 }} />
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 12 }}>
                             {rescheduleCerrado && (
@@ -1379,7 +1379,7 @@
               <p style={{ fontSize: 13, color: "rgba(248,241,227,0.55)" }}>{booking.svc.name} con {booking.bar.name}</p>
 
               <div style={{ width: "100%", overflow: "hidden", borderRadius: 16, marginTop: 14, marginBottom: 18 }}>
-                <input type="date" value={date} onChange={e => setDate(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ width: "100%", maxWidth: "100%", display: "block", boxSizing: "border-box", background: "rgba(248,241,227,0.06)", border: "1px solid rgba(248,241,227,0.1)", padding: 14, fontSize: 16, textAlign: "left", borderRadius: 16, color: "#F8F1E3", colorScheme: "dark", fontFamily: "inherit" }} />
+                <input type="date" value={date} onChange={e => setDate(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ width: "100%", maxWidth: "100%", display: "block", boxSizing: "border-box", WebkitAppearance: "none", appearance: "none", background: "rgba(248,241,227,0.06)", border: "1px solid rgba(248,241,227,0.1)", padding: 14, fontSize: 16, textAlign: "left", borderRadius: 16, color: "#F8F1E3", colorScheme: "dark", fontFamily: "inherit" }} />
               </div>
 
               <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>{groupMode ? "Tu horario" : "Horarios disponibles"}</p>
@@ -2569,7 +2569,7 @@
                   <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px', marginBottom: 12 }}>
                     <div style={{ width: '100%', overflow: 'hidden', borderRadius: 10, marginBottom: 8 }}>
                       <input type="date" value={nuevoCierreFecha} onChange={function(e){ setNuevoCierreFecha(e.target.value); }} min={new Date().toISOString().split('T')[0]}
-                        style={{ width: '100%', maxWidth: '100%', display: 'block', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
+                        style={{ width: '100%', maxWidth: '100%', display: 'block', WebkitAppearance: 'none', appearance: 'none', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
                     </div>
                     <input type="text" value={nuevoCierreMotivo} onChange={function(e){ setNuevoCierreMotivo(e.target.value); }} placeholder="Motivo (opcional): vacaciones, asunto propio..."
                       style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 10, outline: 'none' }} />
@@ -2676,7 +2676,7 @@
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>FECHA</p>
                     <div style={{ width: '100%', overflow: 'hidden', borderRadius: 10, marginBottom: 12 }}>
                       <input type="date" value={ncFecha} onChange={function(e){ setNcFecha(e.target.value); }}
-                        style={{ width: '100%', maxWidth: '100%', display: 'block', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, textAlign: 'left', fontWeight: 700, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
+                        style={{ width: '100%', maxWidth: '100%', display: 'block', WebkitAppearance: 'none', appearance: 'none', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, textAlign: 'left', fontWeight: 700, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
                     </div>
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 8px' }}>HORA</p>
