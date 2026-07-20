@@ -52,6 +52,11 @@
         ::-webkit-scrollbar-track { background: #0F1419; }
         ::-webkit-scrollbar-thumb { background: #161D25; border-radius: 2px; }
         input, select, textarea { color-scheme: dark; }
+        /* Altura de pantalla completa con respaldo: los navegadores que no
+           entienden "dvh" simplemente ignoran esa línea y se quedan con el
+           "vh" de arriba, en vez de quedarse sin altura ninguna. */
+        .gonnie-full-height { height: 100vh; height: 100dvh; }
+        .gonnie-min-full-height { min-height: 100vh; min-height: 100dvh; }
     
     /* ─── GONNIE ANIMATIONS ─── */
     @keyframes confettiFall {
@@ -343,7 +348,7 @@
           };
 
           return (
-            <div style={{ minHeight: '100dvh', background: '#fff', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+            <div className="gonnie-min-full-height" style={{ background: '#fff', position: 'relative', display: 'flex', flexDirection: 'column' }}>
 
               {/* Fase logo — centrado animado */}
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: phase === 'logo' ? 10 : 0, pointerEvents: 'none' }}>
@@ -493,7 +498,7 @@
           }
 
           return (
-            <div style={{ minHeight: '100dvh', background: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 28px 48px' }}>
+            <div className="gonnie-min-full-height" style={{ background: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 28px 48px' }}>
               <h1 style={{ fontSize: 26, fontWeight: 800, color: '#000', margin: '0 0 10px' }}>Crea una nueva contraseña</h1>
               <p style={{ fontSize: 14, color: '#888', margin: '0 0 28px', lineHeight: 1.5 }}>Ya has verificado tu identidad por email. Elige una contraseña nueva para tu cuenta.</p>
 
@@ -3024,7 +3029,7 @@
 
           // Pantalla de carga mientras comprueba sesión
           if (authLoading) return (
-            <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: G.bg }}>
+            <div className="gonnie-min-full-height" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: G.bg }}>
               <div style={{ textAlign: "center" }}>
                 <img src="https://i.imgur.com/VCuWiBN.png" style={{ height: 80, width: "auto", marginBottom: 16, marginLeft: "auto", marginRight: "auto", display: "block" }} alt="Gonnie" />
                 <p style={{ color: G.muted, fontSize: 13 }}>Cargando Gonnie...</p>
@@ -3062,7 +3067,7 @@
           return (
             <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
               <InstallBanner />
-              <div style={{ width: "100%", maxWidth: 420, background: G.bg, height: "100dvh", position: "relative", display: "flex", flexDirection: "column" }}>
+              <div className="gonnie-full-height" style={{ width: "100%", maxWidth: 420, background: G.bg, position: "relative", display: "flex", flexDirection: "column" }}>
                 <div style={{ flex: 1, minHeight: 0, overflowY: mode === "business" ? "hidden" : "auto" }}>
                   {mode === "business" && user && user.email === ADMIN_EMAIL ? (
                     <BusinessScreen />
