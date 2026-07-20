@@ -1726,18 +1726,35 @@
             setGuardandoDia(dia);
             var actual = horarioSemana.find(function(h){ return h.dia === dia; }) || { dia: dia, abierto: true, franjas: [] };
             var nuevo = Object.assign({}, actual, cambios);
+            var existeEnServidor = horarioSemana.some(function(h){ return h.dia === dia; });
             getDbHeaders().then(function(headers) {
-              return fetch(SUPABASE_URL + '/rest/v1/horario_negocio?dia=eq.' + dia, {
-                method: 'PATCH', headers: Object.assign({}, headers, { Prefer: 'return=minimal' }),
-                body: JSON.stringify({ abierto: nuevo.abierto, franjas: nuevo.franjas })
+              var reqHeaders = Object.assign({}, headers, { Prefer: 'return=representation' });
+              if (existeEnServidor) {
+                return fetch(SUPABASE_URL + '/rest/v1/horario_negocio?dia=eq.' + dia, {
+                  method: 'PATCH', headers: reqHeaders,
+                  body: JSON.stringify({ abierto: nuevo.abierto, franjas: nuevo.franjas })
+                });
+              }
+              return fetch(SUPABASE_URL + '/rest/v1/horario_negocio', {
+                method: 'POST', headers: reqHeaders,
+                body: JSON.stringify({ dia: dia, abierto: nuevo.abierto, franjas: nuevo.franjas })
               });
-            }).then(function(){
+            }).then(async function(res) {
+              var texto = await res.text();
+              var data = null;
+              try { data = texto ? JSON.parse(texto) : null; } catch(e) {}
+              if (!res.ok || !Array.isArray(data) || data.length === 0) {
+                throw new Error((data && data.message) || texto || 'La base de datos no guardó el cambio (revisa que hayas ejecutado horario_negocio.sql y que tu cuenta sea la admin).');
+              }
               setHorarioSemana(function(prev){
                 var existe = prev.some(function(h){ return h.dia === dia; });
                 return existe ? prev.map(function(h){ return h.dia === dia ? nuevo : h; }) : prev.concat([nuevo]).sort(function(a,b){ return a.dia - b.dia; });
               });
               setGuardandoDia(null);
-            }).catch(function(){ setGuardandoDia(null); alert('No se pudo guardar el horario'); });
+            }).catch(function(e){
+              setGuardandoDia(null);
+              alert('No se pudo guardar el horario: ' + (e && e.message ? e.message : 'error desconocido'));
+            });
           }
 
           function anadirCierre() {
@@ -2524,13 +2541,13 @@
                                       var nuevas = franjas.map(function(x, i){ return i === fi ? Object.assign({}, x, { inicio: e.target.value }) : x; });
                                       actualizarDia(diaNum, { franjas: nuevas });
                                     }}
-                                    style={{ flex: 1, background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '7px 8px', fontSize: 13, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                                    style={{ flex: 1, background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '7px 8px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box' }} />
                                   <span style={{ color: G.muted, fontSize: 12 }}>–</span>
                                   <input type="time" value={f.fin} onChange={function(e){
                                       var nuevas = franjas.map(function(x, i){ return i === fi ? Object.assign({}, x, { fin: e.target.value }) : x; });
                                       actualizarDia(diaNum, { franjas: nuevas });
                                     }}
-                                    style={{ flex: 1, background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '7px 8px', fontSize: 13, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                                    style={{ flex: 1, background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '7px 8px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box' }} />
                                   <button onClick={function(){
                                       var nuevas = franjas.filter(function(_, i){ return i !== fi; });
                                       actualizarDia(diaNum, { franjas: nuevas });
@@ -2554,9 +2571,9 @@
                   <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '20px 0 10px' }}>Días cerrados puntuales</p>
                   <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px', marginBottom: 12 }}>
                     <input type="date" value={nuevoCierreFecha} onChange={function(e){ setNuevoCierreFecha(e.target.value); }} min={new Date().toISOString().split('T')[0]}
-                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 8, outline: 'none' }} />
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 8, outline: 'none' }} />
                     <input type="text" value={nuevoCierreMotivo} onChange={function(e){ setNuevoCierreMotivo(e.target.value); }} placeholder="Motivo (opcional): vacaciones, asunto propio..."
-                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 13, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 10, outline: 'none' }} />
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 10, outline: 'none' }} />
                     <button onClick={anadirCierre} disabled={!nuevoCierreFecha || guardandoCierre}
                       style={{ width: '100%', background: (!nuevoCierreFecha || guardandoCierre) ? G.bdr : G.brand, border: 'none', borderRadius: 10, padding: '11px', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
                       {guardandoCierre ? 'Añadiendo...' : '+ Añadir día cerrado'}
