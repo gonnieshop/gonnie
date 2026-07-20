@@ -866,8 +866,10 @@
                       {showReschedule && (
                         <div style={{ background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '14px' }}>
                           <p style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 10 }}>Selecciona nueva fecha y hora</p>
-                          <input type="date" value={rescheduleDate} onChange={function(e){ setRescheduleDate(e.target.value); }} min={new Date().toISOString().split('T')[0]}
-                            style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '9px 12px', borderRadius: 10, color: G.text, fontSize: 13, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 700 }} />
+                          <div style={{ width: '100%', overflow: 'hidden', borderRadius: 10, marginBottom: 10 }}>
+                            <input type="date" value={rescheduleDate} onChange={function(e){ setRescheduleDate(e.target.value); }} min={new Date().toISOString().split('T')[0]}
+                              style={{ width: '100%', maxWidth: '100%', display: 'block', background: G.card, border: '1px solid ' + G.bdr, padding: '9px 12px', borderRadius: 10, color: G.text, fontSize: 16, textAlign: 'left', boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 700 }} />
+                          </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 12 }}>
                             {rescheduleCerrado && (
                               <p style={{ gridColumn: '1 / -1', fontSize: 12, color: G.red, margin: 0, fontWeight: 600 }}>La barbería está cerrada ese día. Elige otra fecha.</p>
@@ -1365,7 +1367,7 @@
           }
 
           return (
-            <div style={{ flex: 1, padding: 18, overflowY: 'auto', paddingBottom: 90, background: "#1A1614", color: "#F8F1E3" }}>
+            <div style={{ flex: 1, padding: 18, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 90, boxSizing: 'border-box', background: "#1A1614", color: "#F8F1E3" }}>
               <button onClick={() => nav("detail")} style={{ background: "rgba(248,241,227,0.08)", border: "none", borderRadius: 20, padding: "8px 14px", fontSize: 12, color: "#F8F1E3", cursor: "pointer", fontFamily: "'Bricolage Grotesque'", fontWeight: 600 }}>← Volver</button>
               {groupMode && (
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: G.mint, color: "#0F2A20", borderRadius: 20, padding: "6px 12px", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", marginLeft: 10 }}>
@@ -1376,7 +1378,9 @@
               <h3 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 24, fontWeight: 700, marginTop: 16, color: "#F8F1E3" }}>Elige día y hora</h3>
               <p style={{ fontSize: 13, color: "rgba(248,241,227,0.55)" }}>{booking.svc.name} con {booking.bar.name}</p>
 
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ width: "100%", background: "rgba(248,241,227,0.06)", border: "1px solid rgba(248,241,227,0.1)", padding: 14, borderRadius: 16, color: "#F8F1E3", marginTop: 14, marginBottom: 18, colorScheme: "dark" }} />
+              <div style={{ width: "100%", overflow: "hidden", borderRadius: 16, marginTop: 14, marginBottom: 18 }}>
+                <input type="date" value={date} onChange={e => setDate(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ width: "100%", maxWidth: "100%", display: "block", boxSizing: "border-box", background: "rgba(248,241,227,0.06)", border: "1px solid rgba(248,241,227,0.1)", padding: 14, fontSize: 16, textAlign: "left", borderRadius: 16, color: "#F8F1E3", colorScheme: "dark", fontFamily: "inherit" }} />
+              </div>
 
               <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>{groupMode ? "Tu horario" : "Horarios disponibles"}</p>
               {date && loadingHoras && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Comprobando disponibilidad...</p>}
@@ -2563,8 +2567,10 @@
 
                   <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '20px 0 10px' }}>Días cerrados puntuales</p>
                   <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px', marginBottom: 12 }}>
-                    <input type="date" value={nuevoCierreFecha} onChange={function(e){ setNuevoCierreFecha(e.target.value); }} min={new Date().toISOString().split('T')[0]}
-                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 8, outline: 'none' }} />
+                    <div style={{ width: '100%', overflow: 'hidden', borderRadius: 10, marginBottom: 8 }}>
+                      <input type="date" value={nuevoCierreFecha} onChange={function(e){ setNuevoCierreFecha(e.target.value); }} min={new Date().toISOString().split('T')[0]}
+                        style={{ width: '100%', maxWidth: '100%', display: 'block', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
+                    </div>
                     <input type="text" value={nuevoCierreMotivo} onChange={function(e){ setNuevoCierreMotivo(e.target.value); }} placeholder="Motivo (opcional): vacaciones, asunto propio..."
                       style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 10, outline: 'none' }} />
                     <button onClick={anadirCierre} disabled={!nuevoCierreFecha || guardandoCierre}
@@ -2668,8 +2674,10 @@
                     </select>
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 6px' }}>FECHA</p>
-                    <input type="date" value={ncFecha} onChange={function(e){ setNcFecha(e.target.value); }}
-                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, fontWeight: 700, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 12, outline: 'none' }} />
+                    <div style={{ width: '100%', overflow: 'hidden', borderRadius: 10, marginBottom: 12 }}>
+                      <input type="date" value={ncFecha} onChange={function(e){ setNcFecha(e.target.value); }}
+                        style={{ width: '100%', maxWidth: '100%', display: 'block', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, textAlign: 'left', fontWeight: 700, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
+                    </div>
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 8px' }}>HORA</p>
                     {ncBarbero && ncFecha ? null : <p style={{ fontSize: 11, color: G.muted, margin: '0 0 8px' }}>Elige barbero y fecha primero</p>}
