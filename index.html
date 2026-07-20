@@ -2510,6 +2510,17 @@
                 <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
                   <button onClick={function(){ setPanel('menu'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
                   <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>Horario</h1>
+                  <button onClick={async function(){
+                      try {
+                        var headers = await getDbHeaders();
+                        var res = await fetch(SUPABASE_URL + '/rest/v1/rpc/debug_whoami', { method: 'POST', headers: headers, body: '{}' });
+                        var texto = await res.text();
+                        alert('Status: ' + res.status + '\n\n' + texto);
+                      } catch(e) { alert('Error al comprobar: ' + e.message); }
+                    }}
+                    style={{ marginLeft: 'auto', background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 10, padding: '6px 10px', fontSize: 11, color: G.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    🔍 Debug sesión
+                  </button>
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
