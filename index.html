@@ -2016,7 +2016,7 @@
               doc.setFontSize(9);
               doc.text(c.date || '', margin + 2, y);
               doc.text(c.time ? c.time.slice(0,5) : '', margin + 28, y);
-              var cliente = c.cliente || (c.client_email ? c.client_email.split('@')[0] : 'Cliente');
+              var cliente = c.client_name || c.cliente || (c.client_email ? c.client_email.split('@')[0] : 'Cliente');
               doc.text(cliente.slice(0,18), margin + 44, y);
               doc.text((c.servicios && c.servicios.name ? c.servicios.name.slice(0,20) : '—'), margin + 90, y);
               doc.text((c.barberos && c.barberos.name ? c.barberos.name.slice(0,14) : '—'), margin + 138, y);
@@ -2521,7 +2521,7 @@
                         var totalMin = ch * 60 + cm + dur;
                         return String(Math.floor(totalMin/60)).padStart(2,'0') + ':' + String(totalMin%60).padStart(2,'0');
                       })();
-                      var nombre = c._nombre || c.cliente || (c.client_email ? c.client_email.split('@')[0] : 'Cliente');
+                      var nombre = c._nombre || c.client_name || c.cliente || (c.client_email ? c.client_email.split('@')[0] : 'Cliente');
                       var cancelada = c.status === 'cancelled';
                       var metodoPago = c.payment_method ? String(c.payment_method).toLowerCase() : null;
                       var iconoPago = '';
@@ -2555,9 +2555,9 @@
                 <div onClick={function(){ if(!guardandoPago) setCitaSel(null); }}
                   style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', zIndex: 50 }}>
                   <div onClick={function(e){ e.stopPropagation(); }}
-                    style={{ width: '100%', background: G.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '22px 18px 28px' }}>
+                    style={{ width: '100%', maxHeight: '85vh', overflowY: 'auto', background: G.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '22px 18px 28px', boxSizing: 'border-box' }}>
                     <div style={{ width: 40, height: 4, background: G.bdr, borderRadius: 2, margin: '0 auto 18px' }} />
-                    <p style={{ fontSize: 12, color: G.muted, margin: '0 0 2px' }}>{formatHora(citaSel.time)} · {(citaSel._nombre || (citaSel.client_email ? citaSel.client_email.split('@')[0] : 'Cliente'))}</p>
+                    <p style={{ fontSize: 12, color: G.muted, margin: '0 0 2px' }}>{formatHora(citaSel.time)} · {(citaSel._nombre || citaSel.client_name || (citaSel.client_email ? citaSel.client_email.split('@')[0] : 'Cliente'))}</p>
                     <h3 style={{ fontSize: 18, fontWeight: 800, color: G.text, margin: '0 0 4px' }}>Método de pago</h3>
                     <p style={{ fontSize: 13, color: G.muted, margin: '0 0 18px' }}>{(citaSel.servicios && citaSel.servicios.name) || 'Servicio'} · {(citaSel.servicios && citaSel.servicios.price) || 0}€</p>
                     {[
