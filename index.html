@@ -2505,7 +2505,7 @@
                   <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>Horario</h1>
                 </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0, padding: '0 18px 90px', boxSizing: 'border-box' }}>
                   <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '4px 0 10px' }}>Horario semanal</p>
                   {loadingHorario && <p style={{ fontSize: 13, color: G.muted, textAlign: 'center', margin: '10px 0' }}>Cargando...</p>}
 
@@ -2534,13 +2534,13 @@
                                       var nuevas = franjas.map(function(x, i){ return i === fi ? Object.assign({}, x, { inicio: e.target.value }) : x; });
                                       actualizarDia(diaNum, { franjas: nuevas });
                                     }}
-                                    style={{ flex: 1, background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '7px 8px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box' }} />
-                                  <span style={{ color: G.muted, fontSize: 12 }}>–</span>
+                                    style={{ flex: 1, minWidth: 0, background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '7px 8px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                                  <span style={{ color: G.muted, fontSize: 12, flexShrink: 0 }}>–</span>
                                   <input type="time" value={f.fin} onChange={function(e){
                                       var nuevas = franjas.map(function(x, i){ return i === fi ? Object.assign({}, x, { fin: e.target.value }) : x; });
                                       actualizarDia(diaNum, { franjas: nuevas });
                                     }}
-                                    style={{ flex: 1, background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '7px 8px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                                    style={{ flex: 1, minWidth: 0, background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '7px 8px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box' }} />
                                   <button onClick={function(){
                                       var nuevas = franjas.filter(function(_, i){ return i !== fi; });
                                       actualizarDia(diaNum, { franjas: nuevas });
