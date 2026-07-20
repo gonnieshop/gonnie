@@ -214,6 +214,49 @@
           return nivel.max - puntos;
         }
 
+        // ─── HELPER: HORARIO DEL NEGOCIO ──────────────────────────────────────
+        // Convención: dia = 0 (domingo) .. 6 (sábado), igual que Date.getDay()
+        var DIAS_SEMANA_LARGO = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+        function franjasASlots(franjas) {
+          var out = [];
+          (franjas || []).forEach(function(f) {
+            if (!f || !f.inicio || !f.fin) return;
+            var p1 = f.inicio.split(':'), p2 = f.fin.split(':');
+            var cur = Number(p1[0]) * 60 + Number(p1[1]);
+            var end = Number(p2[0]) * 60 + Number(p2[1]);
+            while (cur < end) {
+              out.push(String(Math.floor(cur / 60)).padStart(2, '0') + ':' + String(cur % 60).padStart(2, '0'));
+              cur += 30;
+            }
+          });
+          return out;
+        }
+
+        function horarioDelDia(fechaStr, horarioSemana) {
+          if (!fechaStr || !Array.isArray(horarioSemana)) return null;
+          var dow = new Date(fechaStr + 'T00:00:00').getDay();
+          return horarioSemana.find(function(h){ return h.dia === dow; }) || null;
+        }
+
+        function diaCerrado(fechaStr, horarioSemana, diasCerrados) {
+          if (!fechaStr) return false;
+          if (Array.isArray(diasCerrados) && diasCerrados.indexOf(fechaStr) >= 0) return true;
+          var h = horarioDelDia(fechaStr, horarioSemana);
+          return !h || !h.abierto;
+        }
+
+        function slotsParaFecha(fechaStr, horarioSemana, diasCerrados) {
+          if (diaCerrado(fechaStr, horarioSemana, diasCerrados)) return [];
+          var h = horarioDelDia(fechaStr, horarioSemana);
+          return h ? franjasASlots(h.franjas) : [];
+        }
+
+        function textoFranjas(franjas) {
+          if (!franjas || franjas.length === 0) return 'Cerrado';
+          return franjas.map(function(f){ return f.inicio + '–' + f.fin; }).join(' · ');
+        }
+
         const BARBER_COLORS = [
           { bg: "#8BD5B8", color: "#0F2A20" },
           { bg: "#F5A0B4", color: "#3A0F1B" },
@@ -652,7 +695,16 @@
           const [descartadas, setDescartadas] = useState(function(){
             try { return JSON.parse(localStorage.getItem('gonnie_notis_descartadas') || '[]'); } catch(e) { return []; }
           });
-          const slots = ['10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
+          const [horarioSemana, setHorarioSemana] = useState([]);
+          const [diasCerrados, setDiasCerrados] = useState([]);
+
+          useEffect(function() {
+            dbGet('horario_negocio', '?select=*').then(function(d){ setHorarioSemana(Array.isArray(d) ? d : []); }).catch(function(){});
+            dbGet('dias_cerrados', '?select=fecha').then(function(d){ setDiasCerrados(Array.isArray(d) ? d.map(function(x){ return x.fecha; }) : []); }).catch(function(){});
+          }, []);
+
+          var slots = slotsParaFecha(rescheduleDate, horarioSemana, diasCerrados);
+          var rescheduleCerrado = rescheduleDate ? diaCerrado(rescheduleDate, horarioSemana, diasCerrados) : false;
 
           // Construir avisos a partir de las citas del cliente
           useEffect(function() {
@@ -817,7 +869,10 @@
                           <input type="date" value={rescheduleDate} onChange={function(e){ setRescheduleDate(e.target.value); }} min={new Date().toISOString().split('T')[0]}
                             style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, padding: '9px 12px', borderRadius: 10, color: G.text, fontSize: 13, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 700 }} />
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 12 }}>
-                            {slots.map(function(s) {
+                            {rescheduleCerrado && (
+                              <p style={{ gridColumn: '1 / -1', fontSize: 12, color: G.red, margin: 0, fontWeight: 600 }}>La barbería está cerrada ese día. Elige otra fecha.</p>
+                            )}
+                            {!rescheduleCerrado && slots.map(function(s) {
                               return (
                                 <button key={s} onClick={function(){ setRescheduleSlot(s); }}
                                   style={{ background: rescheduleSlot === s ? G.brand : G.card, color: rescheduleSlot === s ? '#fff' : G.text, border: '1px solid ' + G.bdr, padding: '8px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>
@@ -1178,7 +1233,15 @@
           const [loadingHoras, setLoadingHoras] = useState(false);
           const [blocked, setBlocked] = useState(false);
           const [checkingBlocked, setCheckingBlocked] = useState(true);
-          const slots = ["10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00","20:30"];
+          const [horarioSemana, setHorarioSemana] = useState([]);
+          const [diasCerrados, setDiasCerrados] = useState([]);
+          const slots = slotsParaFecha(date, horarioSemana, diasCerrados);
+          const fechaCerrada = date ? diaCerrado(date, horarioSemana, diasCerrados) : false;
+
+          useEffect(function() {
+            dbGet('horario_negocio', '?select=*').then(function(d){ setHorarioSemana(Array.isArray(d) ? d : []); }).catch(function(){});
+            dbGet('dias_cerrados', '?select=fecha').then(function(d){ setDiasCerrados(Array.isArray(d) ? d.map(function(x){ return x.fecha; }) : []); }).catch(function(){});
+          }, []);
 
           // Comprobar si esta cuenta tiene bloqueado el poder reservar
           useEffect(function() {
@@ -1318,8 +1381,9 @@
               <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>{groupMode ? "Tu horario" : "Horarios disponibles"}</p>
               {date && loadingHoras && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Comprobando disponibilidad...</p>}
               {!date && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Elige primero una fecha</p>}
+              {date && !loadingHoras && fechaCerrada && <p style={{ fontSize: 12, color: G.red, margin: '0 0 10px', fontWeight: 700 }}>La barbería está cerrada ese día. Elige otra fecha.</p>}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: groupMode ? 20 : 24 }}>
-                {slots.map(function(s) {
+                {!fechaCerrada && slots.map(function(s) {
                   var ocupado = ocupados.indexOf(s) >= 0 || (groupMode && slot2 === s);
                   var elegido = slot === s;
                   return (
@@ -1349,7 +1413,7 @@
                   <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Su horario</p>
                   {!date && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Elige primero una fecha</p>}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
-                    {slots.map(function(s) {
+                    {!fechaCerrada && slots.map(function(s) {
                       var ocupado2 = ocupados.indexOf(s) >= 0 || slot === s;
                       var elegido2 = slot2 === s;
                       return (
@@ -1640,7 +1704,60 @@
           const [ncGuardando, setNcGuardando] = useState(false);
           const [ncDone, setNcDone] = useState(false);
           const [ncOcupados, setNcOcupados] = useState([]);
-          const slots = ['10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
+          const [horarioSemana, setHorarioSemana] = useState([]);
+          const [diasCerrados, setDiasCerrados] = useState([]);
+          const [loadingHorario, setLoadingHorario] = useState(false);
+          const [guardandoDia, setGuardandoDia] = useState(null);
+          const [nuevoCierreFecha, setNuevoCierreFecha] = useState('');
+          const [nuevoCierreMotivo, setNuevoCierreMotivo] = useState('');
+          const [guardandoCierre, setGuardandoCierre] = useState(false);
+          const diasCerradosFechas = diasCerrados.map(function(d){ return d.fecha; });
+          const slots = slotsParaFecha(ncFecha, horarioSemana, diasCerradosFechas);
+          const ncFechaCerrada = ncFecha ? diaCerrado(ncFecha, horarioSemana, diasCerradosFechas) : false;
+
+          // Cargar horario semanal y días cerrados
+          useEffect(function() {
+            setLoadingHorario(true);
+            dbGet('horario_negocio', '?select=*&order=dia.asc').then(function(d){ setHorarioSemana(Array.isArray(d) ? d : []); setLoadingHorario(false); }).catch(function(){ setLoadingHorario(false); });
+            dbGet('dias_cerrados', '?select=*&order=fecha.asc').then(function(d){ setDiasCerrados(Array.isArray(d) ? d : []); }).catch(function(){});
+          }, []);
+
+          function actualizarDia(dia, cambios) {
+            setGuardandoDia(dia);
+            var actual = horarioSemana.find(function(h){ return h.dia === dia; }) || { dia: dia, abierto: true, franjas: [] };
+            var nuevo = Object.assign({}, actual, cambios);
+            getDbHeaders().then(function(headers) {
+              return fetch(SUPABASE_URL + '/rest/v1/horario_negocio?dia=eq.' + dia, {
+                method: 'PATCH', headers: Object.assign({}, headers, { Prefer: 'return=minimal' }),
+                body: JSON.stringify({ abierto: nuevo.abierto, franjas: nuevo.franjas })
+              });
+            }).then(function(){
+              setHorarioSemana(function(prev){
+                var existe = prev.some(function(h){ return h.dia === dia; });
+                return existe ? prev.map(function(h){ return h.dia === dia ? nuevo : h; }) : prev.concat([nuevo]).sort(function(a,b){ return a.dia - b.dia; });
+              });
+              setGuardandoDia(null);
+            }).catch(function(){ setGuardandoDia(null); alert('No se pudo guardar el horario'); });
+          }
+
+          function anadirCierre() {
+            if (!nuevoCierreFecha) return;
+            setGuardandoCierre(true);
+            dbInsert('dias_cerrados', { fecha: nuevoCierreFecha, motivo: nuevoCierreMotivo || null })
+              .then(function(res){
+                var fila = Array.isArray(res) ? res[0] : res;
+                setDiasCerrados(function(prev){ return prev.concat([fila || { fecha: nuevoCierreFecha, motivo: nuevoCierreMotivo }]).sort(function(a,b){ return a.fecha < b.fecha ? -1 : 1; }); });
+                setNuevoCierreFecha(''); setNuevoCierreMotivo('');
+                setGuardandoCierre(false);
+              }).catch(function(){ setGuardandoCierre(false); alert('No se pudo añadir. ¿Ya existe un cierre para esa fecha?'); });
+          }
+
+          function quitarCierre(d) {
+            if (!window.confirm('¿Quitar el cierre del ' + d.fecha + '?')) return;
+            dbDelete('dias_cerrados', '?id=eq.' + d.id)
+              .then(function(){ setDiasCerrados(function(prev){ return prev.filter(function(x){ return x.id !== d.id; }); }); })
+              .catch(function(){ alert('No se pudo quitar'); });
+          }
 
           // Horas ya ocupadas para el barbero y fecha de Nueva cita
           useEffect(function() {
@@ -2027,6 +2144,7 @@
               { id: 'stats', label: 'Estadísticas', desc: 'Ingresos y rendimiento', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>' },
               { id: 'clientes', label: 'Clientes', desc: 'Tu base de clientes', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>' },
               { id: 'productos', label: 'Productos', desc: 'Gestiona la tienda', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>' },
+              { id: 'horario', label: 'Horario', desc: 'Horas y días cerrados', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>' },
             ];
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
@@ -2369,6 +2487,104 @@
             );
           }
 
+          if (panel === 'horario') {
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <button onClick={function(){ setPanel('menu'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
+                  <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>Horario</h1>
+                </div>
+
+                <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '4px 0 10px' }}>Horario semanal</p>
+                  {loadingHorario && <p style={{ fontSize: 13, color: G.muted, textAlign: 'center', margin: '10px 0' }}>Cargando...</p>}
+
+                  {!loadingHorario && [1,2,3,4,5,6,0].map(function(diaNum) {
+                    var h = horarioSemana.find(function(x){ return x.dia === diaNum; }) || { dia: diaNum, abierto: true, franjas: [] };
+                    var franjas = h.franjas || [];
+                    return (
+                      <div key={diaNum} style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px', marginBottom: 10, opacity: guardandoDia === diaNum ? 0.6 : 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: h.abierto ? 12 : 0 }}>
+                          <p style={{ fontWeight: 800, fontSize: 14, color: G.text, margin: 0 }}>{DIAS_SEMANA_LARGO[diaNum]}</p>
+                          <button onClick={function(){ actualizarDia(diaNum, { abierto: !h.abierto, franjas: !h.abierto && franjas.length === 0 ? [{ inicio: '10:00', fin: '14:00' }] : franjas }); }}
+                            disabled={guardandoDia === diaNum}
+                            style={{ width: 46, height: 26, borderRadius: 13, background: h.abierto ? G.brand : G.bdr, position: 'relative', border: 'none', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
+                            <span style={{ position: 'absolute', top: 2, left: h.abierto ? 22 : 2, width: 22, height: 22, borderRadius: 11, background: '#fff', transition: 'left .15s ease', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                          </button>
+                        </div>
+
+                        {!h.abierto && <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>Cerrado</p>}
+
+                        {h.abierto && (
+                          <div>
+                            {franjas.map(function(f, fi) {
+                              return (
+                                <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                  <input type="time" value={f.inicio} onChange={function(e){
+                                      var nuevas = franjas.map(function(x, i){ return i === fi ? Object.assign({}, x, { inicio: e.target.value }) : x; });
+                                      actualizarDia(diaNum, { franjas: nuevas });
+                                    }}
+                                    style={{ flex: 1, background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '7px 8px', fontSize: 13, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                                  <span style={{ color: G.muted, fontSize: 12 }}>–</span>
+                                  <input type="time" value={f.fin} onChange={function(e){
+                                      var nuevas = franjas.map(function(x, i){ return i === fi ? Object.assign({}, x, { fin: e.target.value }) : x; });
+                                      actualizarDia(diaNum, { franjas: nuevas });
+                                    }}
+                                    style={{ flex: 1, background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 8, padding: '7px 8px', fontSize: 13, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                                  <button onClick={function(){
+                                      var nuevas = franjas.filter(function(_, i){ return i !== fi; });
+                                      actualizarDia(diaNum, { franjas: nuevas });
+                                    }}
+                                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: G.red, padding: 4, flexShrink: 0 }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                  </button>
+                                </div>
+                              );
+                            })}
+                            <button onClick={function(){ actualizarDia(diaNum, { franjas: franjas.concat([{ inicio: '10:00', fin: '14:00' }]) }); }}
+                              style={{ background: 'transparent', border: 'none', color: G.brand, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', padding: '4px 0' }}>
+                              + Añadir franja horaria
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '20px 0 10px' }}>Días cerrados puntuales</p>
+                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px', marginBottom: 12 }}>
+                    <input type="date" value={nuevoCierreFecha} onChange={function(e){ setNuevoCierreFecha(e.target.value); }} min={new Date().toISOString().split('T')[0]}
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 14, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 8, outline: 'none' }} />
+                    <input type="text" value={nuevoCierreMotivo} onChange={function(e){ setNuevoCierreMotivo(e.target.value); }} placeholder="Motivo (opcional): vacaciones, asunto propio..."
+                      style={{ width: '100%', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 13, color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 10, outline: 'none' }} />
+                    <button onClick={anadirCierre} disabled={!nuevoCierreFecha || guardandoCierre}
+                      style={{ width: '100%', background: (!nuevoCierreFecha || guardandoCierre) ? G.bdr : G.brand, border: 'none', borderRadius: 10, padding: '11px', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {guardandoCierre ? 'Añadiendo...' : '+ Añadir día cerrado'}
+                    </button>
+                  </div>
+
+                  {diasCerrados.length === 0 && (
+                    <p style={{ fontSize: 12, color: G.muted, textAlign: 'center', margin: '10px 0' }}>No hay días cerrados programados</p>
+                  )}
+                  {diasCerrados.map(function(d) {
+                    return (
+                      <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '11px 14px', marginBottom: 8 }}>
+                        <div>
+                          <p style={{ fontWeight: 700, fontSize: 13, color: G.text, margin: 0 }}>{d.fecha}</p>
+                          {d.motivo && <p style={{ fontSize: 11, color: G.muted, margin: '2px 0 0' }}>{d.motivo}</p>}
+                        </div>
+                        <button onClick={function(){ quitarCierre(d); }}
+                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: G.red, padding: 6, flexShrink: 0 }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+
           // ─── PANEL AGENDA (por defecto) ───
           return (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
@@ -2383,7 +2599,7 @@
                     <p style={{ fontSize: 17, fontWeight: 800, color: G.text, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {fechaSel.getDate()} {MESES_CORTO[fechaSel.getMonth()]} {String(fechaSel.getFullYear()).slice(2)}
                     </p>
-                    <p style={{ fontSize: 12, color: G.muted, margin: '1px 0 0', fontWeight: 600 }}>10:00–14:00 · 17:00–21:00</p>
+                    <p style={{ fontSize: 12, color: G.muted, margin: '1px 0 0', fontWeight: 600 }}>{textoFranjas((horarioDelDia(selectedDate, horarioSemana) || {}).franjas)}</p>
                   </div>
                   <button onClick={function(){ cambiarSemana(1); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, color: G.text, fontSize: 20, lineHeight: 1, fontFamily: 'inherit' }}>›</button>
                 </div>
@@ -2447,8 +2663,9 @@
 
                     <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, margin: '0 0 8px' }}>HORA</p>
                     {ncBarbero && ncFecha ? null : <p style={{ fontSize: 11, color: G.muted, margin: '0 0 8px' }}>Elige barbero y fecha primero</p>}
+                    {ncFecha && ncFechaCerrada && <p style={{ fontSize: 11, color: G.red, margin: '0 0 8px', fontWeight: 700 }}>La barbería está marcada como cerrada ese día.</p>}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 16 }}>
-                      {slots.map(function(s){
+                      {!ncFechaCerrada && slots.map(function(s){
                         var ocupado = ncOcupados.indexOf(s) >= 0;
                         return (
                         <button key={s} onClick={function(){ if (!ocupado) setNcHora(s); }} disabled={ocupado}
