@@ -1632,6 +1632,7 @@
           const [showNuevaCita, setShowNuevaCita] = useState(false);
           const [barberos, setBarberos] = useState([]);
           const [servicios, setServicios] = useState([]);
+          const [barberiaId, setBarberiaId] = useState(null);
           const [ncNombre, setNcNombre] = useState('');
           const [ncBarbero, setNcBarbero] = useState('');
           const [ncServicio, setNcServicio] = useState('');
@@ -1656,6 +1657,7 @@
           useEffect(function() {
             dbGet('barberos', '?select=*').then(function(d){ setBarberos(Array.isArray(d) ? d : []); }).catch(function(){});
             dbGet('servicios', '?select=*').then(function(d){ setServicios(Array.isArray(d) ? d : []); }).catch(function(){});
+            dbGet('barberias', '?select=id&limit=1').then(function(d){ if (Array.isArray(d) && d[0]) setBarberiaId(d[0].id); }).catch(function(){});
           }, []);
 
           async function crearCita() {
@@ -1663,15 +1665,23 @@
             setNcGuardando(true);
             var serv = servicios.find(function(s){ return s.id == ncServicio; });
             try {
-              await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/appointments', {
+              var res = await fetch('https://fnjqzcnufkhrfzxfallj.supabase.co/rest/v1/appointments', {
                 method: 'POST',
                 headers: Object.assign({}, await getDbHeaders(), { 'Prefer': 'return=minimal' }),
-                body: JSON.stringify({ client_email: 'manual@gonnie.app', cliente: ncNombre, barbero_id: ncBarbero, servicio_id: ncServicio, date: ncFecha, time: ncHora, status: 'confirmed', precio: serv ? serv.price : 0, barberia: 'Gonnie Barbershop' })
+                body: JSON.stringify({ client_email: 'manual@gonnie.app', client_name: ncNombre, barberia_id: barberiaId, barbero_id: ncBarbero, servicio_id: ncServicio, date: ncFecha, time: ncHora, status: 'confirmed', price: serv ? serv.price : 0 })
               });
+              if (!res.ok) {
+                var errText = await res.text();
+                alert('No se pudo guardar la cita: ' + errText);
+                return;
+              }
               setNcDone(true);
               setNcNombre(''); setNcBarbero(''); setNcServicio(''); setNcHora('');
               setTimeout(function(){ setNcDone(false); setShowNuevaCita(false); }, 1500);
-            } catch(e) {} finally { setNcGuardando(false); }
+              setReloadClientesTick(function(t){ return t + 1; });
+            } catch(e) {
+              alert('No se pudo guardar la cita. Revisa tu conexión e inténtalo de nuevo.');
+            } finally { setNcGuardando(false); }
           }
 
           useEffect(function() {
@@ -1703,7 +1713,7 @@
                 setIngresosMes(total);
                 setCitasMes(arr);
               }).catch(function(){});
-          }, [selectedDate]);
+          }, [selectedDate, reloadClientesTick]);
 
           // Cargar lista de clientes (al abrir el panel)
           useEffect(function() {
