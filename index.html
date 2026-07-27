@@ -1352,7 +1352,7 @@
 
           if (checkingBlocked) {
             return (
-              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#1A1614" }}>
+              <div style={{ flex: 1, minHeight: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#1A1614", boxSizing: "border-box" }}>
                 <p style={{ color: "rgba(248,241,227,0.5)", fontSize: 13 }}>Cargando...</p>
               </div>
             );
@@ -1360,7 +1360,7 @@
 
           if (blocked) {
             return (
-              <div style={{ flex: 1, padding: 24, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", background: "#1A1614", color: "#F8F1E3" }}>
+              <div style={{ flex: 1, minHeight: "100%", padding: 24, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", background: "#1A1614", color: "#F8F1E3", boxSizing: "border-box" }}>
                 <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(229,85,107,0.15)", border: "2px solid " + G.red, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={G.red} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/></svg>
                 </div>
@@ -1372,7 +1372,7 @@
           }
 
           return (
-            <div style={{ flex: 1, padding: 18, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 90, boxSizing: 'border-box', background: "#1A1614", color: "#F8F1E3" }}>
+            <div style={{ flex: 1, minHeight: '100%', padding: 18, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 90, boxSizing: 'border-box', background: "#1A1614", color: "#F8F1E3" }}>
               <button onClick={() => nav("detail")} style={{ background: "rgba(248,241,227,0.08)", border: "none", borderRadius: 20, padding: "8px 14px", fontSize: 12, color: "#F8F1E3", cursor: "pointer", fontFamily: "'Bricolage Grotesque'", fontWeight: 600 }}>← Volver</button>
               {groupMode && (
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: G.mint, color: "#0F2A20", borderRadius: 20, padding: "6px 12px", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", marginLeft: 10 }}>
