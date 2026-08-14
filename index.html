@@ -106,6 +106,16 @@
         // email admin usado en las políticas RLS de Supabase (is_admin()).
         const ADMIN_EMAIL = "reservasgonnie@gmail.com";
 
+        // ─── MODO PRE-LANZAMIENTO ───────────────────────────────────────────────
+        // Hasta esta fecha cualquiera puede registrarse, pero nadie entra en la
+        // app: solo la cuenta admin (y con ella el Modo Negocio). Para abrir la
+        // app a todo el mundo, cambia la fecha o pon PRELANZAMIENTO_ACTIVO = false.
+        const PRELANZAMIENTO_ACTIVO = true;
+        const FECHA_LANZAMIENTO = new Date("2026-09-01T00:00:00+02:00");
+        function enPrelanzamiento() {
+          return PRELANZAMIENTO_ACTIVO && Date.now() < FECHA_LANZAMIENTO.getTime();
+        }
+
         // ─── SUPABASE AUTH CLIENT ───────────────────────────────────────────────
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -531,6 +541,36 @@
               ) : (
                 <p style={{ fontSize: 14, color: '#0a0', fontWeight: 600, textAlign: 'center' }}>✓ Contraseña actualizada. Entrando...</p>
               )}
+            </div>
+          );
+        }
+
+        // ─── VISTA: LISTA DE ESPERA (PRE-LANZAMIENTO) ─────────────────────────
+        function WaitlistScreen({ user }) {
+          var email = (user && user.email) || '';
+          var dias = Math.max(0, Math.ceil((FECHA_LANZAMIENTO.getTime() - Date.now()) / 86400000));
+          return (
+            <div className="gonnie-min-full-height" style={{ background: G.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px" }}>
+              <img src="https://i.imgur.com/22GIzhb.png" style={{ height: 120, width: "auto", marginBottom: 28 }} alt="Gonnie" />
+
+              <div style={{ background: G.mint, borderRadius: 26, padding: "22px 24px", textAlign: "center", marginBottom: 18 }}>
+                <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 20, fontWeight: 700, color: "#0F2A20", margin: 0, lineHeight: 1.35 }}>
+                  Gonnie App estará disponible en septiembre, gracias por registrarte!
+                </p>
+              </div>
+
+              <div style={{ background: G.card, border: "1px solid " + G.bdr, borderRadius: 20, padding: "16px 18px", width: "100%", textAlign: "center", marginBottom: 10 }}>
+                <p style={{ fontSize: 11, color: G.muted, margin: "0 0 4px", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>Tu registro</p>
+                <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 700, color: G.text, margin: 0, wordBreak: "break-all" }}>{email}</p>
+              </div>
+
+              <p style={{ fontSize: 13, color: G.muted, textAlign: "center", margin: "0 0 26px" }}>
+                {dias > 0 ? "Te avisamos por email cuando abramos (quedan " + dias + " " + (dias === 1 ? "día" : "días") + ")." : "Te avisamos por email cuando abramos."}
+              </p>
+
+              <button onClick={signOut} style={{ width: "100%", background: "transparent", border: "1px solid " + G.bdr, borderRadius: 20, padding: "14px", fontSize: 13, color: G.muted, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                Cerrar sesión
+              </button>
             </div>
           );
         }
@@ -3120,6 +3160,15 @@
             <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
               <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
                 <LoginScreen />
+              </div>
+            </div>
+          );
+
+          // Pre-lanzamiento → el registro queda hecho, pero la app aún no abre
+          if (enPrelanzamiento() && user.email !== ADMIN_EMAIL) return (
+            <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
+              <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
+                <WaitlistScreen user={user} />
               </div>
             </div>
           );
