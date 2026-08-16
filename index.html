@@ -1797,6 +1797,11 @@
             dbGet('dias_cerrados', '?select=*&order=fecha.asc').then(function(d){ setDiasCerrados(Array.isArray(d) ? d : []); }).catch(function(){});
           }, []);
 
+          // Cargar el total de usuarios registrados (para el panel de estadísticas)
+          useEffect(function() {
+            dbGet('profiles', '?select=id').then(function(d){ setTotalUsuarios(Array.isArray(d) ? d.length : 0); }).catch(function(){ setTotalUsuarios(null); });
+          }, []);
+
           function actualizarDia(dia, cambios) {
             setGuardandoDia(dia);
             var actual = horarioSemana.find(function(h){ return h.dia === dia; }) || { dia: dia, abierto: true, franjas: [] };
@@ -2262,11 +2267,6 @@
           }
 
           // ─── PANEL ESTADÍSTICAS ───
-          useEffect(function() {
-            if (panel !== 'stats') return;
-            dbGet('profiles', '?select=id').then(function(d){ setTotalUsuarios(Array.isArray(d) ? d.length : 0); }).catch(function(){ setTotalUsuarios(null); });
-          }, [panel]);
-
           if (panel === 'stats') {
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
