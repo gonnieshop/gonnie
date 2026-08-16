@@ -1767,6 +1767,7 @@
           const [ingresosMes, setIngresosMes] = useState(0);
           const [citasMes, setCitasMes] = useState([]);
           const [totalUsuarios, setTotalUsuarios] = useState(null);
+          const [showUsuarios, setShowUsuarios] = useState(false);
           const [showNuevaCita, setShowNuevaCita] = useState(false);
           const [barberos, setBarberos] = useState([]);
           const [servicios, setServicios] = useState([]);
@@ -1799,7 +1800,7 @@
 
           // Cargar el total de usuarios registrados (para el panel de estadísticas)
           useEffect(function() {
-            dbGet('profiles', '?select=id').then(function(d){ setTotalUsuarios(Array.isArray(d) ? d.length : 0); }).catch(function(){ setTotalUsuarios(null); });
+            dbGet('profiles', '?select=id,full_name,phone&order=full_name.asc').then(function(d){ setTotalUsuarios(Array.isArray(d) ? d : []); }).catch(function(){ setTotalUsuarios(null); });
           }, []);
 
           function actualizarDia(dia, cambios) {
@@ -2339,10 +2340,32 @@
                     <p style={{ fontSize: 12, color: G.muted, margin: '0 0 4px' }}>Citas confirmadas este mes</p>
                     <p style={{ fontSize: 28, fontWeight: 800, color: G.text, margin: 0 }}>{citasMes.length}</p>
                   </div>
-                  <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 12 }}>
-                    <p style={{ fontSize: 12, color: G.muted, margin: '0 0 4px' }}>Usuarios registrados en la app</p>
-                    <p style={{ fontSize: 28, fontWeight: 800, color: G.text, margin: 0 }}>{totalUsuarios === null ? '—' : totalUsuarios}</p>
-                  </div>
+                  <button onClick={function(){ setShowUsuarios(!showUsuarios); }}
+                    style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 12, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>
+                      <span style={{ display: 'block', fontSize: 12, color: G.muted, marginBottom: 4 }}>Usuarios registrados en la app</span>
+                      <span style={{ display: 'block', fontSize: 28, fontWeight: 800, color: G.text }}>{totalUsuarios === null ? '—' : totalUsuarios.length}</span>
+                    </span>
+                    {totalUsuarios !== null && totalUsuarios.length > 0 && (
+                      <span style={{ fontSize: 13, color: G.brand, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                        {showUsuarios ? 'Ocultar' : 'Ver lista'}
+                        <span style={{ fontSize: 16, transform: showUsuarios ? 'rotate(90deg)' : 'none', display: 'inline-block', transition: 'transform .15s' }}>›</span>
+                      </span>
+                    )}
+                  </button>
+
+                  {showUsuarios && totalUsuarios && (
+                    <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '6px 16px', marginBottom: 12, maxHeight: 320, overflowY: 'auto' }}>
+                      {totalUsuarios.map(function(u, i) {
+                        return (
+                          <div key={u.id || i} style={{ padding: '11px 0', borderBottom: i < totalUsuarios.length - 1 ? '1px solid ' + G.bdr : 'none' }}>
+                            <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{u.full_name || 'Sin nombre'}</p>
+                            <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{u.id}{u.phone ? ' · ' + u.phone : ''}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   <button onClick={exportarPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: G.brand, border: 'none', borderRadius: 14, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                     Exportar PDF del mes
@@ -3101,6 +3124,7 @@
                 window.__gonnieEmail = session.user.email;
                 setSplash(false);
                 cargarPuntos(session.user.email);
+                asegurarPerfil(session.user);
               }
             });
             return () => subscription.unsubscribe();
@@ -3386,6 +3410,26 @@
           } else {
             await dbInsert('profiles', { ...data, id: email });
           }
+        }
+
+        // Crea automáticamente la fila en "profiles" la primera vez que alguien
+        // inicia sesión, venga de Google o de email/contraseña — así el listado
+        // de usuarios registrados cuenta a todo el mundo, no solo a quien haya
+        // entrado a guardar su perfil a mano.
+        async function asegurarPerfil(user) {
+          try {
+            if (!user || !user.email) return;
+            var existing = await dbGet('profiles', '?id=eq.' + encodeURIComponent(user.email) + '&select=id');
+            if (Array.isArray(existing) && existing.length > 0) return;
+            var meta = user.user_metadata || {};
+            await dbInsert('profiles', {
+              id: user.email,
+              full_name: meta.full_name || meta.name || '',
+              phone: user.phone || '',
+              photo_url: meta.avatar_url || meta.picture || null,
+              updated_at: new Date().toISOString()
+            });
+          } catch (e) {}
         }
 
         // ─── AJUSTES: EDITAR PERFIL ───────────────────────────────────────────────
