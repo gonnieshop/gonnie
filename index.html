@@ -1799,7 +1799,7 @@
 
           // Cargar el total de usuarios registrados (para el panel de estadísticas)
           useEffect(function() {
-            dbGet('profiles', '?select=id,full_name,phone&order=full_name.asc').then(function(d){ setTotalUsuarios(Array.isArray(d) ? d : []); }).catch(function(){ setTotalUsuarios(null); });
+            dbGet('profiles', '?select=id,full_name,phone,provider&order=full_name.asc').then(function(d){ setTotalUsuarios(Array.isArray(d) ? d : []); }).catch(function(){ setTotalUsuarios(null); });
           }, []);
 
           function actualizarDia(dia, cambios) {
@@ -2379,10 +2379,17 @@
                   {totalUsuarios && totalUsuarios.length > 0 && (
                     <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '6px 16px' }}>
                       {totalUsuarios.map(function(u, i) {
+                        var esGoogle = u.provider === 'google';
+                        var conocido = u.provider === 'google' || u.provider === 'email';
                         return (
-                          <div key={u.id || i} style={{ padding: '13px 0', borderBottom: i < totalUsuarios.length - 1 ? '1px solid ' + G.bdr : 'none' }}>
-                            <p style={{ fontSize: 15, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{u.full_name || 'Sin nombre'}</p>
-                            <p style={{ fontSize: 13, color: G.muted, margin: 0 }}>{u.id}{u.phone ? ' · ' + u.phone : ''}</p>
+                          <div key={u.id || i} style={{ padding: '13px 0', borderBottom: i < totalUsuarios.length - 1 ? '1px solid ' + G.bdr : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                            <div style={{ minWidth: 0 }}>
+                              <p style={{ fontSize: 15, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{u.full_name || 'Sin nombre'}</p>
+                              <p style={{ fontSize: 13, color: G.muted, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.id}{u.phone ? ' · ' + u.phone : ''}</p>
+                            </div>
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, flexShrink: 0, whiteSpace: 'nowrap', background: esGoogle ? G.blue + '14' : (conocido ? G.card2 : 'transparent'), color: esGoogle ? G.blue : G.muted, border: '1px solid ' + (esGoogle ? G.blue : G.bdr) }}>
+                              {esGoogle ? 'Google' : (conocido ? 'Email' : '—')}
+                            </span>
                           </div>
                         );
                       })}
@@ -3433,18 +3440,28 @@
         // Crea automáticamente la fila en "profiles" la primera vez que alguien
         // inicia sesión, venga de Google o de email/contraseña — así el listado
         // de usuarios registrados cuenta a todo el mundo, no solo a quien haya
-        // entrado a guardar su perfil a mano.
+        // entrado a guardar su perfil a mano. También guarda con qué método
+        // entró, para poder mostrarlo en el listado de usuarios.
         async function asegurarPerfil(user) {
           try {
             if (!user || !user.email) return;
-            var existing = await dbGet('profiles', '?id=eq.' + encodeURIComponent(user.email) + '&select=id');
-            if (Array.isArray(existing) && existing.length > 0) return;
+            var provider = (user.app_metadata && user.app_metadata.provider) || 'email';
+            var existing = await dbGet('profiles', '?id=eq.' + encodeURIComponent(user.email) + '&select=id,provider');
+            if (Array.isArray(existing) && existing.length > 0) {
+              if (!existing[0].provider) {
+                await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + encodeURIComponent(user.email), {
+                  method: 'PATCH', headers: await getDbHeaders(), body: JSON.stringify({ provider: provider })
+                });
+              }
+              return;
+            }
             var meta = user.user_metadata || {};
             await dbInsert('profiles', {
               id: user.email,
               full_name: meta.full_name || meta.name || '',
               phone: user.phone || '',
               photo_url: meta.avatar_url || meta.picture || null,
+              provider: provider,
               updated_at: new Date().toISOString()
             });
           } catch (e) {}
