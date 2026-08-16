@@ -1767,7 +1767,6 @@
           const [ingresosMes, setIngresosMes] = useState(0);
           const [citasMes, setCitasMes] = useState([]);
           const [totalUsuarios, setTotalUsuarios] = useState(null);
-          const [showUsuarios, setShowUsuarios] = useState(false);
           const [showNuevaCita, setShowNuevaCita] = useState(false);
           const [barberos, setBarberos] = useState([]);
           const [servicios, setServicios] = useState([]);
@@ -2240,6 +2239,7 @@
               { id: 'clientes', label: 'Clientes', desc: 'Tu base de clientes', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>' },
               { id: 'productos', label: 'Productos', desc: 'Gestiona la tienda', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>' },
               { id: 'horario', label: 'Horario', desc: 'Horas y días cerrados', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>' },
+              { id: 'usuarios', label: 'Usuarios', desc: 'Cuentas registradas en la app', svg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
             ];
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
@@ -2340,36 +2340,54 @@
                     <p style={{ fontSize: 12, color: G.muted, margin: '0 0 4px' }}>Citas confirmadas este mes</p>
                     <p style={{ fontSize: 28, fontWeight: 800, color: G.text, margin: 0 }}>{citasMes.length}</p>
                   </div>
-                  <button onClick={function(){ setShowUsuarios(!showUsuarios); }}
+                  <button onClick={function(){ setPanel('usuarios'); }}
                     style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '16px', marginBottom: 12, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span>
                       <span style={{ display: 'block', fontSize: 12, color: G.muted, marginBottom: 4 }}>Usuarios registrados en la app</span>
                       <span style={{ display: 'block', fontSize: 28, fontWeight: 800, color: G.text }}>{totalUsuarios === null ? '—' : totalUsuarios.length}</span>
                     </span>
-                    {totalUsuarios !== null && totalUsuarios.length > 0 && (
-                      <span style={{ fontSize: 13, color: G.brand, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                        {showUsuarios ? 'Ocultar' : 'Ver lista'}
-                        <span style={{ fontSize: 16, transform: showUsuarios ? 'rotate(90deg)' : 'none', display: 'inline-block', transition: 'transform .15s' }}>›</span>
-                      </span>
-                    )}
+                    <span style={{ fontSize: 13, color: G.brand, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                      Ver todos
+                      <span style={{ fontSize: 16 }}>›</span>
+                    </span>
                   </button>
+                  <button onClick={exportarPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: G.brand, border: 'none', borderRadius: 14, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    Exportar PDF del mes
+                  </button>
+                </div>
+              </div>
+            );
+          }
 
-                  {showUsuarios && totalUsuarios && (
-                    <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '6px 16px', marginBottom: 12, maxHeight: 320, overflowY: 'auto' }}>
+          // ─── PANEL USUARIOS ───
+          if (panel === 'usuarios') {
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <button onClick={function(){ setPanel('menu'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
+                  <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>Usuarios</h1>
+                  {totalUsuarios !== null && <span style={{ fontSize: 13, color: G.muted, marginLeft: 'auto' }}>{totalUsuarios.length}</span>}
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
+                  {totalUsuarios === null && (
+                    <p style={{ fontSize: 13, color: G.muted, textAlign: 'center', marginTop: 30 }}>Cargando...</p>
+                  )}
+                  {totalUsuarios !== null && totalUsuarios.length === 0 && (
+                    <p style={{ fontSize: 13, color: G.muted, textAlign: 'center', marginTop: 30 }}>Todavía no hay usuarios registrados</p>
+                  )}
+                  {totalUsuarios && totalUsuarios.length > 0 && (
+                    <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '6px 16px' }}>
                       {totalUsuarios.map(function(u, i) {
                         return (
-                          <div key={u.id || i} style={{ padding: '11px 0', borderBottom: i < totalUsuarios.length - 1 ? '1px solid ' + G.bdr : 'none' }}>
-                            <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{u.full_name || 'Sin nombre'}</p>
-                            <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>{u.id}{u.phone ? ' · ' + u.phone : ''}</p>
+                          <div key={u.id || i} style={{ padding: '13px 0', borderBottom: i < totalUsuarios.length - 1 ? '1px solid ' + G.bdr : 'none' }}>
+                            <p style={{ fontSize: 15, fontWeight: 700, color: G.text, margin: '0 0 2px' }}>{u.full_name || 'Sin nombre'}</p>
+                            <p style={{ fontSize: 13, color: G.muted, margin: 0 }}>{u.id}{u.phone ? ' · ' + u.phone : ''}</p>
                           </div>
                         );
                       })}
                     </div>
                   )}
-                  <button onClick={exportarPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: G.brand, border: 'none', borderRadius: 14, padding: '13px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                    Exportar PDF del mes
-                  </button>
                 </div>
               </div>
             );
