@@ -105,6 +105,10 @@
         // Cuenta con acceso al Modo Negocio. Debe coincidir EXACTAMENTE con el
         // email admin usado en las políticas RLS de Supabase (is_admin()).
         const ADMIN_EMAIL = "reservasgonnie@gmail.com";
+        // Fecha de apertura al público. Hasta este momento, solo puede entrar
+        // la cuenta admin — el resto ve la pantalla de "Muy pronto".
+        // Para cambiar la fecha, solo hay que tocar la línea de abajo.
+        const FECHA_APERTURA = new Date('2026-09-01T00:00:00');
 
         // ─── SUPABASE AUTH CLIENT ───────────────────────────────────────────────
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -559,6 +563,26 @@
                 <PrimaryBtn onClick={onDone}>Empezar →</PrimaryBtn>
                 <p style={{ fontSize: 11, color: G.muted, textAlign: "center" }}>Gratis para clientes · Barberías desde 29€/mes</p>
               </div>
+            </div>
+          );
+        }
+
+        // ─── PANTALLA: MUY PRONTO (antes de la fecha de apertura) ──────────────
+        function ComingSoonScreen({ fechaApertura }) {
+          var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+          var fechaTexto = fechaApertura.getDate() + ' de ' + meses[fechaApertura.getMonth()] + ' de ' + fechaApertura.getFullYear();
+          return (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 28px", minHeight: "100dvh", background: G.bg, textAlign: "center" }}>
+              <img src="https://i.imgur.com/22GIzhb.png" style={{ height: 120, width: "auto", marginBottom: 28 }} alt="Gonnie" />
+              <h1 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 24, fontWeight: 700, color: G.text, margin: "0 0 10px" }}>Muy pronto</h1>
+              <p style={{ fontSize: 14, color: G.muted, maxWidth: 280, lineHeight: 1.6, marginBottom: 6 }}>
+                Estamos dando los últimos retoques a Gonnie. La app abre el
+              </p>
+              <p style={{ fontSize: 17, fontWeight: 700, color: G.brand, marginBottom: 28 }}>{fechaTexto}</p>
+              <button onClick={function(){ supabaseClient.auth.signOut(); }}
+                style={{ background: "transparent", border: "1px solid " + G.bdr, borderRadius: 20, padding: "10px 20px", fontSize: 13, color: G.muted, cursor: "pointer", fontFamily: "inherit" }}>
+                Cerrar sesión
+              </button>
             </div>
           );
         }
@@ -1797,10 +1821,12 @@
             dbGet('dias_cerrados', '?select=*&order=fecha.asc').then(function(d){ setDiasCerrados(Array.isArray(d) ? d : []); }).catch(function(){});
           }, []);
 
-          // Cargar el total de usuarios registrados (para el panel de estadísticas)
+          // Cargar el total de usuarios registrados (al entrar en Modo Negocio,
+          // y de nuevo cada vez que se abre Estadísticas o Usuarios)
           useEffect(function() {
+            if (panel !== 'menu' && panel !== 'stats' && panel !== 'usuarios') return;
             dbGet('profiles', '?select=id,full_name,phone,provider&order=full_name.asc').then(function(d){ setTotalUsuarios(Array.isArray(d) ? d : []); }).catch(function(){ setTotalUsuarios(null); });
-          }, []);
+          }, [panel]);
 
           function actualizarDia(dia, cambios) {
             setGuardandoDia(dia);
@@ -3188,6 +3214,15 @@
             <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
               <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
                 <SplashScreen onDone={() => setSplash(false)} />
+              </div>
+            </div>
+          );
+
+          // Antes de la fecha de apertura, solo entra la cuenta admin
+          if (user.email !== ADMIN_EMAIL && new Date() < FECHA_APERTURA) return (
+            <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
+              <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
+                <ComingSoonScreen fechaApertura={FECHA_APERTURA} />
               </div>
             </div>
           );
