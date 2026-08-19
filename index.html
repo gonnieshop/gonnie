@@ -653,6 +653,17 @@
           const [catActiva, setCatActiva] = useState('Todos');
           const [productos, setProductos] = useState([]);
           const [loadingProd, setLoadingProd] = useState(true);
+          const [cesta, setCesta] = useState([]);
+
+          var totalCesta = cesta.reduce(function(s, p){ return s + (Number(p.precio) || 0); }, 0);
+
+          function addCesta(p) { setCesta(function(prev){ return prev.concat([p]); }); }
+
+          function pedirCesta() {
+            var lineas = cesta.map(function(p){ return '· ' + p.nombre + ' (' + p.precio + '€)'; }).join('\n');
+            var texto = 'Hola, quiero reservar estos productos para recogerlos en mi próxima cita:\n' + lineas + '\nTotal: ' + totalCesta + '€';
+            window.open('https://wa.me/34663528459?text=' + encodeURIComponent(texto), '_blank');
+          }
 
           useEffect(function() {
             setLoadingProd(true);
@@ -725,14 +736,35 @@
                       <div style={{ background: G.bg, height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }}>
                         <img src={p.img} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt={p.nombre} />
                       </div>
-                      <div style={{ padding: '12px 14px 14px' }}>
-                        <p style={{ fontSize: 12, fontWeight: 600, color: G.text, margin: '0 0 4px', lineHeight: 1.3 }}>{p.nombre}</p>
-                        <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 700, color: G.coral, margin: 0 }}>{p.precio}€</p>
+                      <div style={{ padding: '12px 14px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <p style={{ fontSize: 12, fontWeight: 600, color: G.text, margin: 0, lineHeight: 1.3 }}>{p.nombre}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 700, color: G.coral }}>{p.precio}€</span>
+                          <button onClick={function(e){ e.stopPropagation(); addCesta(p); }}
+                            style={{ width: 30, height: 30, borderRadius: '50%', background: G.brand, color: '#FBFCF8', border: 'none', fontSize: 17, lineHeight: 1, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              {cesta.length > 0 && (
+                <div style={{ position: 'fixed', bottom: 88, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 60, pointerEvents: 'none' }}>
+                  <div style={{ width: '100%', maxWidth: 420, padding: '0 18px', boxSizing: 'border-box', pointerEvents: 'auto' }}>
+                    <div style={{ background: G.cream, border: '1px solid ' + G.bdr, borderRadius: 22, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 10px 30px -12px rgba(60,42,20,0.25)' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 12.5, fontWeight: 700, color: G.text, margin: 0 }}>{cesta.length} {cesta.length === 1 ? 'producto' : 'productos'} · {totalCesta}€</p>
+                        <p style={{ fontSize: 11, color: G.muted, margin: '2px 0 0' }}>Los recoges en tu próxima cita</p>
+                      </div>
+                      <button onClick={function(){ setCesta([]); }}
+                        style={{ background: 'transparent', border: 'none', fontSize: 11.5, color: G.muted, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>Vaciar</button>
+                      <button onClick={pedirCesta}
+                        style={{ background: G.brand, color: '#FBFCF8', border: 'none', borderRadius: 22, padding: '11px 17px', fontFamily: "'Bricolage Grotesque'", fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Reservar</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         }
@@ -780,7 +812,7 @@
           );
         }
 
-        function HomeScreen({ nav, user, puntos = 0, setGroupMode }) {
+        function HomeScreen({ nav, user, puntos = 0, setGroupMode, setBooking }) {
           const nivel = getNivel(puntos);
           const progreso = getProgreso(puntos);
           const ptsSiguiente = getPtsParaSiguiente(puntos);
@@ -801,6 +833,9 @@
           });
           const [horarioSemana, setHorarioSemana] = useState([]);
           const [diasCerrados, setDiasCerrados] = useState([]);
+          const [ultima, setUltima] = useState(null);
+          const [hueco, setHueco] = useState(null);
+          const [huecosHoy, setHuecosHoy] = useState([]);
 
           useEffect(function() {
             dbGet('horario_negocio', '?select=*').then(function(d){ setHorarioSemana(Array.isArray(d) ? d : []); }).catch(function(){});
@@ -820,6 +855,58 @@
               })
               .catch(function(){ setRescheduleOcupados([]); });
           }, [rescheduleDate]);
+
+          // Última cita del cliente + primer hueco libre con ese barbero
+          useEffect(function() {
+            var email = user && user.email;
+            if (!email || !horarioSemana.length) return;
+            dbGet('appointments', '?client_email=eq.' + encodeURIComponent(email) + '&status=eq.confirmed&order=date.desc,time.desc&limit=1&select=*,servicios(*),barberos(*),barberias(*)')
+              .then(function(d) {
+                if (!Array.isArray(d) || d.length === 0 || !d[0].barbero_id) return;
+                var c = d[0];
+                setUltima(c);
+                var ahora = new Date();
+                var hoyStr = ahora.toISOString().split('T')[0];
+                var hasta = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 14);
+                var hastaStr = hasta.toISOString().split('T')[0];
+                return dbGet('appointments', '?barbero_id=eq.' + c.barbero_id + '&status=neq.cancelled&date=gte.' + hoyStr + '&date=lte.' + hastaStr + '&select=date,time')
+                  .then(function(ocup) {
+                    var mapa = {};
+                    (Array.isArray(ocup) ? ocup : []).forEach(function(o) {
+                      if (!o.date) return;
+                      if (!mapa[o.date]) mapa[o.date] = [];
+                      mapa[o.date].push(hhmm(o.time));
+                    });
+                    var nowMin = ahora.getHours() * 60 + ahora.getMinutes();
+                    var primero = null, deHoy = [];
+                    for (var i = 0; i < 14; i++) {
+                      var d2 = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + i);
+                      var key = d2.getFullYear() + '-' + String(d2.getMonth() + 1).padStart(2, '0') + '-' + String(d2.getDate()).padStart(2, '0');
+                      var libres = slotsParaFecha(key, horarioSemana, diasCerrados).filter(function(s) {
+                        if ((mapa[key] || []).indexOf(s) >= 0) return false;
+                        if (i === 0) {
+                          var p = s.split(':');
+                          if (Number(p[0]) * 60 + Number(p[1]) <= nowMin + 30) return false;
+                        }
+                        return true;
+                      });
+                      if (i === 0) deHoy = libres.slice(0, 3);
+                      if (!primero && libres.length > 0) primero = { date: key, time: libres[0] };
+                      if (primero) break;
+                    }
+                    setHueco(primero);
+                    setHuecosHoy(deHoy);
+                  });
+              }).catch(function(){});
+          }, [user && user.email, horarioSemana.length, diasCerrados.length]);
+
+          // Reservar repitiendo el último servicio y barbero
+          function reservarRepetir(f, h) {
+            if (!ultima || !setBooking) { setGroupMode(false); nav('explore'); return; }
+            setGroupMode(false);
+            setBooking({ barberia: ultima.barberias, bar: ultima.barberos, svc: ultima.servicios, pre: { date: f, time: h, metodo: ultima.payment_method || '' } });
+            nav('booking');
+          }
 
           // Construir avisos a partir de las citas del cliente
           useEffect(function() {
@@ -900,28 +987,68 @@
               </div>
 
               <div style={{ padding: "0 18px" }}>
-                {/* Caja de Puntos */}
-                <div onClick={() => nav("loyalty")} style={{ background: G.mint, border: "none", borderRadius: 28, padding: "20px 20px", marginBottom: 16, cursor: "pointer", position: "relative", overflow: "hidden" }}>
-                  <div style={{ position: "absolute", top: -14, right: -14, width: 96, height: 96, borderRadius: "50%", background: G.card, opacity: 0.55 }} />
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, position: "relative" }}>
-                    <div>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
-                        <p style={{ fontSize: 10, color: "#0F2A20", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>Gonnie Points</p>
-                        <NewPill />
+                {/* Reserva rápida: repetir lo de siempre */}
+                {ultima && hueco && !nextAppt && (
+                  <div style={{ background: G.mint, borderRadius: 28, padding: 18, marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#0F2A20', opacity: 0.75, margin: 0 }}>Lo de siempre</p>
+                      <span style={{ background: G.brand, color: '#FBFCF8', borderRadius: 20, padding: '3px 9px', fontSize: 9.5, fontWeight: 800, letterSpacing: '0.06em' }}>1 TOQUE</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <Av txt={((ultima.barberos && ultima.barberos.name) || 'B').slice(0,2).toUpperCase()} size={46} bg={G.cream} color="#0F2A20" />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 700, color: '#0F2A20', margin: 0 }}>
+                          {(ultima.servicios && ultima.servicios.name) || 'Tu servicio'}{ultima.barberos && ultima.barberos.name ? ' con ' + ultima.barberos.name : ''}
+                        </p>
+                        <p style={{ fontSize: 11.5, color: '#0F2A20', opacity: 0.75, margin: '2px 0 0' }}>
+                          Tu última cita: {fechaCorta(ultima.date)}{ultima.servicios && ultima.servicios.price ? ' · ' + ultima.servicios.price + '€' : ''}
+                        </p>
                       </div>
-                      <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 42, fontWeight: 700, color: "#0F2A20", lineHeight: 1, margin: "6px 0 4px" }}>{puntos.toLocaleString("es-ES")}</p>
-                      <p style={{ fontSize: 11, color: "#0F2A20", opacity: 0.75, marginTop: 4 }}>
-                        Nivel {nivel.nombre} · {ptsSiguiente > 0 ? `${ptsSiguiente} pts para ${getNivel(puntos + ptsSiguiente).nombre}` : "¡Nivel máximo! 🎉"}
-                      </p>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", background: G.card, borderRadius: 16, padding: "10px 14px", textAlign: "center" }}>
-                      <span dangerouslySetInnerHTML={{ __html: nivel.icono }} />
-                      <p style={{ fontSize: 9, fontWeight: 800, color: nivel.color, marginTop: 4 }}>{nivel.nombre.toUpperCase()}</p>
+                    <button onClick={function(){ reservarRepetir(hueco.date, hueco.time); }}
+                      style={{ background: G.brand, border: 'none', borderRadius: 22, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontSize: 10, color: 'rgba(251,252,248,0.6)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Primer hueco libre</span>
+                        <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 700, color: '#FBFCF8' }}>{fechaRelativa(hueco.date)}, {hueco.time}</span>
+                      </span>
+                      <span style={{ background: G.mint, color: '#0F2A20', borderRadius: 20, padding: '9px 15px', fontFamily: "'Bricolage Grotesque'", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>Reservar</span>
+                    </button>
+                    {huecosHoy.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#0F2A20', opacity: 0.6, margin: 0 }}>Huecos de hoy</p>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          {huecosHoy.map(function(h) {
+                            return (
+                              <button key={h} onClick={function(){ reservarRepetir(new Date().toISOString().split('T')[0], h); }}
+                                style={{ flex: 1, background: G.cream, border: 'none', borderRadius: 16, padding: '11px 0', fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 700, color: '#0F2A20', cursor: 'pointer' }}>
+                                {h}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    <button onClick={function(){ setGroupMode(false); nav('explore'); }}
+                      style={{ background: 'transparent', border: 'none', fontSize: 11.5, color: '#0F2A20', opacity: 0.7, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      o elegir otro día y hora ›
+                    </button>
+                  </div>
+                )}
+
+                {/* Puntos, en una línea */}
+                <div onClick={function(){ nav("loyalty"); }} style={{ display: 'flex', alignItems: 'center', gap: 12, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 20, padding: '14px 16px', marginBottom: 16, cursor: 'pointer' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 13, background: 'rgba(36,58,44,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 13, fontWeight: 700, color: G.brand }}>{puntos.toLocaleString("es-ES")}</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    <p style={{ fontSize: 12.5, fontWeight: 600, color: G.text, margin: 0 }}>
+                      {ptsSiguiente > 0 ? ptsSiguiente + ' puntos para ' + getNivel(puntos + ptsSiguiente).nombre : 'Nivel ' + nivel.nombre + ' · el más alto'}
+                    </p>
+                    <div style={{ height: 5, borderRadius: 3, background: 'rgba(26,22,20,0.08)', overflow: 'hidden' }}>
+                      <div style={{ width: progreso + '%', height: '100%', background: G.brand, borderRadius: 3, transition: 'width 0.8s ease' }} />
                     </div>
                   </div>
-                  <div style={{ background: "rgba(15,42,32,0.15)", borderRadius: 8, height: 6, overflow: "hidden", position: "relative" }}>
-                    <div style={{ width: `${progreso}%`, height: "100%", background: "#1A1614", borderRadius: 8, transition: "width 0.8s ease" }} />
-                  </div>
+                  <span style={{ fontSize: 18, color: G.muted, flexShrink: 0 }}>›</span>
                 </div>
 
                 {/* Próxima Cita */}
@@ -1353,12 +1480,14 @@
 
         // ─── VISTA 4: AGENDA Y TURNOS (BOOKING SCREEN) ────────────────────────
         function BookingScreen({ booking, nav, setConfirmedAppt, setPuntos, user, groupMode, setGroupMode }) {
-          const [date, setDate] = useState("");
-          const [slot, setSlot] = useState("");
+          var pre = (booking && booking.pre) || null;
+          const primeraCargaFechas = React.useRef(true);
+          const [date, setDate] = useState((pre && pre.date) || "");
+          const [slot, setSlot] = useState((pre && pre.time) || "");
           const [slot2, setSlot2] = useState("");
           const [nombre2, setNombre2] = useState("");
           const [saving, setSaving] = useState(false);
-          const [metodoPago, setMetodoPago] = useState("");
+          const [metodoPago, setMetodoPago] = useState((pre && pre.metodo) || "");
           const [ocupados, setOcupados] = useState([]);
           const [loadingHoras, setLoadingHoras] = useState(false);
           const [blocked, setBlocked] = useState(false);
@@ -1395,8 +1524,10 @@
           useEffect(function() {
             if (!date) { setOcupados([]); return; }
             setLoadingHoras(true);
-            setSlot("");
-            setSlot2("");
+            // No borrar la hora en la primera carga: puede venir prefijada
+            // desde "Lo de siempre" en el inicio.
+            if (primeraCargaFechas.current) primeraCargaFechas.current = false;
+            else { setSlot(""); setSlot2(""); }
             refrescarOcupados().then(function(){ setLoadingHoras(false); });
           }, [date]);
 
@@ -1860,6 +1991,7 @@
         // ─── VISTA 9: PANEL DE CONTROL DE NEGOCIO (BUSINESS MODE / RECHARTS) ──
         function BusinessScreen() {
           const [panel, setPanel] = useState('menu'); // menu | agenda | stats | clientes
+          const [filtroBarbero, setFiltroBarbero] = useState('');
           const [citas, setCitas] = useState([]);
           const [loading, setLoading] = useState(true);
           const [clientes, setClientes] = useState([]);
@@ -2857,6 +2989,13 @@
           }
 
           // ─── PANEL AGENDA (por defecto) ───
+          // Resumen del día y huecos libres del barbero filtrado
+          var citasFiltradas = filtroBarbero ? citas.filter(function(c){ return String(c.barbero_id) === String(filtroBarbero); }) : citas;
+          var confirmadasDia = citasFiltradas.filter(function(c){ return c.status === 'confirmed'; });
+          var previstoDia = confirmadasDia.reduce(function(s, c){ return s + ((c.servicios && c.servicios.price) || 0); }, 0);
+          var ocupadasDia = confirmadasDia.map(function(c){ return formatHora(c.time); });
+          var huecosLibres = slotsParaFecha(selectedDate, horarioSemana, diasCerrados).filter(function(s){ return ocupadasDia.indexOf(s) < 0; });
+
           return (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
               {/* Header FIJO */}
@@ -2901,6 +3040,40 @@
 
               {/* ZONA SCROLLEABLE: panel nueva cita + stats + PDF + timeline */}
               <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
+
+                {/* Resumen del día */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+                  <div style={{ background: G.card, borderRadius: 14, padding: '10px 10px' }}>
+                    <p style={{ fontSize: 18, fontWeight: 800, color: G.text, margin: 0 }}>{confirmadasDia.length}</p>
+                    <p style={{ fontSize: 10, color: G.muted, margin: 0 }}>citas</p>
+                  </div>
+                  <div style={{ background: G.mint, borderRadius: 14, padding: '10px 10px' }}>
+                    <p style={{ fontSize: 18, fontWeight: 800, color: '#0F2A20', margin: 0 }}>{previstoDia}€</p>
+                    <p style={{ fontSize: 10, color: '#0F2A20', opacity: 0.7, margin: 0 }}>previsto</p>
+                  </div>
+                  <div style={{ background: G.card, borderRadius: 14, padding: '10px 10px' }}>
+                    <p style={{ fontSize: 18, fontWeight: 800, color: huecosLibres.length > 0 ? G.red : G.text, margin: 0 }}>{filtroBarbero ? huecosLibres.length : '—'}</p>
+                    <p style={{ fontSize: 10, color: G.muted, margin: 0 }}>huecos libres</p>
+                  </div>
+                </div>
+
+                {/* Filtro por barbero */}
+                <div style={{ display: 'flex', gap: 7, marginBottom: 14, overflowX: 'auto', scrollbarWidth: 'none' }}>
+                  <button onClick={function(){ setFiltroBarbero(''); }}
+                    style={{ flexShrink: 0, background: filtroBarbero ? G.card : G.brand, color: filtroBarbero ? G.text : '#FBFCF8', border: 'none', borderRadius: 18, padding: '7px 13px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Todos</button>
+                  {barberos.map(function(b) {
+                    var activo = String(filtroBarbero) === String(b.id);
+                    return (
+                      <button key={b.id} onClick={function(){ setFiltroBarbero(activo ? '' : b.id); }}
+                        style={{ flexShrink: 0, background: activo ? G.brand : G.card, color: activo ? '#FBFCF8' : G.text, border: 'none', borderRadius: 18, padding: '7px 13px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        {b.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                {!filtroBarbero && (
+                  <p style={{ fontSize: 11, color: G.muted, margin: '0 0 12px' }}>Elige un barbero para ver sus huecos libres.</p>
+                )}
 
                 {/* Panel nueva cita */}
                 {showNuevaCita && (
@@ -2998,8 +3171,20 @@
                       );
                     })}
 
+                    {/* Huecos libres del barbero filtrado */}
+                    {filtroBarbero && huecosLibres.map(function(s) {
+                      var p = s.split(':');
+                      var hs = Number(p[0]);
+                      if (hs < HORA_INI || hs >= HORA_FIN) return null;
+                      return (
+                        <div key={'libre-' + s} style={{ position: 'absolute', left: 52, right: 0, top: topDeHora(hs, Number(p[1])), height: 26, border: '1px dashed ' + G.bdr, borderRadius: 8, boxSizing: 'border-box', display: 'flex', alignItems: 'center', paddingLeft: 10 }}>
+                          <span style={{ fontSize: 10.5, color: G.muted }}>Libre · {s}</span>
+                        </div>
+                      );
+                    })}
+
                     {/* Bloques de citas */}
-                    {citas.map(function(c, i) {
+                    {citasFiltradas.map(function(c, i) {
                       if (!c.time) return null;
                       var parts = c.time.split(':');
                       var ch = Number(parts[0]), cm = Number(parts[1]);
@@ -3036,7 +3221,7 @@
                     })}
                   </div>
                 )}
-                {!loading && citas.length === 0 && (
+                {!loading && citasFiltradas.length === 0 && (
                   <p style={{ fontSize: 13, color: G.muted, textAlign: 'center', marginTop: 16 }}>No hay citas para este día</p>
                 )}
               </div>
@@ -3333,7 +3518,7 @@
                     <BusinessScreen />
                   ) : (
                     <>
-                      {view === "home" && <HomeScreen nav={setView} user={user} puntos={puntos} setGroupMode={setGroupMode} />}
+                      {view === "home" && <HomeScreen nav={setView} user={user} puntos={puntos} setGroupMode={setGroupMode} setBooking={setBooking} />}
                       {view === "shop" && <ShopScreen nav={setView} />}
                       {view === "explore" && <ExploreScreen nav={setView} setBarberia={setBarberia} />}
                       {view === "detail" && <DetailScreen barberia={barberia} nav={setView} setBooking={setBooking} />}
