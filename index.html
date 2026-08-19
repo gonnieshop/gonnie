@@ -989,49 +989,35 @@
               <div style={{ padding: "0 18px" }}>
                 {/* Reserva rápida: repetir lo de siempre */}
                 {ultima && hueco && !nextAppt && (
-                  <div style={{ background: G.mint, borderRadius: 28, padding: 18, marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#0F2A20', opacity: 0.75, margin: 0 }}>Lo de siempre</p>
-                      <span style={{ background: G.brand, color: '#FBFCF8', borderRadius: 20, padding: '3px 9px', fontSize: 9.5, fontWeight: 800, letterSpacing: '0.06em' }}>1 TOQUE</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <Av txt={((ultima.barberos && ultima.barberos.name) || 'B').slice(0,2).toUpperCase()} size={46} bg={G.cream} color="#0F2A20" />
+                  <div style={{ background: G.mint, borderRadius: 22, padding: '12px 14px', marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <Av txt={((ultima.barberos && ultima.barberos.name) || 'B').slice(0,2).toUpperCase()} size={34} bg={G.cream} color="#0F2A20" />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 700, color: '#0F2A20', margin: 0 }}>
+                        <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 13.5, fontWeight: 700, color: '#0F2A20', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {(ultima.servicios && ultima.servicios.name) || 'Tu servicio'}{ultima.barberos && ultima.barberos.name ? ' con ' + ultima.barberos.name : ''}
                         </p>
-                        <p style={{ fontSize: 11.5, color: '#0F2A20', opacity: 0.75, margin: '2px 0 0' }}>
-                          Tu última cita: {fechaCorta(ultima.date)}{ultima.servicios && ultima.servicios.price ? ' · ' + ultima.servicios.price + '€' : ''}
+                        <p style={{ fontSize: 11, color: '#0F2A20', opacity: 0.7, margin: '1px 0 0' }}>
+                          Lo de siempre{ultima.servicios && ultima.servicios.price ? ' · ' + ultima.servicios.price + '€' : ''}
                         </p>
                       </div>
+                      <button onClick={function(){ reservarRepetir(hueco.date, hueco.time); }}
+                        style={{ background: G.brand, color: '#FBFCF8', border: 'none', borderRadius: 18, padding: '9px 13px', fontFamily: "'Bricolage Grotesque'", fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+                        {fechaRelativa(hueco.date)} {hueco.time}
+                      </button>
                     </div>
-                    <button onClick={function(){ reservarRepetir(hueco.date, hueco.time); }}
-                      style={{ background: G.brand, border: 'none', borderRadius: 22, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-                      <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <span style={{ fontSize: 10, color: 'rgba(251,252,248,0.6)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Primer hueco libre</span>
-                        <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 700, color: '#FBFCF8' }}>{fechaRelativa(hueco.date)}, {hueco.time}</span>
-                      </span>
-                      <span style={{ background: G.mint, color: '#0F2A20', borderRadius: 20, padding: '9px 15px', fontFamily: "'Bricolage Grotesque'", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>Reservar</span>
-                    </button>
                     {huecosHoy.length > 0 && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#0F2A20', opacity: 0.6, margin: 0 }}>Huecos de hoy</p>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          {huecosHoy.map(function(h) {
-                            return (
-                              <button key={h} onClick={function(){ reservarRepetir(new Date().toISOString().split('T')[0], h); }}
-                                style={{ flex: 1, background: G.cream, border: 'none', borderRadius: 16, padding: '11px 0', fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 700, color: '#0F2A20', cursor: 'pointer' }}>
-                                {h}
-                              </button>
-                            );
-                          })}
-                        </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 10.5, color: '#0F2A20', opacity: 0.6, flexShrink: 0 }}>Hoy</span>
+                        {huecosHoy.map(function(h) {
+                          return (
+                            <button key={h} onClick={function(){ reservarRepetir(new Date().toISOString().split('T')[0], h); }}
+                              style={{ background: G.cream, border: 'none', borderRadius: 14, padding: '6px 11px', fontFamily: "'Bricolage Grotesque'", fontSize: 12, fontWeight: 700, color: '#0F2A20', cursor: 'pointer' }}>
+                              {h}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
-                    <button onClick={function(){ setGroupMode(false); nav('explore'); }}
-                      style={{ background: 'transparent', border: 'none', fontSize: 11.5, color: '#0F2A20', opacity: 0.7, cursor: 'pointer', fontFamily: 'inherit' }}>
-                      o elegir otro día y hora ›
-                    </button>
                   </div>
                 )}
 
@@ -1711,7 +1697,7 @@
                 )}
               </div>
 
-              <div style={{ flex: 1, padding: '0 18px 12px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ flex: 1, padding: '0 18px 170px', display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: G.muted, margin: 0 }}>Día</p>
                   <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none' }}>
