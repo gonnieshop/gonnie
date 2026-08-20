@@ -1174,7 +1174,7 @@
                 </div>
 
                 {/* Próxima Cita */}
-                <div style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 24, padding: "16px 16px", marginBottom: 16 }}>
+                <div style={{ background: nextAppt ? '#1A1614' : G.card, border: nextAppt ? 'none' : `1px solid ${G.bdr}`, borderRadius: 24, padding: "16px 16px", marginBottom: 16 }}>
                   {cancelDone && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
                   <AnimCheck type="cross" />
@@ -1184,14 +1184,14 @@
               {nextAppt ? (
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                      <p style={{ fontSize: 10, color: G.muted, fontWeight: 700, textTransform: "uppercase" }}>Próxima cita</p>
+                      <p style={{ fontSize: 10, color: 'rgba(251,252,248,0.5)', fontWeight: 700, textTransform: "uppercase", letterSpacing: '0.07em' }}>Próxima cita</p>
                       <Pill color="#080B0F" bg={G.green}>{fechaRelativa(nextAppt.date)} · {hhmm(nextAppt.time)}</Pill>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <Av txt={(nextAppt.barberos && nextAppt.barberos.name || "B").slice(0,2).toUpperCase()} size={46} bg={G.rose} color="#3A0F1B" />
                       <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 15, fontWeight: 700, color: G.text }}>{nextAppt.servicios && nextAppt.servicios.name}</p>
-                        <p style={{ fontSize: 12, color: G.muted }}>{nextAppt.barberos && nextAppt.barberos.name}</p>
+                        <p style={{ fontSize: 15, fontWeight: 700, color: '#FBFCF8' }}>{nextAppt.servicios && nextAppt.servicios.name}</p>
+                        <p style={{ fontSize: 12, color: 'rgba(251,252,248,0.6)' }}>{nextAppt.barberos && nextAppt.barberos.name}</p>
                       </div>
                       
                     </div>
@@ -1199,10 +1199,10 @@
                       {/* Botones principales */}
                       {!confirmCancel && !showReschedule && (
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button onClick={function(){ setShowReschedule(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.brand + '50', borderRadius: 10, padding: '9px', fontSize: 12, color: G.brand, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          <button onClick={function(){ setShowReschedule(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(251,252,248,0.28)', borderRadius: 12, padding: '11px', fontSize: 12, color: '#FBFCF8', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                             Cambiar fecha
                           </button>
-                          <button onClick={function(){ setConfirmCancel(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 10, padding: '9px', fontSize: 12, color: G.red, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          <button onClick={function(){ setConfirmCancel(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,128,149,0.4)', borderRadius: 12, padding: '11px', fontSize: 12, color: '#FF8095', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                             Cancelar cita
                           </button>
                         </div>
@@ -1210,10 +1210,10 @@
 
                       {/* Confirmar cancelación */}
                       {confirmCancel && (
-                        <div style={{ background: G.red + '10', border: '1px solid ' + G.red + '30', borderRadius: 10, padding: '12px' }}>
-                          <p style={{ fontSize: 12, color: G.red, textAlign: 'center', marginBottom: 10, fontWeight: 600 }}>¿Seguro que quieres cancelar?</p>
+                        <div style={{ background: 'rgba(251,252,248,0.07)', border: '1px solid rgba(255,128,149,0.35)', borderRadius: 12, padding: '12px' }}>
+                          <p style={{ fontSize: 12, color: '#FF8095', textAlign: 'center', marginBottom: 10, fontWeight: 600 }}>¿Seguro que quieres cancelar?</p>
                           <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={function(){ setConfirmCancel(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 8, padding: '8px', fontSize: 12, color: G.muted, cursor: 'pointer', fontFamily: 'inherit' }}>No</button>
+                            <button onClick={function(){ setConfirmCancel(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(251,252,248,0.25)', borderRadius: 10, padding: '9px', fontSize: 12, color: 'rgba(251,252,248,0.7)', cursor: 'pointer', fontFamily: 'inherit' }}>No</button>
                             <button onClick={function(){
                               setCancelling(true);
                               cancelBooking(nextAppt.id, nextAppt, user && user.email, user && user.user_metadata && user.user_metadata.full_name)
@@ -1893,17 +1893,17 @@
                 </div>
               </div>
 
-              <div style={{ position: 'sticky', bottom: 84, background: G.cream, borderTop: '1px solid ' + G.bdr, padding: '14px 18px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ position: 'sticky', bottom: 84, background: '#1A1614', padding: '15px 18px 17px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                    <span style={{ fontSize: 12.5, fontWeight: 600 }}>{booking.svc.name} con {booking.bar.name}</span>
-                    <span style={{ fontSize: 11, color: G.muted }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, color: '#FBFCF8' }}>{booking.svc.name} con {booking.bar.name}</span>
+                    <span style={{ fontSize: 11, color: 'rgba(251,252,248,0.55)' }}>
                       {date && slot ? fechaCorta(date) + ', ' + slot + ' · ' + booking.svc.duration_min + ' min · +' + puntosCita + ' pts' : 'Elige día, hora y pago'}
                     </span>
                   </div>
-                  <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 20, fontWeight: 700 }}>{booking.svc.price}€</span>
+                  <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 20, fontWeight: 700, color: '#FBFCF8' }}>{booking.svc.price}€</span>
                 </div>
-                <PrimaryBtn disabled={saving || !listo} onClick={confirm} style={{ background: (saving || !listo) ? 'rgba(26,22,20,0.1)' : G.brand, color: (saving || !listo) ? 'rgba(26,22,20,0.35)' : '#FBFCF8' }}>
+                <PrimaryBtn disabled={saving || !listo} onClick={confirm} style={{ background: (saving || !listo) ? 'rgba(251,252,248,0.12)' : G.mint, color: (saving || !listo) ? 'rgba(251,252,248,0.4)' : '#0F2A20' }}>
                   {saving ? 'Procesando...' : (listo ? (groupMode ? 'Confirmar las 2 reservas' : 'Confirmar ' + fechaCorta(date) + ', ' + slot) : 'Completa la reserva')}
                 </PrimaryBtn>
               </div>
@@ -2116,7 +2116,7 @@
 
         // ─── VISTA 9: PANEL DE CONTROL DE NEGOCIO (BUSINESS MODE / RECHARTS) ──
         function BusinessScreen() {
-          const [panel, setPanel] = useState('menu'); // menu | agenda | stats | clientes
+          const [panel, setPanel] = useState('agenda'); // agenda | stats | clientes | menu (=Más)
           const [filtroBarbero, setFiltroBarbero] = useState('');
           const [citas, setCitas] = useState([]);
           const [loading, setLoading] = useState(true);
@@ -2688,6 +2688,29 @@
             doc.save('Gonnie_' + mesNombre.replace(' ', '_') + '.pdf');
           }
 
+          // Pestañas fijas: la agenda es la casa, no una opción de un menú.
+          function tabsNegocio() {
+            var tabs = [
+              { id: 'agenda', label: 'Agenda' },
+              { id: 'stats', label: 'Estadísticas' },
+              { id: 'clientes', label: 'Clientes' },
+              { id: 'menu', label: 'Más' }
+            ];
+            return (
+              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
+                {tabs.map(function(t) {
+                  var activo = panel === t.id;
+                  return (
+                    <button key={t.id} onClick={function(){ setPanel(t.id); }}
+                      style={{ flexShrink: 0, background: activo ? G.brand : 'transparent', color: activo ? '#FBFCF8' : G.muted, border: activo ? 'none' : '1px solid ' + G.bdr, borderRadius: 20, padding: '8px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          }
+
           // ─── MENÚ PRINCIPAL ───
           if (panel === 'menu') {
             var opciones = [
@@ -2701,7 +2724,8 @@
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
                 <div style={{ padding: '28px 18px 0', flexShrink: 0 }}>
-                  <h1 style={{ fontSize: 26, fontWeight: 800, color: G.text, margin: '0 0 2px' }}>Panel de negocio</h1>
+                  {tabsNegocio()}
+                  <h1 style={{ fontSize: 24, fontWeight: 800, color: G.text, margin: '14px 0 2px' }}>Panel de negocio</h1>
                   <p style={{ fontSize: 14, color: G.muted, margin: 0 }}>Gestiona tu barbería</p>
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '22px 18px 90px' }}>
@@ -2728,9 +2752,9 @@
           if (panel === 'stats') {
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-                <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <button onClick={function(){ setPanel('menu'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
-                  <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>Estadísticas</h1>
+                <div style={{ padding: '20px 18px 14px', flexShrink: 0 }}>
+                  {tabsNegocio()}
+                  <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: '14px 0 0' }}>Estadísticas</h1>
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
@@ -2877,8 +2901,12 @@
             clientes.forEach(function(c){ if (c.telefono) telANombre[c.telefono] = String(c.nombre || '').split(' ')[0]; });
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-                <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <button onClick={function(){ if (modoMensaje) { setModoMensaje(false); setSeleccionados({}); setEnviadoIdx(0); } else if (showAddCliente) { setShowAddCliente(false); } else { setPanel('menu'); } }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
+                <div style={{ padding: '20px 18px 14px', flexShrink: 0 }}>
+                  {!modoMensaje && !showAddCliente && <div style={{ paddingBottom: 14 }}>{tabsNegocio()}</div>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {(modoMensaje || showAddCliente) && (
+                    <button onClick={function(){ if (modoMensaje) { setModoMensaje(false); setSeleccionados({}); setEnviadoIdx(0); } else { setShowAddCliente(false); } }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
+                  )}
                   <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>{modoMensaje ? 'Mensaje masivo' : (showAddCliente ? 'Nuevo cliente' : 'Clientes')}</h1>
                   {!loadingClientes && !modoMensaje && !showAddCliente && <span style={{ fontSize: 12, color: G.muted, marginLeft: 'auto', textAlign: 'right', lineHeight: 1.3 }}>{nRegistrados} en la app<br/>{nSinRegistrar} sin registrar</span>}
                   {!loadingClientes && !modoMensaje && !showAddCliente && (
@@ -2893,6 +2921,7 @@
                       Mensaje masivo
                     </button>
                   )}
+                  </div>
                 </div>
 
                 {showAddCliente && (
@@ -3285,12 +3314,29 @@
           var ocupadasDia = confirmadasDia.map(function(c){ return formatHora(c.time); });
           var huecosLibres = slotsParaFecha(selectedDate, horarioSemana, diasCerrados).filter(function(s){ return ocupadasDia.indexOf(s) < 0; });
 
+          // Cita en curso y siguiente, para la franja fija de arriba
+          var esHoy = selectedDate === hoyISO();
+          var enCurso = null, siguienteCita = null;
+          if (esHoy) {
+            var ahoraMinAg = new Date().getHours() * 60 + new Date().getMinutes();
+            function minutosDe(t) {
+              var p = hhmm(t).split(':');
+              return (Number(p[0]) || 0) * 60 + (Number(p[1]) || 0);
+            }
+            confirmadasDia.slice().sort(function(a, b){ return minutosDe(a.time) - minutosDe(b.time); }).forEach(function(c) {
+              var ini = minutosDe(c.time);
+              var dur = (c.servicios && c.servicios.duration_min) || 30;
+              if (ahoraMinAg >= ini && ahoraMinAg < ini + dur) enCurso = c;
+              else if (ini > ahoraMinAg && !siguienteCita) siguienteCita = c;
+            });
+          }
+
           return (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
               {/* Header FIJO */}
               <div style={{ padding: '20px 18px 0', flexShrink: 0 }}>
                 {/* Fila botón volver */}
-                <button onClick={function(){ setPanel('menu'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '0 0 8px', color: G.muted, fontSize: 13, fontWeight: 600, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}>‹ Panel de negocio</button>
+                <div style={{ paddingBottom: 12 }}>{tabsNegocio()}</div>
                 {/* Fila título + fecha navegable */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 2px' }}>
                   <button onClick={function(){ cambiarSemana(-1); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, color: G.text, fontSize: 20, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
@@ -3345,6 +3391,36 @@
                     <p style={{ fontSize: 10, color: G.muted, margin: 0 }}>huecos libres</p>
                   </div>
                 </div>
+
+                {/* Lo que pasa ahora mismo, siempre en el mismo sitio */}
+                {esHoy && (enCurso || siguienteCita) && (
+                  <div style={{ background: '#1A1614', borderRadius: 18, padding: '13px 15px', marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 9 }}>
+                    {enCurso ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: 4, background: G.mint, flexShrink: 0 }} />
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(251,252,248,0.5)', textTransform: 'uppercase', flexShrink: 0 }}>Ahora</span>
+                        <span style={{ flex: 1, minWidth: 0, fontFamily: "'Bricolage Grotesque'", fontSize: 17, fontWeight: 700, color: '#FBFCF8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {enCurso.client_name || 'Cliente'}
+                        </span>
+                        <span style={{ fontSize: 12.5, color: 'rgba(251,252,248,0.6)', flexShrink: 0 }}>{hhmm(enCurso.time)}</span>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: 4, background: 'rgba(251,252,248,0.25)', flexShrink: 0 }} />
+                        <span style={{ fontSize: 12.5, color: 'rgba(251,252,248,0.6)' }}>Ahora mismo no tienes a nadie</span>
+                      </div>
+                    )}
+                    {siguienteCita && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderTop: '1px solid rgba(251,252,248,0.12)', paddingTop: 9 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(251,252,248,0.4)', textTransform: 'uppercase', flexShrink: 0 }}>Luego</span>
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: 'rgba(251,252,248,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {siguienteCita.client_name || 'Cliente'}{siguienteCita.servicios && siguienteCita.servicios.name ? ' · ' + siguienteCita.servicios.name : ''}
+                        </span>
+                        <span style={{ fontSize: 12.5, fontWeight: 700, color: G.mint, flexShrink: 0 }}>{hhmm(siguienteCita.time)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Filtro por barbero */}
                 <div style={{ display: 'flex', gap: 7, marginBottom: 14, overflowX: 'auto', scrollbarWidth: 'none' }}>
