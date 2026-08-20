@@ -242,6 +242,18 @@
 
         function hhmm(t) { return t ? String(t).slice(0,5) : ''; }
 
+        // Teléfono comparable: solo dígitos, últimos 9 (ignora +34, espacios, guiones)
+        function normTel(t) {
+          var d = String(t || '').replace(/\D/g, '');
+          return d.length >= 9 ? d.slice(-9) : '';
+        }
+
+        // Nombre comparable: sin acentos, minúsculas, un solo espacio
+        function normNombre(n) {
+          return String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9 ]/g, '').trim().replace(/\s+/g, ' ');
+        }
+
         function fechaCorta(fechaStr) {
           if (!fechaStr) return '';
           var d = new Date(fechaStr + 'T00:00:00');
@@ -1983,6 +1995,23 @@
           const [clientes, setClientes] = useState([]);
           const [loadingClientes, setLoadingClientes] = useState(false);
           const [modoMensaje, setModoMensaje] = useState(false);
+          const [filtroEstado, setFiltroEstado] = useState('todos'); // todos | registrados | sin
+          const [vinculando, setVinculando] = useState(null);
+          const [vinculos, setVinculos] = useState(function() {
+            try { return JSON.parse(localStorage.getItem('gonnie_vinculos_clientes') || '{}'); } catch (e) { return {}; }
+          });
+
+          // Vincular a mano un importado con una cuenta registrada
+          function vincularCliente(imp, email) {
+            var t = normTel(imp && imp.telefono);
+            if (!t || !email) return;
+            var next = Object.assign({}, vinculos);
+            next[t] = email;
+            setVinculos(next);
+            try { localStorage.setItem('gonnie_vinculos_clientes', JSON.stringify(next)); } catch (e) {}
+            setVinculando(null);
+            setReloadClientesTick(function(x){ return x + 1; });
+          }
           const [buscarCliente, setBuscarCliente] = useState('');
           const [showAddCliente, setShowAddCliente] = useState(false);
           const [nuevoClienteNombre, setNuevoClienteNombre] = useState('');
@@ -2170,50 +2199,106 @@
           useEffect(function() {
             if (panel !== 'clientes') return;
             setLoadingClientes(true);
-            dbGet('appointments', '?order=date.desc&select=client_email,client_name,date,status,servicios(price)')
-              .then(function(data) {
-                var arr = Array.isArray(data) ? data : [];
-                var mapa = {};
-                arr.forEach(function(c) {
-                  var key = c.client_email || c.client_name;
-                  if (!key) return;
-                  if (!mapa[key]) {
-                    mapa[key] = { email: c.client_email, nombre: c.client_name || (c.client_email ? c.client_email.split('@')[0] : 'Cliente'), visitas: 0, gastado: 0, ultima: c.date };
-                  }
-                  if (c.status === 'confirmed') {
-                    mapa[key].visitas += 1;
-                    mapa[key].gastado += (c.servicios && c.servicios.price) || 0;
-                  }
-                  if (c.date > mapa[key].ultima) mapa[key].ultima = c.date;
-                });
-                // Completar nombres desde profiles
-                var emails = Object.keys(mapa).filter(function(k){ return mapa[k].email; }).map(function(k){ return mapa[k].email; });
-                var lista = Object.keys(mapa).map(function(k){ return mapa[k]; }).sort(function(a,b){ return b.visitas - a.visitas; });
-                function fusionarYeasy(base) {
-                  var telsExistentes = {};
-                  base.forEach(function(c){ if (c.telefono) telsExistentes[c.telefono.replace(/\s/g,'')] = true; });
-                  return dbGet('clientes_yeasy', '?select=id,nombre,telefono&order=nombre.asc')
-                    .then(function(yeasyData){
-                      var yeasy = (Array.isArray(yeasyData) ? yeasyData : []).map(function(y){ return { id: y.id, email: null, telefono: y.telefono, nombre: y.nombre, visitas: 0, gastado: 0, ultima: null, importado: true }; });
-                      var extra = yeasy.filter(function(y){ return y.telefono && !telsExistentes[y.telefono.replace(/\s/g,'')]; });
-                      return base.concat(extra);
-                    })
-                    .catch(function(){
-                      var extra = YEASY_CLIENTES.filter(function(y){ return !telsExistentes[y.telefono.replace(/\s/g,'')]; });
-                      return base.concat(extra);
-                    });
+            // Un importado de Yeasy y su cuenta nueva en la app son la misma
+            // persona: se cruzan por teléfono (o por nombre, o a mano) para que
+            // el negocio pueda actuar sobre ella (bloquear, ver visitas...).
+            Promise.all([
+              dbGet('appointments', '?order=date.desc&select=client_email,client_name,date,status,servicios(price)').catch(function(){ return []; }),
+              dbGet('profiles', '?select=id,full_name,phone,provider&order=full_name.asc').catch(function(){ return []; }),
+              dbGet('clientes_yeasy', '?select=id,nombre,telefono&order=nombre.asc').catch(function(){ return null; })
+            ]).then(function(res) {
+              var citasArr = Array.isArray(res[0]) ? res[0] : [];
+              var perfiles = Array.isArray(res[1]) ? res[1] : [];
+              var importados = Array.isArray(res[2])
+                ? res[2].map(function(y){ return { id: y.id, nombre: y.nombre, telefono: y.telefono }; })
+                : YEASY_CLIENTES.map(function(y){ return { id: null, nombre: y.nombre, telefono: y.telefono }; });
+
+              // Estadísticas de citas, por email o por nombre (citas creadas a mano)
+              var stats = {};
+              citasArr.forEach(function(c) {
+                var key = c.client_email || (c.client_name ? 'n:' + normNombre(c.client_name) : null);
+                if (!key) return;
+                if (!stats[key]) stats[key] = { email: c.client_email || null, nombre: c.client_name || (c.client_email ? c.client_email.split('@')[0] : 'Cliente'), visitas: 0, gastado: 0, ultima: c.date };
+                if (c.status === 'confirmed') {
+                  stats[key].visitas += 1;
+                  stats[key].gastado += (c.servicios && c.servicios.price) || 0;
                 }
-                if (emails.length === 0) { fusionarYeasy(lista).then(function(l){ setClientes(l); setLoadingClientes(false); }); return; }
-                dbGet('profiles', '?id=in.(' + emails.map(encodeURIComponent).join(',') + ')&select=id,full_name')
-                  .then(function(perfiles) {
-                    var pm = {};
-                    (perfiles || []).forEach(function(p){ if (p.full_name) pm[p.id] = p.full_name; });
-                    lista.forEach(function(cl){ if (cl.email && pm[cl.email]) cl.nombre = pm[cl.email]; });
-                    fusionarYeasy(lista).then(function(l){ setClientes(l); setLoadingClientes(false); });
-                  }).catch(function(){ fusionarYeasy(lista).then(function(l){ setClientes(l); setLoadingClientes(false); }); });
-              })
-              .catch(function(){ setLoadingClientes(false); });
-          }, [panel, reloadClientesTick]);
+                if (c.date && c.date > stats[key].ultima) stats[key].ultima = c.date;
+              });
+
+              // Una fila por cuenta registrada (aunque no haya reservado nunca)
+              var filas = [];
+              var porEmail = {};
+              perfiles.forEach(function(p) {
+                if (!p.id) return;
+                var s = stats[p.id] || {};
+                var fila = {
+                  email: p.id,
+                  nombre: p.full_name || s.nombre || p.id.split('@')[0],
+                  telefono: p.phone || null,
+                  visitas: s.visitas || 0,
+                  gastado: s.gastado || 0,
+                  ultima: s.ultima || null,
+                  registrado: true,
+                  importado: false,
+                  yeasyId: null
+                };
+                porEmail[p.id] = fila;
+                filas.push(fila);
+              });
+              // Citas con email pero sin perfil creado
+              Object.keys(stats).forEach(function(k) {
+                var s = stats[k];
+                if (!s.email || porEmail[s.email]) return;
+                var fila = { email: s.email, nombre: s.nombre, telefono: null, visitas: s.visitas, gastado: s.gastado, ultima: s.ultima, registrado: true, importado: false, yeasyId: null };
+                porEmail[s.email] = fila;
+                filas.push(fila);
+              });
+
+              // Índices para cruzar
+              var porTel = {}, porNombre = {};
+              filas.forEach(function(f) {
+                var t = normTel(f.telefono);
+                if (t) porTel[t] = f;
+                var n = normNombre(f.nombre);
+                if (n) porNombre[n] = f;
+              });
+
+              var sinRegistrar = [];
+              importados.forEach(function(imp) {
+                var t = normTel(imp.telefono);
+                var vinculado = t && vinculos[t] ? porEmail[vinculos[t]] : null;
+                var match = vinculado || (t ? porTel[t] : null) || porNombre[normNombre(imp.nombre)] || null;
+                if (match) {
+                  // Misma persona: se completa la ficha registrada
+                  if (!match.telefono) match.telefono = imp.telefono;
+                  if (!match.yeasyId) match.yeasyId = imp.id;
+                  match.eraImportado = true;
+                  if (vinculado) match.vinculadoAMano = true;
+                  var nStats = stats['n:' + normNombre(imp.nombre)];
+                  if (nStats && !match.visitas && nStats.visitas) { match.visitas = nStats.visitas; match.gastado = nStats.gastado; match.ultima = nStats.ultima; }
+                } else {
+                  sinRegistrar.push({ id: imp.id, email: null, nombre: imp.nombre, telefono: imp.telefono, visitas: 0, gastado: 0, ultima: null, registrado: false, importado: true, yeasyId: imp.id });
+                }
+              });
+
+              // Citas a nombre suelto (sin email y sin importado que las reclame)
+              Object.keys(stats).forEach(function(k) {
+                var s = stats[k];
+                if (s.email) return;
+                var n = normNombre(s.nombre);
+                if (porNombre[n]) return;
+                if (sinRegistrar.some(function(x){ return normNombre(x.nombre) === n; })) return;
+                sinRegistrar.push({ id: null, email: null, nombre: s.nombre, telefono: null, visitas: s.visitas, gastado: s.gastado, ultima: s.ultima, registrado: false, importado: true, yeasyId: null });
+              });
+
+              filas.sort(function(a, b){ return (b.visitas - a.visitas) || String(a.nombre).localeCompare(String(b.nombre), 'es'); });
+              sinRegistrar.sort(function(a, b){ return String(a.nombre).localeCompare(String(b.nombre), 'es'); });
+
+              setClientes(filas.concat(sinRegistrar));
+              setLoadingClientes(false);
+            }).catch(function(){ setLoadingClientes(false); });
+          }, [panel, reloadClientesTick, vinculos]);
 
           // Cargar clientes bloqueados (junto con la lista de clientes)
           useEffect(function() {
@@ -2643,12 +2728,24 @@
 
           // ─── PANEL CLIENTES ───
           if (panel === 'clientes') {
+            var nRegistrados = clientes.filter(function(c){ return c.registrado; }).length;
+            var nSinRegistrar = clientes.length - nRegistrados;
+            var clientesVisibles = clientes.filter(function(cl) {
+              if (filtroEstado === 'registrados' && !cl.registrado) return false;
+              if (filtroEstado === 'sin' && cl.registrado) return false;
+              var q = buscarCliente.trim().toLowerCase();
+              if (!q) return true;
+              return normNombre(cl.nombre).indexOf(normNombre(q)) !== -1
+                || String(cl.telefono || '').replace(/\s/g, '').indexOf(q.replace(/\s/g, '')) !== -1
+                || String(cl.email || '').toLowerCase().indexOf(q) !== -1;
+            });
+            var candidatosVinculo = clientes.filter(function(c){ return c.registrado; });
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
                 <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
                   <button onClick={function(){ if (modoMensaje) { setModoMensaje(false); setSeleccionados({}); } else if (showAddCliente) { setShowAddCliente(false); } else { setPanel('menu'); } }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
                   <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>{modoMensaje ? 'Mensaje masivo' : (showAddCliente ? 'Nuevo cliente' : 'Clientes')}</h1>
-                  {!loadingClientes && !modoMensaje && !showAddCliente && <span style={{ fontSize: 13, color: G.muted, marginLeft: 'auto' }}>{clientes.length}</span>}
+                  {!loadingClientes && !modoMensaje && !showAddCliente && <span style={{ fontSize: 12, color: G.muted, marginLeft: 'auto', textAlign: 'right', lineHeight: 1.3 }}>{nRegistrados} en la app<br/>{nSinRegistrar} sin registrar</span>}
                   {!loadingClientes && !modoMensaje && !showAddCliente && (
                     <button onClick={function(){ setShowAddCliente(true); setNuevoClienteNombre(''); setNuevoClienteTel(''); }}
                       style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 10, width: 34, height: 34, fontSize: 18, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -2706,8 +2803,19 @@
                   <div style={{ padding: '0 18px 12px', flexShrink: 0 }}>
                     <div style={{ position: 'relative' }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                      <input value={buscarCliente} onChange={function(e){ setBuscarCliente(e.target.value); }} placeholder="Buscar por nombre o teléfono"
+                      <input value={buscarCliente} onChange={function(e){ setBuscarCliente(e.target.value); }} placeholder="Buscar por nombre, teléfono o email"
                         style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '11px 14px 11px 38px', fontSize: 16, color: G.text, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                    </div>
+                    <div style={{ display: 'flex', gap: 7, marginTop: 10 }}>
+                      {[{ id: 'todos', label: 'Todos' }, { id: 'registrados', label: 'En la app · ' + nRegistrados }, { id: 'sin', label: 'Sin registrar · ' + nSinRegistrar }].map(function(f) {
+                        var activo = filtroEstado === f.id;
+                        return (
+                          <button key={f.id} onClick={function(){ setFiltroEstado(f.id); }}
+                            style={{ background: activo ? G.brand : G.card, color: activo ? '#fff' : G.text, border: activo ? 'none' : '1px solid ' + G.bdr, borderRadius: 18, padding: '7px 12px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                            {f.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -2715,18 +2823,10 @@
                 <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
                   {loadingClientes && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
                   {!loadingClientes && clientes.length === 0 && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Aún no hay clientes</p>}
-                  {!loadingClientes && clientes.filter(function(cl){
-                      var q = buscarCliente.trim().toLowerCase();
-                      if (!q) return true;
-                      return (cl.nombre || '').toLowerCase().indexOf(q) !== -1 || (cl.telefono || '').replace(/\s/g,'').indexOf(q.replace(/\s/g,'')) !== -1;
-                    }).length === 0 && (
+                  {!loadingClientes && clientes.length > 0 && clientesVisibles.length === 0 && (
                     <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Sin resultados</p>
                   )}
-                  {!loadingClientes && clientes.filter(function(cl){
-                      var q = buscarCliente.trim().toLowerCase();
-                      if (!q) return true;
-                      return (cl.nombre || '').toLowerCase().indexOf(q) !== -1 || (cl.telefono || '').replace(/\s/g,'').indexOf(q.replace(/\s/g,'')) !== -1;
-                    }).map(function(cl, i) {
+                  {!loadingClientes && clientesVisibles.map(function(cl, i) {
                     var inicial = (cl.nombre || '?').charAt(0).toUpperCase();
                     var marcado = !!(cl.telefono && seleccionados[cl.telefono]);
                     var bloqueadoCl = estaBloqueado(cl.email);
@@ -2743,10 +2843,22 @@
                           <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cl.nombre}</span>
                             {bloqueadoCl && <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: G.red, padding: '2px 6px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.03em', flexShrink: 0 }}>Bloqueado</span>}
+                            {!bloqueadoCl && cl.registrado && cl.eraImportado && <span style={{ fontSize: 9, fontWeight: 800, color: '#0F2A20', background: G.mint, padding: '2px 6px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.03em', flexShrink: 0 }}>{cl.vinculadoAMano ? 'Vinculado' : 'Ya en la app'}</span>}
                           </p>
-                          <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{cl.importado ? (cl.telefono || 'Importado de Yeasy') : (cl.visitas + ' ' + (cl.visitas === 1 ? 'visita' : 'visitas') + ' · ' + cl.gastado + '€ gastados')}</p>
+                          <p style={{ fontSize: 11, color: G.muted, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {cl.registrado
+                              ? (cl.visitas + ' ' + (cl.visitas === 1 ? 'visita' : 'visitas') + ' · ' + cl.gastado + '€' + (cl.telefono ? ' · ' + cl.telefono : '') + (cl.ultima ? ' · última ' + fechaCorta(cl.ultima) : ''))
+                              : ((cl.telefono || 'Sin teléfono') + ' · sin cuenta en la app')}
+                          </p>
                         </div>
                         {modoMensaje && !cl.telefono && <span style={{ fontSize: 10, color: G.muted }}>Sin tfno</span>}
+                        {!modoMensaje && !cl.registrado && cl.telefono && (
+                          <button onClick={function(e){ e.stopPropagation(); setVinculando(cl); }}
+                            title="Vincular con una cuenta de la app"
+                            style={{ background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 10, padding: '6px 10px', fontSize: 11, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                            Vincular
+                          </button>
+                        )}
                         {!modoMensaje && cl.email && (
                           <button onClick={function(e){ e.stopPropagation(); toggleBloqueo(cl); }}
                             disabled={bloqueando === cl.email}
@@ -2773,6 +2885,39 @@
                     );
                   })}
                 </div>
+                )}
+
+                {vinculando && (
+                  <div onClick={function(){ setVinculando(null); }}
+                    style={{ position: 'fixed', inset: 0, background: 'rgba(26,22,20,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                    <div onClick={function(e){ e.stopPropagation(); }}
+                      style={{ width: '100%', maxWidth: 460, background: G.cream, borderRadius: '24px 24px 0 0', padding: '20px 18px 28px', maxHeight: '76vh', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div>
+                        <p style={{ fontSize: 17, fontWeight: 800, color: G.text, margin: 0 }}>Vincular a {vinculando.nombre}</p>
+                        <p style={{ fontSize: 12, color: G.muted, margin: '4px 0 0', lineHeight: 1.5 }}>
+                          Elige su cuenta de la app. Se usa cuando el teléfono está guardado distinto ({vinculando.telefono || 'sin teléfono'}) o se registró con otro nombre.
+                        </p>
+                      </div>
+                      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+                        {candidatosVinculo.length === 0 && (
+                          <p style={{ fontSize: 12.5, color: G.muted, margin: '8px 0' }}>Todavía no hay cuentas registradas en la app.</p>
+                        )}
+                        {candidatosVinculo.map(function(u) {
+                          return (
+                            <button key={u.email} onClick={function(){ vincularCliente(vinculando, u.email); }}
+                              style={{ width: '100%', textAlign: 'left', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '12px 14px', marginBottom: 8, cursor: 'pointer', fontFamily: 'inherit' }}>
+                              <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: G.text }}>{u.nombre}</span>
+                              <span style={{ display: 'block', fontSize: 11, color: G.muted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}{u.telefono ? ' · ' + u.telefono : ''}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button onClick={function(){ setVinculando(null); }}
+                        style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '13px', fontSize: 13.5, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
                 )}
 
                 {modoMensaje && (
