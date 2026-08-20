@@ -53,6 +53,17 @@
            "vh" de arriba, en vez de quedarse sin altura ninguna. */
         .gonnie-full-height { height: 100vh; height: 100dvh; }
         .gonnie-min-full-height { min-height: 100vh; min-height: 100dvh; }
+
+        /* Reset base. Lo daba Tailwind; al quitarlo volvieron los márgenes
+           por defecto del navegador y todo se separó de más. */
+        *, *::before, *::after { box-sizing: border-box; }
+        h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd { margin: 0; }
+        ul, ol { margin: 0; padding: 0; }
+        button, input, select, textarea { font: inherit; color: inherit; margin: 0; }
+        button { background: none; border: 0; padding: 0; cursor: pointer; }
+        img, svg, video { display: block; max-width: 100%; }
+        table { border-collapse: collapse; }
+        a { color: inherit; text-decoration: none; }
     
     /* ─── GONNIE ANIMATIONS ─── */
     @keyframes confettiFall {
@@ -876,9 +887,18 @@
           });
           const [horarioSemana, setHorarioSemana] = useState([]);
           const [diasCerrados, setDiasCerrados] = useState([]);
-          const [ultima, setUltima] = useState(null);
-          const [hueco, setHueco] = useState(null);
-          const [huecosHoy, setHuecosHoy] = useState([]);
+          // Se guarda lo último calculado para pintar la tarjeta al instante
+          // en la siguiente visita, mientras se recalcula por detrás.
+          var cacheRapida = (function() {
+            try {
+              var c = JSON.parse(localStorage.getItem('gonnie_ultima_cache') || 'null');
+              if (c && c.email === (user && user.email) && c.hueco && c.hueco.date >= hoyISO()) return c;
+            } catch (e) {}
+            return null;
+          })();
+          const [ultima, setUltima] = useState(cacheRapida ? cacheRapida.ultima : null);
+          const [hueco, setHueco] = useState(cacheRapida ? cacheRapida.hueco : null);
+          const [huecosHoy, setHuecosHoy] = useState(cacheRapida && cacheRapida.dia === hoyISO() ? (cacheRapida.huecosHoy || []) : []);
 
           useEffect(function() {
             dbGet('horario_negocio', '?select=*').then(function(d){ setHorarioSemana(Array.isArray(d) ? d : []); }).catch(function(){});
@@ -939,6 +959,12 @@
                     }
                     setHueco(primero);
                     setHuecosHoy(deHoy);
+                    try {
+                      localStorage.setItem('gonnie_ultima_cache', JSON.stringify({
+                        email: email, dia: hoyISO(), hueco: primero, huecosHoy: deHoy,
+                        ultima: { date: c.date, servicios: c.servicios, barberos: c.barberos, barberias: c.barberias, payment_method: c.payment_method }
+                      }));
+                    } catch (e) {}
                   });
               }).catch(function(){});
           }, [user && user.email, horarioSemana.length, diasCerrados.length]);
