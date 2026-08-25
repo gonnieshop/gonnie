@@ -24,12 +24,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    
-    <script src="https://unpkg.com/react-is@18/umd/react-is.development.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
     <script src="https://unpkg.com/@babel/standalone@7.23.4/babel.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -57,7 +53,24 @@
            "vh" de arriba, en vez de quedarse sin altura ninguna. */
         .gonnie-full-height { height: 100vh; height: 100dvh; }
         .gonnie-min-full-height { min-height: 100vh; min-height: 100dvh; }
+
+        /* Reset base. Lo daba Tailwind; al quitarlo volvieron los márgenes
+           por defecto del navegador y todo se separó de más. */
+        *, *::before, *::after { box-sizing: border-box; }
+        h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd { margin: 0; }
+        ul, ol { margin: 0; padding: 0; }
+        button, input, select, textarea { font: inherit; color: inherit; margin: 0; }
+        button { background: none; border: 0; padding: 0; cursor: pointer; }
+        img, svg, video { display: block; max-width: 100%; }
+        table { border-collapse: collapse; }
+        a { color: inherit; text-decoration: none; }
     
+    /* Barrido de luz de los esqueletos de carga */
+    @keyframes gonnieShimmer {
+      0%   { background-position: -180% 0; }
+      100% { background-position: 180% 0; }
+    }
+
     /* ─── GONNIE ANIMATIONS ─── */
     @keyframes confettiFall {
       0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
@@ -232,6 +245,28 @@
           return Math.min(((puntos - nivel.min) / (nivel.max - nivel.min)) * 100, 100);
         }
 
+        // El único premio, de momento. Todo lo que habla de puntos lee de aquí.
+        var PREMIO = { pts: 500, titulo: 'corte gratis' };
+
+        // El premio se repite: cada 500 puntos, otro corte gratis. Todo lo que
+        // habla de puntos sale de aquí, para que no haya dos cuentas distintas.
+        function estadoPremio(puntos) {
+          var p = Math.max(0, Number(puntos) || 0);
+          var ganados = Math.floor(p / PREMIO.pts);
+          var umbral = (ganados + 1) * PREMIO.pts;
+          return {
+            ganados: ganados,
+            umbral: umbral,
+            falta: umbral - p,
+            progreso: Math.min(100, Math.round((p % PREMIO.pts) / PREMIO.pts * 100))
+          };
+        }
+
+        // "un corte gratis" / "3 cortes gratis"
+        function textoPremios(n) {
+          return n === 1 ? 'un ' + PREMIO.titulo : n + ' cortes gratis';
+        }
+
         function getPtsParaSiguiente(puntos) {
           const nivel = getNivel(puntos);
           if (nivel.nombre === "Platino") return 0;
@@ -241,6 +276,121 @@
         // ─── HELPER: HORARIO DEL NEGOCIO ──────────────────────────────────────
         // Convención: dia = 0 (domingo) .. 6 (sábado), igual que Date.getDay()
         var DIAS_SEMANA_LARGO = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+        // ─── HELPERS: FECHAS EN ESPAÑOL ───────────────────────────────────────
+        var DOW_CORTO = ['dom','lun','mar','mié','jue','vie','sáb'];
+        var MES_CORTO = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+        var MES_LARGO = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+        function hhmm(t) { return t ? String(t).slice(0,5) : ''; }
+
+        // El nombre de una cita puede venir del join con profiles, de la cita
+        // creada a mano o del email. Se resuelve siempre igual.
+        function nombreDeCita(c) {
+          if (!c) return 'Cliente';
+          return c._nombre || c.client_name || c.cliente
+            || (c.client_email ? c.client_email.split('@')[0] : 'Cliente');
+        }
+
+        // Fecha en formato YYYY-MM-DD con la hora LOCAL. toISOString() devuelve
+        // UTC: de madrugada en España daba el día anterior.
+        function fechaISO(d) {
+          var x = d || new Date();
+          return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+        }
+        function hoyISO() { return fechaISO(new Date()); }
+
+        // Aviso flotante propio. Sustituye a toast(), que en una PWA abre un
+        // diálogo del navegador con el dominio y rompe el acabado.
+        function toast(msg) {
+          var cont = document.getElementById('gonnie-toasts');
+          if (!cont) {
+            cont = document.createElement('div');
+            cont.id = 'gonnie-toasts';
+            cont.style.cssText = 'position:fixed;left:0;right:0;bottom:104px;z-index:9999;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 18px;pointer-events:none';
+            document.body.appendChild(cont);
+          }
+          var el = document.createElement('div');
+          el.textContent = String(msg);
+          el.style.cssText = 'max-width:420px;width:100%;box-sizing:border-box;background:#1A1614;color:#FBFCF8;font:600 13.5px/1.45 "DM Sans",system-ui,sans-serif;padding:14px 16px;border-radius:16px;box-shadow:0 14px 34px -12px rgba(26,22,20,0.5);pointer-events:auto;cursor:pointer;opacity:0;transform:translateY(10px);transition:opacity .22s ease,transform .22s ease';
+          el.onclick = function(){ quitar(); };
+          cont.appendChild(el);
+          requestAnimationFrame(function(){ el.style.opacity = '1'; el.style.transform = 'translateY(0)'; });
+          var fuera = false;
+          function quitar() {
+            if (fuera) return;
+            fuera = true;
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(10px)';
+            setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 240);
+          }
+          setTimeout(quitar, 4200);
+        }
+
+        // Teléfono comparable: solo dígitos, últimos 9 (ignora +34, espacios, guiones)
+        function normTel(t) {
+          var d = String(t || '').replace(/\D/g, '');
+          return d.length >= 9 ? d.slice(-9) : '';
+        }
+
+        // Nombre comparable: sin acentos, minúsculas, un solo espacio
+        function normNombre(n) {
+          return String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9 ]/g, '').trim().replace(/\s+/g, ' ');
+        }
+
+        function fechaCorta(fechaStr) {
+          if (!fechaStr) return '';
+          var d = new Date(fechaStr + 'T00:00:00');
+          if (isNaN(d)) return fechaStr;
+          return DOW_CORTO[d.getDay()] + ' ' + d.getDate() + ' ' + MES_CORTO[d.getMonth()];
+        }
+
+        function fechaLarga(fechaStr) {
+          if (!fechaStr) return '';
+          var d = new Date(fechaStr + 'T00:00:00');
+          if (isNaN(d)) return fechaStr;
+          return DIAS_SEMANA_LARGO[d.getDay()].toLowerCase() + ' ' + d.getDate() + ' de ' + MES_LARGO[d.getMonth()];
+        }
+
+        // "Hoy", "Mañana" o "jue 20 ago" — para etiquetas cortas
+        function fechaRelativa(fechaStr) {
+          if (!fechaStr) return '';
+          var hoy = new Date(); hoy.setHours(0,0,0,0);
+          var d = new Date(fechaStr + 'T00:00:00');
+          if (isNaN(d)) return fechaStr;
+          var dif = Math.round((d - hoy) / 86400000);
+          if (dif === 0) return 'Hoy';
+          if (dif === 1) return 'Mañana';
+          if (dif === -1) return 'Ayer';
+          return fechaCorta(fechaStr);
+        }
+
+        // Descarga un .ics para añadir la cita al calendario del móvil
+        function descargarICS(fechaStr, horaStr, titulo, minutos) {
+          if (!fechaStr || !horaStr) return;
+          function fmt(d) {
+            return d.getUTCFullYear() + String(d.getUTCMonth()+1).padStart(2,'0') + String(d.getUTCDate()).padStart(2,'0')
+              + 'T' + String(d.getUTCHours()).padStart(2,'0') + String(d.getUTCMinutes()).padStart(2,'0') + '00Z';
+          }
+          var ini = new Date(fechaStr + 'T' + hhmm(horaStr) + ':00');
+          var fin = new Date(ini.getTime() + (minutos || 30) * 60000);
+          var ics = [
+            'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Gonnie//ES','BEGIN:VEVENT',
+            'UID:' + Date.now() + '@gonnie',
+            'DTSTAMP:' + fmt(new Date()),
+            'DTSTART:' + fmt(ini),
+            'DTEND:' + fmt(fin),
+            'SUMMARY:' + (titulo || 'Cita en Gonnie Barbershop'),
+            'LOCATION:C. Gabriel y Galán 11, Villanueva de la Serena',
+            'END:VEVENT','END:VCALENDAR'
+          ].join('\r\n');
+          var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'cita-gonnie.ics';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
 
         function franjasASlots(franjas) {
           var out = [];
@@ -332,8 +482,69 @@
           <p style={{ fontSize: 11, color: G.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>{children}</p>
         );
 
-        const Skeleton = ({ h = 60, r = 20 }) => (
-          <div style={{ height: h, borderRadius: r, background: "rgba(26,22,20,0.05)", border: "none", marginBottom: 12, opacity: 1 }} />
+        // Silueta gris con un barrido de luz. Se percibe más rápido que un
+        // "Cargando...", porque ya anticipa la forma de lo que va a llegar.
+        const Skeleton = ({ h = 60, r = 20, w = '100%', mb = 12 }) => (
+          <div style={{
+            height: h, width: w, borderRadius: r, marginBottom: mb, flexShrink: 0,
+            background: 'linear-gradient(90deg, rgba(26,22,20,0.05) 25%, rgba(26,22,20,0.09) 37%, rgba(26,22,20,0.05) 63%)',
+            backgroundSize: '300% 100%',
+            animation: 'gonnieShimmer 1.4s ease-in-out infinite'
+          }} />
+        );
+
+        // Fila con avatar y dos líneas: clientes, citas, reseñas.
+        const SkeletonFilas = ({ n = 5, avatar = true }) => (
+          <div>
+            {Array.from({ length: n }).map(function(_, i) {
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0' }}>
+                  {avatar && <Skeleton h={42} w={42} r={21} mb={0} />}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Skeleton h={13} r={7} w={i % 3 === 0 ? '52%' : '68%'} mb={7} />
+                    <Skeleton h={11} r={6} w={i % 2 === 0 ? '38%' : '46%'} mb={0} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+
+        // Vacío con salida: nunca un aviso a secas, siempre algo que tocar.
+        const EstadoVacio = ({ icono, titulo, texto, accion, onAccion }) => (
+          <div style={{ textAlign: 'center', padding: '38px 16px' }}>
+            <div style={{ width: 66, height: 66, borderRadius: '50%', background: G.card, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              {icono || (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><circle cx="12" cy="16" r="0.6" fill={G.muted}/></svg>
+              )}
+            </div>
+            <p style={{ fontSize: 14.5, fontWeight: 700, color: G.text, margin: '0 0 5px' }}>{titulo}</p>
+            {texto && <p style={{ fontSize: 12.5, color: G.muted, margin: '0 auto', maxWidth: 250, lineHeight: 1.5 }}>{texto}</p>}
+            {accion && onAccion && (
+              <button onClick={onAccion}
+                style={{ marginTop: 18, background: G.brand, color: '#FBFCF8', border: 'none', borderRadius: 22, padding: '13px 22px', fontFamily: "'Bricolage Grotesque'", fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
+                {accion}
+              </button>
+            )}
+          </div>
+        );
+
+        // Si la red falla, se dice y se ofrece reintentar. Antes se quedaba
+        // cargando para siempre sin explicar nada.
+        const EstadoError = ({ texto, onReintentar }) => (
+          <div style={{ textAlign: 'center', padding: '34px 16px' }}>
+            <div style={{ width: 66, height: 66, borderRadius: '50%', background: 'rgba(229,85,107,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={G.red} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 9v4"/><circle cx="12" cy="16.5" r="0.6" fill={G.red}/></svg>
+            </div>
+            <p style={{ fontSize: 14.5, fontWeight: 700, color: G.text, margin: '0 0 5px' }}>No se ha podido cargar</p>
+            <p style={{ fontSize: 12.5, color: G.muted, margin: '0 auto', maxWidth: 250, lineHeight: 1.5 }}>{texto || 'Comprueba tu conexión.'}</p>
+            {onReintentar && (
+              <button onClick={onReintentar}
+                style={{ marginTop: 18, background: G.card, color: G.text, border: '1px solid ' + G.bdr, borderRadius: 22, padding: '13px 22px', fontFamily: "'Bricolage Grotesque'", fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
+                Reintentar
+              </button>
+            )}
+          </div>
         );
 
         const GONNIE_LOGO = "/logo transparente.png";
@@ -600,6 +811,17 @@
           const [catActiva, setCatActiva] = useState('Todos');
           const [productos, setProductos] = useState([]);
           const [loadingProd, setLoadingProd] = useState(true);
+          const [cesta, setCesta] = useState([]);
+
+          var totalCesta = cesta.reduce(function(s, p){ return s + (Number(p.precio) || 0); }, 0);
+
+          function addCesta(p) { setCesta(function(prev){ return prev.concat([p]); }); }
+
+          function pedirCesta() {
+            var lineas = cesta.map(function(p){ return '· ' + p.nombre + ' (' + p.precio + '€)'; }).join('\n');
+            var texto = 'Hola, quiero reservar estos productos para recogerlos en mi próxima cita:\n' + lineas + '\nTotal: ' + totalCesta + '€';
+            window.open('https://wa.me/34663528459?text=' + encodeURIComponent(texto), '_blank');
+          }
 
           useEffect(function() {
             setLoadingProd(true);
@@ -672,14 +894,35 @@
                       <div style={{ background: G.bg, height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }}>
                         <img src={p.img} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt={p.nombre} />
                       </div>
-                      <div style={{ padding: '12px 14px 14px' }}>
-                        <p style={{ fontSize: 12, fontWeight: 600, color: G.text, margin: '0 0 4px', lineHeight: 1.3 }}>{p.nombre}</p>
-                        <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 700, color: G.coral, margin: 0 }}>{p.precio}€</p>
+                      <div style={{ padding: '12px 14px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <p style={{ fontSize: 12, fontWeight: 600, color: G.text, margin: 0, lineHeight: 1.3 }}>{p.nombre}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 15, fontWeight: 700, color: G.coral }}>{p.precio}€</span>
+                          <button onClick={function(e){ e.stopPropagation(); addCesta(p); }}
+                            style={{ width: 40, height: 40, borderRadius: '50%', background: G.brand, color: '#FBFCF8', border: 'none', fontSize: 20, lineHeight: 1, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>+</button>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              {cesta.length > 0 && (
+                <div style={{ position: 'fixed', bottom: 88, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 60, pointerEvents: 'none' }}>
+                  <div style={{ width: '100%', maxWidth: 420, padding: '0 18px', boxSizing: 'border-box', pointerEvents: 'auto' }}>
+                    <div style={{ background: G.cream, border: '1px solid ' + G.bdr, borderRadius: 22, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 10px 30px -12px rgba(60,42,20,0.25)' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 12.5, fontWeight: 700, color: G.text, margin: 0 }}>{cesta.length} {cesta.length === 1 ? 'producto' : 'productos'} · {totalCesta}€</p>
+                        <p style={{ fontSize: 11, color: G.muted, margin: '2px 0 0' }}>Los recoges en tu próxima cita</p>
+                      </div>
+                      <button onClick={function(){ setCesta([]); }}
+                        style={{ background: 'transparent', border: 'none', fontSize: 11.5, color: G.muted, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>Vaciar</button>
+                      <button onClick={pedirCesta}
+                        style={{ background: G.brand, color: '#FBFCF8', border: 'none', borderRadius: 22, padding: '11px 17px', fontFamily: "'Bricolage Grotesque'", fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Reservar</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         }
@@ -727,7 +970,8 @@
           );
         }
 
-        function HomeScreen({ nav, user, puntos = 0, setGroupMode }) {
+        function HomeScreen({ nav, user, puntos = 0, setGroupMode, setBooking }) {
+          const premio = estadoPremio(puntos);
           const nivel = getNivel(puntos);
           const progreso = getProgreso(puntos);
           const ptsSiguiente = getPtsParaSiguiente(puntos);
@@ -748,6 +992,18 @@
           });
           const [horarioSemana, setHorarioSemana] = useState([]);
           const [diasCerrados, setDiasCerrados] = useState([]);
+          // Se guarda lo último calculado para pintar la tarjeta al instante
+          // en la siguiente visita, mientras se recalcula por detrás.
+          var cacheRapida = (function() {
+            try {
+              var c = JSON.parse(localStorage.getItem('gonnie_ultima_cache') || 'null');
+              if (c && c.email === (user && user.email) && c.hueco && c.hueco.date >= hoyISO()) return c;
+            } catch (e) {}
+            return null;
+          })();
+          const [ultima, setUltima] = useState(cacheRapida ? cacheRapida.ultima : null);
+          const [hueco, setHueco] = useState(cacheRapida ? cacheRapida.hueco : null);
+          const [huecosHoy, setHuecosHoy] = useState(cacheRapida && cacheRapida.dia === hoyISO() ? (cacheRapida.huecosHoy || []) : []);
 
           useEffect(function() {
             dbGet('horario_negocio', '?select=*').then(function(d){ setHorarioSemana(Array.isArray(d) ? d : []); }).catch(function(){});
@@ -768,6 +1024,64 @@
               .catch(function(){ setRescheduleOcupados([]); });
           }, [rescheduleDate]);
 
+          // Última cita del cliente + primer hueco libre con ese barbero
+          useEffect(function() {
+            var email = user && user.email;
+            if (!email || !horarioSemana.length) return;
+            dbGet('appointments', '?client_email=eq.' + encodeURIComponent(email) + '&status=eq.confirmed&order=date.desc,time.desc&limit=1&select=*,servicios(*),barberos(*),barberias(*)')
+              .then(function(d) {
+                if (!Array.isArray(d) || d.length === 0 || !d[0].barbero_id) return;
+                var c = d[0];
+                setUltima(c);
+                var ahora = new Date();
+                var hoyStr = fechaISO(ahora);
+                var hasta = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 14);
+                var hastaStr = fechaISO(hasta);
+                return dbGet('appointments', '?barbero_id=eq.' + c.barbero_id + '&status=neq.cancelled&date=gte.' + hoyStr + '&date=lte.' + hastaStr + '&select=date,time')
+                  .then(function(ocup) {
+                    var mapa = {};
+                    (Array.isArray(ocup) ? ocup : []).forEach(function(o) {
+                      if (!o.date) return;
+                      if (!mapa[o.date]) mapa[o.date] = [];
+                      mapa[o.date].push(hhmm(o.time));
+                    });
+                    var nowMin = ahora.getHours() * 60 + ahora.getMinutes();
+                    var primero = null, deHoy = [];
+                    for (var i = 0; i < 14; i++) {
+                      var d2 = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + i);
+                      var key = d2.getFullYear() + '-' + String(d2.getMonth() + 1).padStart(2, '0') + '-' + String(d2.getDate()).padStart(2, '0');
+                      var libres = slotsParaFecha(key, horarioSemana, diasCerrados).filter(function(s) {
+                        if ((mapa[key] || []).indexOf(s) >= 0) return false;
+                        if (i === 0) {
+                          var p = s.split(':');
+                          if (Number(p[0]) * 60 + Number(p[1]) <= nowMin + 30) return false;
+                        }
+                        return true;
+                      });
+                      if (i === 0) deHoy = libres.slice(0, 3);
+                      if (!primero && libres.length > 0) primero = { date: key, time: libres[0] };
+                      if (primero) break;
+                    }
+                    setHueco(primero);
+                    setHuecosHoy(deHoy);
+                    try {
+                      localStorage.setItem('gonnie_ultima_cache', JSON.stringify({
+                        email: email, dia: hoyISO(), hueco: primero, huecosHoy: deHoy,
+                        ultima: { date: c.date, servicios: c.servicios, barberos: c.barberos, barberias: c.barberias, payment_method: c.payment_method }
+                      }));
+                    } catch (e) {}
+                  });
+              }).catch(function(){});
+          }, [user && user.email, horarioSemana.length, diasCerrados.length]);
+
+          // Reservar repitiendo el último servicio y barbero
+          function reservarRepetir(f, h) {
+            if (!ultima || !setBooking) { setGroupMode(false); nav('explore'); return; }
+            setGroupMode(false);
+            setBooking({ barberia: ultima.barberias, bar: ultima.barberos, svc: ultima.servicios, pre: { date: f, time: h, metodo: ultima.payment_method || '' } });
+            nav('booking');
+          }
+
           // Construir avisos a partir de las citas del cliente
           useEffect(function() {
             var email = user && user.email;
@@ -784,16 +1098,16 @@
                   var servicio = (c.servicios && c.servicios.name) || 'tu cita';
                   var horaTxt = c.time ? c.time.slice(0,5) : '';
                   var idBase = (c.id || c.date) + '_';
+                  // Solo avisos que piden algo o que acaban de pasar: una cita
+                  // dentro de dos semanas no debe generar un aviso permanente.
                   if (c.status === 'cancelled') {
-                    avisos.push({ id: idBase + 'cancel', tipo: 'cancel', titulo: 'Cita cancelada', texto: servicio + ' del ' + c.date + ' fue cancelada', date: c.date });
+                    if (difDias >= -14) avisos.push({ id: idBase + 'cancel', tipo: 'cancel', titulo: 'Cita cancelada', texto: servicio + ' del ' + fechaCorta(c.date) + ' fue cancelada', date: c.date });
                   } else if (difDias === 0) {
                     avisos.push({ id: idBase + 'hoy', tipo: 'hoy', titulo: '¡Tu cita es hoy!', texto: servicio + ' a las ' + horaTxt, date: c.date });
                   } else if (difDias === 1) {
                     avisos.push({ id: idBase + 'manana', tipo: 'manana', titulo: 'Cita mañana', texto: servicio + ' a las ' + horaTxt, date: c.date });
-                  } else if (difDias > 1) {
-                    avisos.push({ id: idBase + 'futura', tipo: 'futura', titulo: 'Cita confirmada', texto: servicio + ' el ' + c.date + ' a las ' + horaTxt, date: c.date });
-                  } else {
-                    avisos.push({ id: idBase + 'pasada', tipo: 'pasada', titulo: '¿Qué tal quedó?', texto: 'Esperamos que disfrutaras de ' + servicio, date: c.date });
+                  } else if (difDias < 0 && difDias >= -7) {
+                    avisos.push({ id: idBase + 'pasada', tipo: 'pasada', titulo: '¿Qué tal quedó?', texto: servicio + ' del ' + fechaCorta(c.date) + ' · toca para valorar', date: c.date });
                   }
                 });
                 // Aviso de fidelización
@@ -807,7 +1121,7 @@
           useEffect(function() {
             var email = user && user.email;
             if (!email) return;
-            var today = new Date().toISOString().split('T')[0];
+            var today = hoyISO();
             dbGet('appointments', '?client_email=eq.' + encodeURIComponent(email) + '&date=gte.' + today + '&status=eq.confirmed&order=date.asc,time.asc&limit=1&select=*,servicios(name),barberos(name)')
               .then(function(d) {
                 if (Array.isArray(d) && d.length > 0) setNextAppt(d[0]);
@@ -847,32 +1161,60 @@
               </div>
 
               <div style={{ padding: "0 18px" }}>
-                {/* Caja de Puntos */}
-                <div onClick={() => nav("loyalty")} style={{ background: G.mint, border: "none", borderRadius: 28, padding: "20px 20px", marginBottom: 16, cursor: "pointer", position: "relative", overflow: "hidden" }}>
-                  <div style={{ position: "absolute", top: -14, right: -14, width: 96, height: 96, borderRadius: "50%", background: G.card, opacity: 0.55 }} />
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, position: "relative" }}>
-                    <div>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
-                        <p style={{ fontSize: 10, color: "#0F2A20", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>Gonnie Points</p>
-                        <NewPill />
+                {/* Reserva rápida: repetir lo de siempre */}
+                {ultima && hueco && !nextAppt && (
+                  <div style={{ background: G.mint, borderRadius: 22, padding: '12px 14px', marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <Av txt={((ultima.barberos && ultima.barberos.name) || 'B').slice(0,2).toUpperCase()} size={34} bg={G.cream} color="#0F2A20" />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 13.5, fontWeight: 700, color: '#0F2A20', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {(ultima.servicios && ultima.servicios.name) || 'Tu servicio'}{ultima.barberos && ultima.barberos.name ? ' con ' + ultima.barberos.name : ''}
+                        </p>
+                        <p style={{ fontSize: 11, color: '#0F2A20', opacity: 0.7, margin: '1px 0 0' }}>
+                          Lo de siempre{ultima.servicios && ultima.servicios.price ? ' · ' + ultima.servicios.price + '€' : ''}
+                        </p>
                       </div>
-                      <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 42, fontWeight: 700, color: "#0F2A20", lineHeight: 1, margin: "6px 0 4px" }}>{puntos.toLocaleString("es-ES")}</p>
-                      <p style={{ fontSize: 11, color: "#0F2A20", opacity: 0.75, marginTop: 4 }}>
-                        Nivel {nivel.nombre} · {ptsSiguiente > 0 ? `${ptsSiguiente} pts para ${getNivel(puntos + ptsSiguiente).nombre}` : "¡Nivel máximo! 🎉"}
-                      </p>
+                      <button onClick={function(){ reservarRepetir(hueco.date, hueco.time); }}
+                        style={{ background: G.brand, color: '#FBFCF8', border: 'none', borderRadius: 18, padding: '9px 13px', fontFamily: "'Bricolage Grotesque'", fontSize: 12.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+                        {fechaRelativa(hueco.date)} {hueco.time}
+                      </button>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", background: G.card, borderRadius: 16, padding: "10px 14px", textAlign: "center" }}>
-                      <span dangerouslySetInnerHTML={{ __html: nivel.icono }} />
-                      <p style={{ fontSize: 9, fontWeight: 800, color: nivel.color, marginTop: 4 }}>{nivel.nombre.toUpperCase()}</p>
+                    {huecosHoy.length > 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 10.5, color: '#0F2A20', opacity: 0.6, flexShrink: 0 }}>Hoy</span>
+                        {huecosHoy.map(function(h) {
+                          return (
+                            <button key={h} onClick={function(){ reservarRepetir(hoyISO(), h); }}
+                              style={{ background: G.cream, border: 'none', borderRadius: 14, padding: '6px 11px', fontFamily: "'Bricolage Grotesque'", fontSize: 12, fontWeight: 700, color: '#0F2A20', cursor: 'pointer' }}>
+                              {h}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Puntos, en una línea */}
+                <div onClick={function(){ nav("loyalty"); }} style={{ display: 'flex', alignItems: 'center', gap: 12, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 20, padding: '14px 16px', marginBottom: 16, cursor: 'pointer' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 13, background: 'rgba(36,58,44,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 13, fontWeight: 700, color: G.brand }}>{puntos.toLocaleString("es-ES")}</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    <p style={{ fontSize: 12.5, fontWeight: 600, color: G.text, margin: 0 }}>
+                      {premio.ganados > 0
+                        ? 'Tienes ' + textoPremios(premio.ganados) + ' esperando'
+                        : premio.falta + ' pts para tu ' + PREMIO.titulo}
+                    </p>
+                    <div style={{ height: 5, borderRadius: 3, background: 'rgba(26,22,20,0.08)', overflow: 'hidden' }}>
+                      <div style={{ width: premio.progreso + '%', height: '100%', background: premio.ganados > 0 ? G.brandL : G.brand, borderRadius: 3, transition: 'width 0.8s ease' }} />
                     </div>
                   </div>
-                  <div style={{ background: "rgba(15,42,32,0.15)", borderRadius: 8, height: 6, overflow: "hidden", position: "relative" }}>
-                    <div style={{ width: `${progreso}%`, height: "100%", background: "#1A1614", borderRadius: 8, transition: "width 0.8s ease" }} />
-                  </div>
+                  <span style={{ fontSize: 18, color: G.muted, flexShrink: 0 }}>›</span>
                 </div>
 
                 {/* Próxima Cita */}
-                <div style={{ background: G.card, border: `1px solid ${G.bdr}`, borderRadius: 24, padding: "16px 16px", marginBottom: 16 }}>
+                <div style={{ background: nextAppt ? '#1A1614' : G.card, border: nextAppt ? 'none' : `1px solid ${G.bdr}`, borderRadius: 24, padding: "16px 16px", marginBottom: 16 }}>
                   {cancelDone && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
                   <AnimCheck type="cross" />
@@ -882,14 +1224,14 @@
               {nextAppt ? (
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                      <p style={{ fontSize: 10, color: G.muted, fontWeight: 700, textTransform: "uppercase" }}>Próxima cita</p>
-                      <Pill color="#080B0F" bg={G.green}>{nextAppt.date} · {nextAppt.time}</Pill>
+                      <p style={{ fontSize: 10, color: 'rgba(251,252,248,0.5)', fontWeight: 700, textTransform: "uppercase", letterSpacing: '0.07em' }}>Próxima cita</p>
+                      <Pill color="#080B0F" bg={G.green}>{fechaRelativa(nextAppt.date)} · {hhmm(nextAppt.time)}</Pill>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <Av txt={(nextAppt.barberos && nextAppt.barberos.name || "B").slice(0,2).toUpperCase()} size={46} bg={G.rose} color="#3A0F1B" />
                       <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 15, fontWeight: 700, color: G.text }}>{nextAppt.servicios && nextAppt.servicios.name}</p>
-                        <p style={{ fontSize: 12, color: G.muted }}>{nextAppt.barberos && nextAppt.barberos.name}</p>
+                        <p style={{ fontSize: 15, fontWeight: 700, color: '#FBFCF8' }}>{nextAppt.servicios && nextAppt.servicios.name}</p>
+                        <p style={{ fontSize: 12, color: 'rgba(251,252,248,0.6)' }}>{nextAppt.barberos && nextAppt.barberos.name}</p>
                       </div>
                       
                     </div>
@@ -897,10 +1239,10 @@
                       {/* Botones principales */}
                       {!confirmCancel && !showReschedule && (
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button onClick={function(){ setShowReschedule(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.brand + '50', borderRadius: 10, padding: '9px', fontSize: 12, color: G.brand, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          <button onClick={function(){ setShowReschedule(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(251,252,248,0.28)', borderRadius: 12, padding: '11px', fontSize: 12, color: '#FBFCF8', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                             Cambiar fecha
                           </button>
-                          <button onClick={function(){ setConfirmCancel(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.red + '40', borderRadius: 10, padding: '9px', fontSize: 12, color: G.red, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                          <button onClick={function(){ setConfirmCancel(true); }} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,128,149,0.4)', borderRadius: 12, padding: '11px', fontSize: 12, color: '#FF8095', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                             Cancelar cita
                           </button>
                         </div>
@@ -908,10 +1250,10 @@
 
                       {/* Confirmar cancelación */}
                       {confirmCancel && (
-                        <div style={{ background: G.red + '10', border: '1px solid ' + G.red + '30', borderRadius: 10, padding: '12px' }}>
-                          <p style={{ fontSize: 12, color: G.red, textAlign: 'center', marginBottom: 10, fontWeight: 600 }}>¿Seguro que quieres cancelar?</p>
+                        <div style={{ background: 'rgba(251,252,248,0.07)', border: '1px solid rgba(255,128,149,0.35)', borderRadius: 12, padding: '12px' }}>
+                          <p style={{ fontSize: 12, color: '#FF8095', textAlign: 'center', marginBottom: 10, fontWeight: 600 }}>¿Seguro que quieres cancelar?</p>
                           <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={function(){ setConfirmCancel(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 8, padding: '8px', fontSize: 12, color: G.muted, cursor: 'pointer', fontFamily: 'inherit' }}>No</button>
+                            <button onClick={function(){ setConfirmCancel(false); }} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(251,252,248,0.25)', borderRadius: 10, padding: '9px', fontSize: 12, color: 'rgba(251,252,248,0.7)', cursor: 'pointer', fontFamily: 'inherit' }}>No</button>
                             <button onClick={function(){
                               setCancelling(true);
                               cancelBooking(nextAppt.id, nextAppt, user && user.email, user && user.user_metadata && user.user_metadata.full_name)
@@ -929,7 +1271,7 @@
                         <div style={{ background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '14px' }}>
                           <p style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 10 }}>Selecciona nueva fecha y hora</p>
                           <div style={{ width: '100%', overflow: 'hidden', borderRadius: 10, marginBottom: 10 }}>
-                            <input type="date" value={rescheduleDate} onChange={function(e){ setRescheduleDate(e.target.value); }} min={new Date().toISOString().split('T')[0]}
+                            <input type="date" value={rescheduleDate} onChange={function(e){ setRescheduleDate(e.target.value); }} min={hoyISO()}
                               style={{ width: '100%', maxWidth: '100%', display: 'block', WebkitAppearance: 'none', appearance: 'none', background: G.card, border: '1px solid ' + G.bdr, padding: '9px 12px', borderRadius: 10, color: G.text, fontSize: 16, textAlign: 'left', boxSizing: 'border-box', fontFamily: 'inherit', fontWeight: 700 }} />
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 12 }}>
@@ -961,12 +1303,12 @@
                                 });
                                 if (!res.ok) {
                                   if (res.status === 409) {
-                                    alert('Uy, esa hora se acaba de ocupar. Elige otra, por favor.');
+                                    toast('Uy, esa hora se acaba de ocupar. Elige otra, por favor.');
                                     var refreshed = await dbGet("appointments", "?date=eq." + rescheduleDate + "&barbero_id=eq." + nextAppt.barbero_id + "&status=neq.cancelled&id=neq." + nextAppt.id + "&select=time");
                                     setRescheduleOcupados((Array.isArray(refreshed) ? refreshed : []).map(function(a){ return a.time ? a.time.slice(0,5) : ''; }));
                                     setRescheduleSlot('');
                                   } else {
-                                    alert('No se pudo reprogramar la cita. Inténtalo de nuevo.');
+                                    toast('No se pudo reprogramar la cita. Inténtalo de nuevo.');
                                   }
                                   return;
                                 }
@@ -975,7 +1317,7 @@
                                 setRescheduleDone(true);
                                 setTimeout(function(){ setRescheduleDone(false); }, 2500);
                               } catch(e) {
-                                alert('No se pudo reprogramar la cita. Comprueba tu conexión.');
+                                toast('No se pudo reprogramar la cita. Comprueba tu conexión.');
                               } finally { setRescheduling(false); }
                             }} style={{ flex: 1, background: (!rescheduleDate || !rescheduleSlot) ? G.bdr : G.brand, border: 'none', borderRadius: 8, padding: '8px', fontSize: 12, color: '#fff', cursor: (!rescheduleDate || !rescheduleSlot || rescheduling) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontWeight: 700 }}>
                               {rescheduling ? 'Guardando...' : 'Confirmar'}
@@ -1299,13 +1641,15 @@
         }
 
         // ─── VISTA 4: AGENDA Y TURNOS (BOOKING SCREEN) ────────────────────────
-        function BookingScreen({ booking, nav, setConfirmedAppt, setPuntos, user, groupMode, setGroupMode }) {
-          const [date, setDate] = useState("");
-          const [slot, setSlot] = useState("");
+        function BookingScreen({ booking, nav, setConfirmedAppt, setPuntos, puntos = 0, user, groupMode, setGroupMode }) {
+          var pre = (booking && booking.pre) || null;
+          const primeraCargaFechas = React.useRef(true);
+          const [date, setDate] = useState((pre && pre.date) || "");
+          const [slot, setSlot] = useState((pre && pre.time) || "");
           const [slot2, setSlot2] = useState("");
           const [nombre2, setNombre2] = useState("");
           const [saving, setSaving] = useState(false);
-          const [metodoPago, setMetodoPago] = useState("");
+          const [metodoPago, setMetodoPago] = useState((pre && pre.metodo) || "");
           const [ocupados, setOcupados] = useState([]);
           const [loadingHoras, setLoadingHoras] = useState(false);
           const [blocked, setBlocked] = useState(false);
@@ -1342,16 +1686,18 @@
           useEffect(function() {
             if (!date) { setOcupados([]); return; }
             setLoadingHoras(true);
-            setSlot("");
-            setSlot2("");
+            // No borrar la hora en la primera carga: puede venir prefijada
+            // desde "Lo de siempre" en el inicio.
+            if (primeraCargaFechas.current) primeraCargaFechas.current = false;
+            else { setSlot(""); setSlot2(""); }
             refrescarOcupados().then(function(){ setLoadingHoras(false); });
           }, [date]);
 
           const confirm = async () => {
-            if (blocked) return alert("No puedes reservar en este momento. Contacta con la barbería.");
-            if (!date || !slot) return alert("Selecciona fecha y hora");
-            if (groupMode && !slot2) return alert("Selecciona también la hora para la segunda persona");
-            if (groupMode && slot2 === slot) return alert("Elige dos horas diferentes para cada persona");
+            if (blocked) return toast("No puedes reservar en este momento. Contacta con la barbería.");
+            if (!date || !slot) return toast("Selecciona fecha y hora");
+            if (groupMode && !slot2) return toast("Selecciona también la hora para la segunda persona");
+            if (groupMode && slot2 === slot) return toast("Elige dos horas diferentes para cada persona");
             setSaving(true);
             try {
              const payload = {
@@ -1374,7 +1720,7 @@
                 if (esConflictoDeHorario(e1)) {
                   setSlot("");
                   await refrescarOcupados();
-                  alert("Uy, alguien acaba de reservar esa hora justo antes que tú. Elige otra, por favor.");
+                  toast("Uy, alguien acaba de reservar esa hora justo antes que tú. Elige otra, por favor.");
                   return;
                 }
                 throw e1;
@@ -1406,7 +1752,7 @@
                   if (esConflictoDeHorario(e2)) {
                     setSlot2("");
                     await refrescarOcupados();
-                    alert("La hora de tu acompañante se acaba de ocupar. Elige otra para los dos, por favor.");
+                    toast("La hora de tu acompañante se acaba de ocupar. Elige otra para los dos, por favor.");
                     return;
                   }
                   throw e2;
@@ -1442,14 +1788,18 @@
               if (setGroupMode) setGroupMode(false);
               nav("confirmed");
             } catch (e) {
-              alert("No se pudo completar la reserva. Comprueba tu conexión e inténtalo de nuevo.");
+              toast("No se pudo completar la reserva. Comprueba tu conexión e inténtalo de nuevo.");
             } finally { setSaving(false); }
           };
 
           if (checkingBlocked) {
             return (
-              <div style={{ flex: 1, minHeight: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#1A1614", boxSizing: "border-box" }}>
-                <p style={{ color: "rgba(248,241,227,0.5)", fontSize: 13 }}>Cargando...</p>
+              <div style={{ flex: 1, minHeight: "100%", padding: '20px 18px', background: G.bg, boxSizing: "border-box" }}>
+                <Skeleton h={20} w="45%" r={8} mb={20} />
+                <Skeleton h={54} r={16} mb={10} />
+                <Skeleton h={54} r={16} mb={10} />
+                <Skeleton h={54} r={16} mb={22} />
+                <Skeleton h={70} r={16} mb={0} />
               </div>
             );
           }
@@ -1467,101 +1817,148 @@
             );
           }
 
-          return (
-            <div style={{ flex: 1, minHeight: '100%', padding: 18, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 90, boxSizing: 'border-box', background: "#1A1614", color: "#F8F1E3" }}>
-              <button onClick={() => nav("detail")} style={{ background: "rgba(248,241,227,0.08)", border: "none", borderRadius: 20, padding: "8px 14px", fontSize: 12, color: "#F8F1E3", cursor: "pointer", fontFamily: "'Bricolage Grotesque'", fontWeight: 600 }}>← Volver</button>
-              {groupMode && (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: G.mint, color: "#0F2A20", borderRadius: 20, padding: "6px 12px", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", marginLeft: 10 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F2A20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
-                  Reserva grupal
+          // Tira de días: 14 días desde hoy, marcando los cerrados
+          var diasStrip = [];
+          (function(){
+            var base = new Date();
+            for (var i = 0; i < 14; i++) {
+              var d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
+              var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+              diasStrip.push({ key: key, dow: DOW_CORTO[d.getDay()], num: d.getDate(), mes: MES_CORTO[d.getMonth()], cerrado: diaCerrado(key, horarioSemana, diasCerrados) });
+            }
+          })();
+
+          var hoyKey = hoyISO();
+          var ahoraMin = new Date().getHours() * 60 + new Date().getMinutes();
+          function horaPasada(s) {
+            if (date !== hoyKey) return false;
+            var p = String(s).split(':');
+            return (parseInt(p[0], 10) * 60 + parseInt(p[1], 10)) <= ahoraMin;
+          }
+          var horasManana = slots.filter(function(s){ return parseInt(s.slice(0,2), 10) < 15; });
+          var horasTarde = slots.filter(function(s){ return parseInt(s.slice(0,2), 10) >= 15; });
+          var listo = !!date && !!slot && !!metodoPago && (!groupMode || (!!slot2 && slot2 !== slot));
+          var puntosCita = Math.floor(((booking.svc && booking.svc.price) || 0) * 2);
+          // Lo que esta cita hace por tu premio. Es donde se decide, así que
+          // es donde tiene que decirse.
+          var puntosTras = (Number(puntos) || 0) + puntosCita;
+          var umbralPremio = estadoPremio(puntos).umbral;
+          var cruzaPremio = puntosTras >= umbralPremio;
+          var textoPuntos = cruzaPremio
+            ? 'Con esta cita ganas un ' + PREMIO.titulo
+            : '+' + puntosCita + ' pts · te quedas a ' + (umbralPremio - puntosTras) + ' del ' + PREMIO.titulo;
+
+          function chipHora(s, esSegundo) {
+            var ocupado = ocupados.indexOf(s) >= 0 || horaPasada(s) || (esSegundo ? slot === s : (groupMode && slot2 === s));
+            var elegido = esSegundo ? slot2 === s : slot === s;
+            return (
+              <button key={(esSegundo ? 'p2-' : 'p1-') + s} disabled={ocupado}
+                onClick={function(){ if (ocupado) return; if (esSegundo) setSlot2(s); else setSlot(s); }}
+                style={{ background: ocupado ? G.bg : (elegido ? (esSegundo ? G.mint : G.brand) : G.card), color: ocupado ? 'rgba(26,22,20,0.22)' : (elegido ? (esSegundo ? '#0F2A20' : '#FBFCF8') : G.text), border: '1px solid ' + (ocupado ? G.bdr : 'transparent'), padding: '11px 0', borderRadius: 14, fontWeight: 700, fontFamily: "'Bricolage Grotesque'", fontSize: 13, cursor: ocupado ? 'not-allowed' : 'pointer', textDecoration: ocupado ? 'line-through' : 'none' }}>
+                {s}
+              </button>
+            );
+          }
+
+          function bloqueHoras(lista, titulo, esSegundo) {
+            if (lista.length === 0) return null;
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{titulo}</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 7 }}>
+                  {lista.map(function(s){ return chipHora(s, esSegundo); })}
                 </div>
-              )}
-              <h3 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 24, fontWeight: 700, marginTop: 16, color: "#F8F1E3" }}>Elige día y hora</h3>
-              <p style={{ fontSize: 13, color: "rgba(248,241,227,0.55)" }}>{booking.svc.name} con {booking.bar.name}</p>
+              </div>
+            );
+          }
 
-              <div style={{ width: "100%", overflow: "hidden", borderRadius: 16, marginTop: 14, marginBottom: 18 }}>
-                <input type="date" value={date} onChange={e => setDate(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ width: "100%", maxWidth: "100%", display: "block", boxSizing: "border-box", WebkitAppearance: "none", appearance: "none", background: "rgba(248,241,227,0.06)", border: "1px solid rgba(248,241,227,0.1)", padding: 14, fontSize: 16, textAlign: "left", borderRadius: 16, color: "#F8F1E3", colorScheme: "dark", fontFamily: "inherit" }} />
+          return (
+            <div style={{ flex: 1, minHeight: '100%', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box', background: G.bg, color: G.text, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 18px 14px' }}>
+                <button onClick={function(){ nav("detail"); }} style={{ width: 34, height: 34, borderRadius: '50%', background: G.card, border: 'none', fontSize: 17, color: G.muted, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>‹</button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Reservar</span>
+                  <span style={{ fontSize: 11, color: G.muted }}>{booking.svc.name} con {booking.bar.name}</span>
+                </div>
+                {groupMode && (
+                  <span style={{ marginLeft: 'auto', background: G.mint, color: '#0F2A20', borderRadius: 20, padding: '5px 11px', fontSize: 9.5, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Grupal</span>
+                )}
               </div>
 
-              <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>{groupMode ? "Tu horario" : "Horarios disponibles"}</p>
-              {date && loadingHoras && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Comprobando disponibilidad...</p>}
-              {!date && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Elige primero una fecha</p>}
-              {date && !loadingHoras && fechaCerrada && <p style={{ fontSize: 12, color: G.red, margin: '0 0 10px', fontWeight: 700 }}>La barbería está cerrada ese día. Elige otra fecha.</p>}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: groupMode ? 20 : 24 }}>
-                {!fechaCerrada && slots.map(function(s) {
-                  var ocupado = ocupados.indexOf(s) >= 0 || (groupMode && slot2 === s);
-                  var elegido = slot === s;
-                  return (
-                    <button key={s} onClick={function(){ if (!ocupado) setSlot(s); }} disabled={ocupado || !date}
-                      style={{
-                        position: 'relative',
-                        background: ocupado ? 'rgba(248,241,227,0.03)' : (elegido ? G.mint : 'rgba(248,241,227,0.06)'),
-                        color: ocupado ? 'rgba(248,241,227,0.25)' : (elegido ? "#0F2A20" : "#F8F1E3"),
-                        border: "1px solid " + (elegido ? G.mint : "rgba(248,241,227,0.08)"),
-                        padding: 12, borderRadius: 20, fontWeight: 700, fontFamily: "'Bricolage Grotesque'",
-                        cursor: ocupado || !date ? "not-allowed" : "pointer",
-                        textDecoration: ocupado ? 'line-through' : 'none',
-                        opacity: !date ? 0.5 : 1
-                      }}>
-                      {s}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {groupMode && (
-                <div style={{ marginBottom: 24, paddingTop: 4, borderTop: "1px solid rgba(248,241,227,0.1)" }}>
-                  <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", margin: "18px 0 10px" }}>Acompañante</p>
-                  <input type="text" value={nombre2} onChange={e => setNombre2(e.target.value)} placeholder="Nombre del acompañante (opcional)"
-                    style={{ width: "100%", background: "rgba(248,241,227,0.06)", border: "1px solid rgba(248,241,227,0.1)", padding: 14, borderRadius: 16, color: "#F8F1E3", marginBottom: 14, fontFamily: "inherit", fontSize: 14 }} />
-
-                  <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Su horario</p>
-                  {!date && <p style={{ fontSize: 12, color: "rgba(248,241,227,0.5)", margin: '0 0 10px' }}>Elige primero una fecha</p>}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
-                    {!fechaCerrada && slots.map(function(s) {
-                      var ocupado2 = ocupados.indexOf(s) >= 0 || slot === s;
-                      var elegido2 = slot2 === s;
+              <div style={{ flex: 1, padding: '0 18px 170px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: G.muted, margin: 0 }}>Día</p>
+                  <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none' }}>
+                    {diasStrip.map(function(d) {
+                      var sel = date === d.key;
                       return (
-                        <button key={"p2-" + s} onClick={function(){ if (!ocupado2) setSlot2(s); }} disabled={ocupado2 || !date}
-                          style={{
-                            position: 'relative',
-                            background: ocupado2 ? 'rgba(248,241,227,0.03)' : (elegido2 ? G.coral : 'rgba(248,241,227,0.06)'),
-                            color: ocupado2 ? 'rgba(248,241,227,0.25)' : (elegido2 ? "#FFFFFF" : "#F8F1E3"),
-                            border: "1px solid " + (elegido2 ? G.coral : "rgba(248,241,227,0.08)"),
-                            padding: 12, borderRadius: 20, fontWeight: 700, fontFamily: "'Bricolage Grotesque'",
-                            cursor: ocupado2 || !date ? "not-allowed" : "pointer",
-                            textDecoration: ocupado2 ? 'line-through' : 'none',
-                            opacity: !date ? 0.5 : 1
-                          }}>
-                          {s}
+                        <button key={d.key} onClick={function(){ if (!d.cerrado) setDate(d.key); }} disabled={d.cerrado}
+                          style={{ width: 56, flexShrink: 0, background: sel ? G.brand : (d.cerrado ? 'transparent' : G.card), border: d.cerrado ? '1px dashed ' + G.bdr : '1px solid transparent', borderRadius: 16, padding: '9px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, cursor: d.cerrado ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: d.cerrado ? 0.55 : 1 }}>
+                          <span style={{ fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.06em', color: sel ? 'rgba(251,252,248,0.65)' : G.muted }}>{d.dow}</span>
+                          <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 18, fontWeight: 700, color: sel ? '#FBFCF8' : G.text }}>{d.num}</span>
+                          <span style={{ fontSize: 9, color: sel ? 'rgba(251,252,248,0.65)' : G.muted }}>{d.cerrado ? 'cerrado' : d.mes}</span>
                         </button>
                       );
                     })}
                   </div>
-                  <p style={{ fontSize: 11, color: "rgba(248,241,227,0.4)", margin: "6px 0 0" }}>La hora de tu acompañante debe ser distinta a la tuya.</p>
                 </div>
-              )}
 
-              <p style={{ fontSize: 11, color: "rgba(248,241,227,0.5)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Método de pago{groupMode ? " (para ambas reservas)" : ""}</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 24 }}>
-                {[
-                  { id: "efectivo", label: "Efectivo", color: G.coral, svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>' },
-                  { id: "tarjeta", label: "Tarjeta", color: G.coral, svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>' },
-                  { id: "bizum", label: "Bizum", color: G.mint, svg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="COL" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M8 8l8 8M16 8l-8 8"/></svg>' },
-                ].map(function(m) {
-                  var activo = metodoPago === m.id;
-                  var col = m.color;
-                  return (
-                    <button key={m.id} onClick={function(){ setMetodoPago(m.id); }}
-                      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: activo ? col : "rgba(248,241,227,0.06)", border: "1px solid " + (activo ? col : "rgba(248,241,227,0.08)"), padding: "14px 6px", borderRadius: 18, cursor: "pointer", fontFamily: "inherit" }}>
-                      <span dangerouslySetInnerHTML={{ __html: m.svg.replace(/COL/g, activo ? "#1A1614" : "rgba(248,241,227,0.6)") }} />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: activo ? "#1A1614" : "rgba(248,241,227,0.7)" }}>{m.label}</span>
-                    </button>
-                  );
-                })}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: G.muted, margin: 0 }}>
+                    {groupMode ? 'Tu hora' : 'Hora'}{date ? ' · ' + fechaLarga(date) : ''}
+                  </p>
+                  {!date && <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>Elige primero un día</p>}
+                  {date && loadingHoras && <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>Comprobando disponibilidad...</p>}
+                  {date && !loadingHoras && fechaCerrada && <p style={{ fontSize: 12, color: G.red, margin: 0, fontWeight: 600 }}>La barbería está cerrada ese día.</p>}
+                  {date && !loadingHoras && !fechaCerrada && bloqueHoras(horasManana, 'Mañana', false)}
+                  {date && !loadingHoras && !fechaCerrada && bloqueHoras(horasTarde, 'Tarde', false)}
+                </div>
+
+                {groupMode && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, borderTop: '1px solid ' + G.bdr, paddingTop: 18 }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: G.muted, margin: 0 }}>Acompañante</p>
+                    <input type="text" value={nombre2} onChange={function(e){ setNombre2(e.target.value); }} placeholder="Nombre (opcional)"
+                      style={{ width: '100%', boxSizing: 'border-box', background: G.card, border: '1px solid ' + G.bdr, padding: '13px 14px', borderRadius: 16, color: G.text, fontFamily: 'inherit', fontSize: 14 }} />
+                    {date && !fechaCerrada && bloqueHoras(horasManana, 'Su hora · mañana', true)}
+                    {date && !fechaCerrada && bloqueHoras(horasTarde, 'Su hora · tarde', true)}
+                    <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>Su hora debe ser distinta a la tuya.</p>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: G.muted, margin: 0 }}>Pagas en la barbería</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                    {[{ id: 'efectivo', label: 'Efectivo' }, { id: 'tarjeta', label: 'Tarjeta' }, { id: 'bizum', label: 'Bizum' }].map(function(m) {
+                      var activo = metodoPago === m.id;
+                      return (
+                        <button key={m.id} onClick={function(){ setMetodoPago(m.id); }}
+                          style={{ background: activo ? G.mint : G.card, border: '1px solid transparent', borderRadius: 16, padding: '13px 6px', cursor: 'pointer', fontFamily: "'Bricolage Grotesque'", fontSize: 12.5, fontWeight: 700, color: activo ? '#0F2A20' : G.text }}>
+                          {m.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
-              <PrimaryBtn disabled={saving || !date || !slot || !metodoPago || (groupMode && (!slot2 || slot2 === slot))} onClick={confirm} style={{ background: (saving || !date || !slot || !metodoPago || (groupMode && (!slot2 || slot2 === slot))) ? "rgba(30,62,230,0.3)" : G.brand }}>{saving ? "Procesando..." : (groupMode ? "Confirmar las 2 reservas" : "Confirmar Reserva")}</PrimaryBtn>
+              <div style={{ position: 'sticky', bottom: 84, background: '#1A1614', padding: '15px 18px 17px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, color: '#FBFCF8' }}>{booking.svc.name} con {booking.bar.name}</span>
+                    <span style={{ fontSize: 11, color: 'rgba(251,252,248,0.55)' }}>
+                      {date && slot ? fechaCorta(date) + ', ' + slot + ' · ' + booking.svc.duration_min + ' min' : 'Elige día, hora y pago'}
+                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: cruzaPremio ? G.mint : 'rgba(251,252,248,0.75)', marginTop: 1 }}>
+                      {textoPuntos}
+                    </span>
+                  </div>
+                  <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 20, fontWeight: 700, color: '#FBFCF8' }}>{booking.svc.price}€</span>
+                </div>
+                <PrimaryBtn disabled={saving || !listo} onClick={confirm} style={{ background: (saving || !listo) ? 'rgba(251,252,248,0.12)' : G.mint, color: (saving || !listo) ? 'rgba(251,252,248,0.4)' : '#0F2A20' }}>
+                  {saving ? 'Procesando...' : (listo ? (groupMode ? 'Confirmar las 2 reservas' : 'Confirmar ' + fechaCorta(date) + ', ' + slot) : 'Completa la reserva')}
+                </PrimaryBtn>
+              </div>
+              <div style={{ height: 20 }} />
             </div>
           );
         }
@@ -1588,8 +1985,8 @@
                 </svg>
               </div>
               <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", color: "#0F2A20", textTransform: "uppercase", opacity: 0.7, margin: "0 0 6px" }}>Todo listo</p>
-              <h2 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 32, fontWeight: 700, marginBottom: 10, color: "#0F2A20", lineHeight: 1.05 }}>Nos vemos<br/>{ (appt && appt.date) ? "el " + appt.date : "pronto" }.</h2>
-              <p style={{ fontSize: 14, color: "#0F2A20", opacity: 0.75, marginBottom: 24, maxWidth: 260, marginLeft: "auto", marginRight: "auto", lineHeight: 1.4 }}>Te esperamos {(appt && appt.date) ? "el " + appt.date : ""} {(appt && appt.time) ? "a las " + appt.time : ""}.</p>
+              <h2 style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 32, fontWeight: 700, marginBottom: 10, color: "#0F2A20", lineHeight: 1.05 }}>Nos vemos<br/>{ (appt && appt.date) ? "el " + fechaLarga(appt.date) : "pronto" }.</h2>
+              <p style={{ fontSize: 14, color: "#0F2A20", opacity: 0.75, marginBottom: 24, maxWidth: 260, marginLeft: "auto", marginRight: "auto", lineHeight: 1.4 }}>Te esperamos {(appt && appt.date) ? "el " + fechaLarga(appt.date) : ""} {(appt && appt.time) ? "a las " + hhmm(appt.time) : ""}.</p>
 
               <div style={{ background: G.card, borderRadius: 22, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, marginBottom: 12, textAlign: "left" }}>
                 <div style={{ width: 38, height: 38, borderRadius: 12, background: G.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -1597,7 +1994,7 @@
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{(appt && appt.time2) ? "Tú" : "Cuando"}</p>
-                  <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>{(appt && appt.date) || "Hoy"} · {(appt && appt.time) || "—"}</p>
+                  <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>{(appt && appt.date) ? fechaCorta(appt.date) : "Hoy"} · {hhmm(appt && appt.time) || "—"}</p>
                 </div>
               </div>
               {appt && appt.time2 && (
@@ -1607,7 +2004,7 @@
                   </div>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{appt.nombre2 || "Acompañante"}</p>
-                    <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>{(appt && appt.date) || "Hoy"} · {appt.time2}</p>
+                    <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, margin: 0, color: G.text }}>{(appt && appt.date) ? fechaCorta(appt.date) : "Hoy"} · {hhmm(appt.time2)}</p>
                   </div>
                 </div>
               )}
@@ -1621,7 +2018,8 @@
                 </div>
               </div>
 
-              <button onClick={function(){ nav("home"); }} style={{ width: "100%", background: "#1A1614", color: "#F8F1E3", border: "none", borderRadius: 24, padding: "16px", fontSize: 15, fontWeight: 700, fontFamily: "'Bricolage Grotesque'", cursor: "pointer" }}>Añadir al calendario</button>
+              <button onClick={function(){ descargarICS(appt && appt.date, appt && appt.time, 'Cita en Gonnie Barbershop', 45); }} style={{ width: "100%", background: "#1A1614", color: "#F8F1E3", border: "none", borderRadius: 24, padding: "16px", fontSize: 15, fontWeight: 700, fontFamily: "'Bricolage Grotesque'", cursor: "pointer", marginBottom: 10 }}>Añadir al calendario</button>
+              <button onClick={function(){ nav("home"); }} style={{ width: "100%", background: "rgba(15,42,32,0.1)", color: "#0F2A20", border: "none", borderRadius: 24, padding: "16px", fontSize: 15, fontWeight: 700, fontFamily: "'Bricolage Grotesque'", cursor: "pointer" }}>Volver al inicio</button>
             </div>
           );
         }
@@ -1719,7 +2117,7 @@
                             <span style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 14, fontWeight: 600, color: G.text }}>{c.servicios && c.servicios.price ? c.servicios.price + '€' : '—'}</span>
                           </div>
                           <p style={{ fontSize: 12, color: G.muted, margin: 0 }}>
-                            {c.barberos && c.barberos.name || '—'} · {c.date} · {c.time ? c.time.slice(0,5) : '—'}
+                            {c.barberos && c.barberos.name || '—'} · {fechaCorta(c.date)} · {hhmm(c.time) || '—'}
                           </p>
                         </div>
                       );
@@ -1733,12 +2131,29 @@
 
         // ─── VISTA 7: FIDELIZACIÓN Y PREMIOS (LOYALTY) ────────────────────────
         function LoyaltyScreen({ puntos }) {
+          var premio = estadoPremio(puntos);
           const rewards = [
-            { pts: 500, title: "Corte Gratis", desc: "Un servicio de corte completo, gratis.", claim: puntos >= 500, bg: G.mint, fg: "#0F2A20" },
+            { pts: PREMIO.pts, title: "Corte Gratis", desc: "Un servicio de corte completo, gratis.", claim: premio.ganados > 0, bg: G.mint, fg: "#0F2A20" },
           ];
 
           return (
             <div style={{ flex: 1, padding: 18, paddingBottom: 80 }}>
+              {/* Cuánto te falta, antes que nada */}
+              <div style={{ background: '#1A1614', borderRadius: 24, padding: '20px 18px', marginBottom: 14 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(251,252,248,0.5)', margin: 0 }}>Tus puntos</p>
+                <p style={{ fontFamily: "'Bricolage Grotesque'", fontSize: 40, fontWeight: 800, color: '#FBFCF8', margin: '4px 0 12px', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                  {puntos.toLocaleString('es-ES')}
+                </p>
+                <div style={{ height: 7, borderRadius: 4, background: 'rgba(251,252,248,0.14)', overflow: 'hidden', marginBottom: 9 }}>
+                  <div style={{ width: premio.progreso + '%', height: '100%', background: G.mint, borderRadius: 4, transition: 'width 0.8s ease' }} />
+                </div>
+                <p style={{ fontSize: 12.5, color: premio.ganados > 0 ? G.mint : 'rgba(251,252,248,0.7)', margin: 0, fontWeight: premio.ganados > 0 ? 700 : 400 }}>
+                  {premio.ganados > 0
+                    ? 'Ya puedes canjear ' + textoPremios(premio.ganados)
+                    : 'Te faltan ' + premio.falta + ' pts para tu ' + PREMIO.titulo}
+                </p>
+              </div>
+
               {rewards.map((r, i) => (
                 <div key={i} style={{ background: r.claim ? r.bg : G.card, padding: 18, borderRadius: 22, border: r.claim ? "none" : `1px solid ${G.bdr}`, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                   <div>
@@ -1757,7 +2172,7 @@
                   <div style={{ width: 72, height: 72, borderRadius: "50%", background: G.card, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
                   </div>
-                  <p style={{ fontSize: 13, color: G.muted, margin: 0 }}>Te faltan {500 - puntos > 0 ? 500 - puntos : 0} pts para tu primer premio</p>
+                  <p style={{ fontSize: 13, color: G.muted, margin: 0, lineHeight: 1.5 }}>Ganas 2 puntos por cada euro.<br/>Un corte de 12€ son 24 puntos.</p>
                 </div>
               )}
             </div>
@@ -1769,12 +2184,32 @@
 
         // ─── VISTA 9: PANEL DE CONTROL DE NEGOCIO (BUSINESS MODE / RECHARTS) ──
         function BusinessScreen() {
-          const [panel, setPanel] = useState('menu'); // menu | agenda | stats | clientes
+          const [panel, setPanel] = useState('agenda'); // agenda | stats | clientes | menu (=Más)
+          const [filtroBarbero, setFiltroBarbero] = useState('');
           const [citas, setCitas] = useState([]);
           const [loading, setLoading] = useState(true);
           const [clientes, setClientes] = useState([]);
           const [loadingClientes, setLoadingClientes] = useState(false);
+          const [errorClientes, setErrorClientes] = useState(false);
           const [modoMensaje, setModoMensaje] = useState(false);
+          const [filtroEstado, setFiltroEstado] = useState('todos'); // todos | registrados | sin
+          const [vinculando, setVinculando] = useState(null);
+          const [enviadoIdx, setEnviadoIdx] = useState(0);
+          const [vinculos, setVinculos] = useState(function() {
+            try { return JSON.parse(localStorage.getItem('gonnie_vinculos_clientes') || '{}'); } catch (e) { return {}; }
+          });
+
+          // Vincular a mano un importado con una cuenta registrada
+          function vincularCliente(imp, email) {
+            var t = normTel(imp && imp.telefono);
+            if (!t || !email) return;
+            var next = Object.assign({}, vinculos);
+            next[t] = email;
+            setVinculos(next);
+            try { localStorage.setItem('gonnie_vinculos_clientes', JSON.stringify(next)); } catch (e) {}
+            setVinculando(null);
+            setReloadClientesTick(function(x){ return x + 1; });
+          }
           const [buscarCliente, setBuscarCliente] = useState('');
           const [showAddCliente, setShowAddCliente] = useState(false);
           const [nuevoClienteNombre, setNuevoClienteNombre] = useState('');
@@ -1794,7 +2229,7 @@
           const [editProd, setEditProd] = useState(null); // producto en edición o {} para nuevo
           const [savingProd, setSavingProd] = useState(false);
           const [uploadingImg, setUploadingImg] = useState(false);
-          const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+          const [selectedDate, setSelectedDate] = useState(hoyISO());
           const [ingresosMes, setIngresosMes] = useState(0);
           const [citasMes, setCitasMes] = useState([]);
           const [totalUsuarios, setTotalUsuarios] = useState(null);
@@ -1807,7 +2242,7 @@
           const [ncNombre, setNcNombre] = useState('');
           const [ncBarbero, setNcBarbero] = useState('');
           const [ncServicio, setNcServicio] = useState('');
-          const [ncFecha, setNcFecha] = useState(new Date().toISOString().split('T')[0]);
+          const [ncFecha, setNcFecha] = useState(hoyISO());
           const [ncHora, setNcHora] = useState('');
           const [ncGuardando, setNcGuardando] = useState(false);
           const [ncDone, setNcDone] = useState(false);
@@ -1861,7 +2296,7 @@
               setGuardandoDia(null);
             }).catch(function(e){
               setGuardandoDia(null);
-              alert('No se pudo guardar el horario: ' + (e && e.message ? e.message : 'error desconocido'));
+              toast('No se pudo guardar el horario: ' + (e && e.message ? e.message : 'error desconocido'));
             });
           }
 
@@ -1874,14 +2309,14 @@
                 setDiasCerrados(function(prev){ return prev.concat([fila || { fecha: nuevoCierreFecha, motivo: nuevoCierreMotivo }]).sort(function(a,b){ return a.fecha < b.fecha ? -1 : 1; }); });
                 setNuevoCierreFecha(''); setNuevoCierreMotivo('');
                 setGuardandoCierre(false);
-              }).catch(function(){ setGuardandoCierre(false); alert('No se pudo añadir. ¿Ya existe un cierre para esa fecha?'); });
+              }).catch(function(){ setGuardandoCierre(false); toast('No se pudo añadir. ¿Ya existe un cierre para esa fecha?'); });
           }
 
           function quitarCierre(d) {
             if (!window.confirm('¿Quitar el cierre del ' + d.fecha + '?')) return;
             dbDelete('dias_cerrados', '?id=eq.' + d.id)
               .then(function(){ setDiasCerrados(function(prev){ return prev.filter(function(x){ return x.id !== d.id; }); }); })
-              .catch(function(){ alert('No se pudo quitar'); });
+              .catch(function(){ toast('No se pudo quitar'); });
           }
 
           // Pone a 0 los puntos de TODAS las cuentas que tengan más de 0
@@ -1898,12 +2333,12 @@
               });
             }).then(function(res){
               setResetPuntosCargando(false);
-              if (!res.ok) { alert('No se pudo completar el reseteo. Inténtalo de nuevo.'); return; }
+              if (!res.ok) { toast('No se pudo completar el reseteo. Inténtalo de nuevo.'); return; }
               setResetPuntosHecho(true);
               setTimeout(function(){ setResetPuntosHecho(false); }, 3000);
             }).catch(function(){
               setResetPuntosCargando(false);
-              alert('No se pudo completar el reseteo. Comprueba tu conexión.');
+              toast('No se pudo completar el reseteo. Comprueba tu conexión.');
             });
           }
 
@@ -1937,9 +2372,9 @@
               if (!res.ok) {
                 var errText = await res.text();
                 if (res.status === 409) {
-                  alert('Esa hora ya está ocupada para ese barbero. Elige otra.');
+                  toast('Esa hora ya está ocupada para ese barbero. Elige otra.');
                 } else {
-                  alert('No se pudo guardar la cita: ' + errText);
+                  toast('No se pudo guardar la cita: ' + errText);
                 }
                 return;
               }
@@ -1948,7 +2383,7 @@
               setTimeout(function(){ setNcDone(false); setShowNuevaCita(false); }, 1500);
               setReloadClientesTick(function(t){ return t + 1; });
             } catch(e) {
-              alert('No se pudo guardar la cita. Revisa tu conexión e inténtalo de nuevo.');
+              toast('No se pudo guardar la cita. Revisa tu conexión e inténtalo de nuevo.');
             } finally { setNcGuardando(false); }
           }
 
@@ -1973,7 +2408,7 @@
             // Ingresos del mes completo
             var d = new Date(selectedDate);
             var primerDia = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-01';
-            var ultimoDia = new Date(d.getFullYear(), d.getMonth()+1, 0).toISOString().split('T')[0];
+            var ultimoDia = fechaISO(new Date(d.getFullYear(), d.getMonth()+1, 0));
             dbGet('appointments', '?date=gte.' + primerDia + '&date=lte.' + ultimoDia + '&status=eq.confirmed&order=date.asc,time.asc&select=*,barberos(name),servicios(name,price)')
               .then(function(data) {
                 var arr = Array.isArray(data) ? data : [];
@@ -1987,72 +2422,107 @@
           useEffect(function() {
             if (panel !== 'clientes') return;
             setLoadingClientes(true);
-            dbGet('appointments', '?order=date.desc&select=client_email,client_name,date,status,servicios(price)')
-              .then(function(data) {
-                var arr = Array.isArray(data) ? data : [];
-                var mapa = {};
-                arr.forEach(function(c) {
-                  var key = c.client_email || c.client_name;
-                  if (!key) return;
-                  if (!mapa[key]) {
-                    mapa[key] = { email: c.client_email, nombre: c.client_name || (c.client_email ? c.client_email.split('@')[0] : 'Cliente'), visitas: 0, gastado: 0, ultima: c.date };
-                  }
-                  if (c.status === 'confirmed') {
-                    mapa[key].visitas += 1;
-                    mapa[key].gastado += (c.servicios && c.servicios.price) || 0;
-                  }
-                  if (c.date > mapa[key].ultima) mapa[key].ultima = c.date;
-                });
-                // Completar nombres desde profiles
-                var emails = Object.keys(mapa).filter(function(k){ return mapa[k].email; }).map(function(k){ return mapa[k].email; });
-                var lista = Object.keys(mapa).map(function(k){ return mapa[k]; }).sort(function(a,b){ return b.visitas - a.visitas; });
-                function fusionarYeasy(base) {
-                  var telsExistentes = {};
-                  var emailsExistentes = {};
-                  base.forEach(function(c){
-                    if (c.telefono) telsExistentes[c.telefono.replace(/\s/g,'')] = true;
-                    if (c.email) emailsExistentes[c.email] = true;
-                  });
-                  return Promise.all([
-                    dbGet('clientes_yeasy', '?select=id,nombre,telefono&order=nombre.asc'),
-                    dbGet('profiles', '?select=id,phone&phone=not.is.null')
-                  ]).then(function(results){
-                    var yeasyData = results[0];
-                    var perfilesConTel = results[1];
-                    // Teléfono (sin espacios) → email, para las cuentas que sí tienen
-                    // teléfono guardado en su perfil
-                    var telAEmail = {};
-                    (Array.isArray(perfilesConTel) ? perfilesConTel : []).forEach(function(p){
-                      if (p.phone) telAEmail[String(p.phone).replace(/\s/g,'')] = p.id;
-                    });
-                    var yeasy = (Array.isArray(yeasyData) ? yeasyData : []).map(function(y){
-                      var telNorm = y.telefono ? y.telefono.replace(/\s/g,'') : null;
-                      var emailMatch = telNorm && telAEmail[telNorm] ? telAEmail[telNorm] : null;
-                      return { id: y.id, email: emailMatch, telefono: y.telefono, nombre: y.nombre, visitas: 0, gastado: 0, ultima: null, importado: true, registradoDesdeImportado: !!emailMatch };
-                    });
-                    var extra = yeasy.filter(function(y){
-                      var telNorm = y.telefono ? y.telefono.replace(/\s/g,'') : null;
-                      var yaEnBase = (telNorm && telsExistentes[telNorm]) || (y.email && emailsExistentes[y.email]);
-                      return !yaEnBase;
-                    });
-                    return base.concat(extra);
-                  })
-                    .catch(function(){
-                      var extra = YEASY_CLIENTES.filter(function(y){ return !telsExistentes[y.telefono.replace(/\s/g,'')]; });
-                      return base.concat(extra);
-                    });
+            setErrorClientes(false);
+            // Un importado de Yeasy y su cuenta nueva en la app son la misma
+            // persona: se cruzan por teléfono (o por nombre, o a mano) para que
+            // el negocio pueda actuar sobre ella (bloquear, ver visitas...).
+            Promise.all([
+              dbGet('appointments', '?order=date.desc&select=client_email,client_name,date,status,servicios(price)').catch(function(){ return []; }),
+              dbGet('profiles', '?select=id,full_name,phone,provider&order=full_name.asc').catch(function(){ return []; }),
+              dbGet('clientes_yeasy', '?select=id,nombre,telefono&order=nombre.asc').catch(function(){ return null; })
+            ]).then(function(res) {
+              var citasArr = Array.isArray(res[0]) ? res[0] : [];
+              var perfiles = Array.isArray(res[1]) ? res[1] : [];
+              var importados = Array.isArray(res[2])
+                ? res[2].map(function(y){ return { id: y.id, nombre: y.nombre, telefono: y.telefono }; })
+                : YEASY_CLIENTES.map(function(y){ return { id: null, nombre: y.nombre, telefono: y.telefono }; });
+
+              // Estadísticas de citas, por email o por nombre (citas creadas a mano)
+              var stats = {};
+              citasArr.forEach(function(c) {
+                var key = c.client_email || (c.client_name ? 'n:' + normNombre(c.client_name) : null);
+                if (!key) return;
+                if (!stats[key]) stats[key] = { email: c.client_email || null, nombre: c.client_name || (c.client_email ? c.client_email.split('@')[0] : 'Cliente'), visitas: 0, gastado: 0, ultima: c.date };
+                if (c.status === 'confirmed') {
+                  stats[key].visitas += 1;
+                  stats[key].gastado += (c.servicios && c.servicios.price) || 0;
                 }
-                if (emails.length === 0) { fusionarYeasy(lista).then(function(l){ setClientes(l); setLoadingClientes(false); }); return; }
-                dbGet('profiles', '?id=in.(' + emails.map(encodeURIComponent).join(',') + ')&select=id,full_name')
-                  .then(function(perfiles) {
-                    var pm = {};
-                    (perfiles || []).forEach(function(p){ if (p.full_name) pm[p.id] = p.full_name; });
-                    lista.forEach(function(cl){ if (cl.email && pm[cl.email]) cl.nombre = pm[cl.email]; });
-                    fusionarYeasy(lista).then(function(l){ setClientes(l); setLoadingClientes(false); });
-                  }).catch(function(){ fusionarYeasy(lista).then(function(l){ setClientes(l); setLoadingClientes(false); }); });
-              })
-              .catch(function(){ setLoadingClientes(false); });
-          }, [panel, reloadClientesTick]);
+                if (c.date && c.date > stats[key].ultima) stats[key].ultima = c.date;
+              });
+
+              // Una fila por cuenta registrada (aunque no haya reservado nunca)
+              var filas = [];
+              var porEmail = {};
+              perfiles.forEach(function(p) {
+                if (!p.id) return;
+                var s = stats[p.id] || {};
+                var fila = {
+                  email: p.id,
+                  nombre: p.full_name || s.nombre || p.id.split('@')[0],
+                  telefono: p.phone || null,
+                  visitas: s.visitas || 0,
+                  gastado: s.gastado || 0,
+                  ultima: s.ultima || null,
+                  registrado: true,
+                  importado: false,
+                  yeasyId: null
+                };
+                porEmail[p.id] = fila;
+                filas.push(fila);
+              });
+              // Citas con email pero sin perfil creado
+              Object.keys(stats).forEach(function(k) {
+                var s = stats[k];
+                if (!s.email || porEmail[s.email]) return;
+                var fila = { email: s.email, nombre: s.nombre, telefono: null, visitas: s.visitas, gastado: s.gastado, ultima: s.ultima, registrado: true, importado: false, yeasyId: null };
+                porEmail[s.email] = fila;
+                filas.push(fila);
+              });
+
+              // Índices para cruzar
+              var porTel = {}, porNombre = {};
+              filas.forEach(function(f) {
+                var t = normTel(f.telefono);
+                if (t) porTel[t] = f;
+                var n = normNombre(f.nombre);
+                if (n) porNombre[n] = f;
+              });
+
+              var sinRegistrar = [];
+              importados.forEach(function(imp) {
+                var t = normTel(imp.telefono);
+                var vinculado = t && vinculos[t] ? porEmail[vinculos[t]] : null;
+                var match = vinculado || (t ? porTel[t] : null) || porNombre[normNombre(imp.nombre)] || null;
+                if (match) {
+                  // Misma persona: se completa la ficha registrada
+                  if (!match.telefono) match.telefono = imp.telefono;
+                  if (!match.yeasyId) match.yeasyId = imp.id;
+                  match.eraImportado = true;
+                  if (vinculado) match.vinculadoAMano = true;
+                  var nStats = stats['n:' + normNombre(imp.nombre)];
+                  if (nStats && !match.visitas && nStats.visitas) { match.visitas = nStats.visitas; match.gastado = nStats.gastado; match.ultima = nStats.ultima; }
+                } else {
+                  sinRegistrar.push({ id: imp.id, email: null, nombre: imp.nombre, telefono: imp.telefono, visitas: 0, gastado: 0, ultima: null, registrado: false, importado: true, yeasyId: imp.id });
+                }
+              });
+
+              // Citas a nombre suelto (sin email y sin importado que las reclame)
+              Object.keys(stats).forEach(function(k) {
+                var s = stats[k];
+                if (s.email) return;
+                var n = normNombre(s.nombre);
+                if (porNombre[n]) return;
+                if (sinRegistrar.some(function(x){ return normNombre(x.nombre) === n; })) return;
+                sinRegistrar.push({ id: null, email: null, nombre: s.nombre, telefono: null, visitas: s.visitas, gastado: s.gastado, ultima: s.ultima, registrado: false, importado: true, yeasyId: null });
+              });
+
+              filas.sort(function(a, b){ return (b.visitas - a.visitas) || String(a.nombre).localeCompare(String(b.nombre), 'es'); });
+              sinRegistrar.sort(function(a, b){ return String(a.nombre).localeCompare(String(b.nombre), 'es'); });
+
+              setClientes(filas.concat(sinRegistrar));
+              setLoadingClientes(false);
+            }).catch(function(){ setLoadingClientes(false); setErrorClientes(true); });
+          }, [panel, reloadClientesTick, vinculos]);
 
           // Cargar clientes bloqueados (junto con la lista de clientes)
           useEffect(function() {
@@ -2078,13 +2548,13 @@
               setBloqueando(cl.email);
               dbDelete('usuarios_bloqueados', '?email=eq.' + encodeURIComponent(cl.email))
                 .then(function(){ setBloqueados(function(prev){ return prev.filter(function(e){ return e !== cl.email; }); }); setBloqueando(null); })
-                .catch(function(){ setBloqueando(null); alert('No se pudo desbloquear'); });
+                .catch(function(){ setBloqueando(null); toast('No se pudo desbloquear'); });
             } else {
               if (!window.confirm('¿Bloquear a ' + cl.nombre + '? No podrá reservar nuevas citas en la app.')) return;
               setBloqueando(cl.email);
               dbInsert('usuarios_bloqueados', { email: cl.email, motivo: null })
                 .then(function(){ setBloqueados(function(prev){ return prev.concat([cl.email]); }); setBloqueando(null); })
-                .catch(function(){ setBloqueando(null); alert('No se pudo bloquear'); });
+                .catch(function(){ setBloqueando(null); toast('No se pudo bloquear'); });
             }
           }
 
@@ -2114,14 +2584,14 @@
                 body: file
               });
               setUploadingImg(false);
-              if (!res.ok) { alert('Error al subir la imagen'); return null; }
+              if (!res.ok) { toast('Error al subir la imagen'); return null; }
               return SUPABASE_URL + '/storage/v1/object/public/productos/' + nombreArchivo;
-            } catch(e) { setUploadingImg(false); alert('Error al subir la imagen'); return null; }
+            } catch(e) { setUploadingImg(false); toast('Error al subir la imagen'); return null; }
           }
 
           // Guardar producto (nuevo o edición)
           async function guardarProducto() {
-            if (!editProd || !editProd.nombre || !editProd.precio) { alert('Nombre y precio son obligatorios'); return; }
+            if (!editProd || !editProd.nombre || !editProd.precio) { toast('Nombre y precio son obligatorios'); return; }
             setSavingProd(true);
             try {
               var payload = {
@@ -2142,7 +2612,7 @@
               }
               await recargarProductos();
               setEditProd(null);
-            } catch(e) { alert('Error al guardar'); }
+            } catch(e) { toast('Error al guardar'); }
             setSavingProd(false);
           }
 
@@ -2154,7 +2624,7 @@
                 method: 'DELETE', headers: await getDbHeaders()
               });
               await recargarProductos();
-            } catch(e) { alert('Error al borrar'); }
+            } catch(e) { toast('Error al borrar'); }
           }
 
           function formatHora(t) { return t ? t.slice(0,5) : ''; }
@@ -2225,7 +2695,7 @@
 
           var now = new Date();
           var nowMin = now.getHours() * 60 + now.getMinutes();
-          var esHoy = selectedDate === new Date().toISOString().split('T')[0];
+          var esHoy = selectedDate === hoyISO();
 
           function estadoCita(c) {
             if (c.status === 'cancelled') return { label: 'Cancelada', color: G.red };
@@ -2311,6 +2781,29 @@
             doc.save('Gonnie_' + mesNombre.replace(' ', '_') + '.pdf');
           }
 
+          // Pestañas fijas: la agenda es la casa, no una opción de un menú.
+          function tabsNegocio() {
+            var tabs = [
+              { id: 'agenda', label: 'Agenda' },
+              { id: 'stats', label: 'Estadísticas' },
+              { id: 'clientes', label: 'Clientes' },
+              { id: 'menu', label: 'Más' }
+            ];
+            return (
+              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
+                {tabs.map(function(t) {
+                  var activo = panel === t.id;
+                  return (
+                    <button key={t.id} onClick={function(){ setPanel(t.id); }}
+                      style={{ flexShrink: 0, background: activo ? G.brand : 'transparent', color: activo ? '#FBFCF8' : G.muted, border: activo ? 'none' : '1px solid ' + G.bdr, borderRadius: 20, padding: '8px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          }
+
           // ─── MENÚ PRINCIPAL ───
           if (panel === 'menu') {
             var opciones = [
@@ -2324,7 +2817,8 @@
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
                 <div style={{ padding: '28px 18px 0', flexShrink: 0 }}>
-                  <h1 style={{ fontSize: 26, fontWeight: 800, color: G.text, margin: '0 0 2px' }}>Panel de negocio</h1>
+                  {tabsNegocio()}
+                  <h1 style={{ fontSize: 24, fontWeight: 800, color: G.text, margin: '14px 0 2px' }}>Panel de negocio</h1>
                   <p style={{ fontSize: 14, color: G.muted, margin: 0 }}>Gestiona tu barbería</p>
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '22px 18px 90px' }}>
@@ -2351,9 +2845,9 @@
           if (panel === 'stats') {
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-                <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <button onClick={function(){ setPanel('menu'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
-                  <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>Estadísticas</h1>
+                <div style={{ padding: '20px 18px 14px', flexShrink: 0 }}>
+                  {tabsNegocio()}
+                  <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: '14px 0 0' }}>Estadísticas</h1>
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
@@ -2458,7 +2952,7 @@
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
                   {totalUsuarios === null && (
-                    <p style={{ fontSize: 13, color: G.muted, textAlign: 'center', marginTop: 30 }}>Cargando...</p>
+                    <div style={{ marginTop: 8 }}><SkeletonFilas n={5} /></div>
                   )}
                   {totalUsuarios !== null && totalUsuarios.length === 0 && (
                     <p style={{ fontSize: 13, color: G.muted, textAlign: 'center', marginTop: 30 }}>Todavía no hay usuarios registrados</p>
@@ -2489,24 +2983,45 @@
 
           // ─── PANEL CLIENTES ───
           if (panel === 'clientes') {
+            var nRegistrados = clientes.filter(function(c){ return c.registrado; }).length;
+            var nSinRegistrar = clientes.length - nRegistrados;
+            var clientesVisibles = clientes.filter(function(cl) {
+              if (filtroEstado === 'registrados' && !cl.registrado) return false;
+              if (filtroEstado === 'sin' && cl.registrado) return false;
+              var q = buscarCliente.trim().toLowerCase();
+              if (!q) return true;
+              return normNombre(cl.nombre).indexOf(normNombre(q)) !== -1
+                || String(cl.telefono || '').replace(/\s/g, '').indexOf(q.replace(/\s/g, '')) !== -1
+                || String(cl.email || '').toLowerCase().indexOf(q) !== -1;
+            });
+            var candidatosVinculo = clientes.filter(function(c){ return c.registrado; });
+            var telsSeleccionados = Object.keys(seleccionados).filter(function(k){ return seleccionados[k]; });
+            var enviosTerminados = telsSeleccionados.length > 0 && enviadoIdx >= telsSeleccionados.length;
+            var telANombre = {};
+            clientes.forEach(function(c){ if (c.telefono) telANombre[c.telefono] = String(c.nombre || '').split(' ')[0]; });
             return (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-                <div style={{ padding: '20px 18px 14px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <button onClick={function(){ if (modoMensaje) { setModoMensaje(false); setSeleccionados({}); } else if (showAddCliente) { setShowAddCliente(false); } else { setPanel('menu'); } }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
+                <div style={{ padding: '20px 18px 14px', flexShrink: 0 }}>
+                  {!modoMensaje && !showAddCliente && <div style={{ paddingBottom: 14 }}>{tabsNegocio()}</div>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {(modoMensaje || showAddCliente) && (
+                    <button onClick={function(){ if (modoMensaje) { setModoMensaje(false); setSeleccionados({}); setEnviadoIdx(0); } else { setShowAddCliente(false); } }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
+                  )}
                   <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>{modoMensaje ? 'Mensaje masivo' : (showAddCliente ? 'Nuevo cliente' : 'Clientes')}</h1>
-                  {!loadingClientes && !modoMensaje && !showAddCliente && <span style={{ fontSize: 13, color: G.muted, marginLeft: 'auto' }}>{clientes.length}</span>}
+                  {!loadingClientes && !modoMensaje && !showAddCliente && <span style={{ fontSize: 12, color: G.muted, marginLeft: 'auto', textAlign: 'right', lineHeight: 1.3 }}>{nRegistrados} en la app<br/>{nSinRegistrar} sin registrar</span>}
                   {!loadingClientes && !modoMensaje && !showAddCliente && (
                     <button onClick={function(){ setShowAddCliente(true); setNuevoClienteNombre(''); setNuevoClienteTel(''); }}
-                      style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 10, width: 34, height: 34, fontSize: 18, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, width: 42, height: 42, fontSize: 20, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       +
                     </button>
                   )}
                   {!loadingClientes && !modoMensaje && !showAddCliente && clientes.length > 0 && (
-                    <button onClick={function(){ setModoMensaje(true); }}
+                    <button onClick={function(){ setModoMensaje(true); setEnviadoIdx(0); }}
                       style={{ background: G.brand, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
                       Mensaje masivo
                     </button>
                   )}
+                  </div>
                 </div>
 
                 {showAddCliente && (
@@ -2520,7 +3035,7 @@
                         setGuardandoCliente(true);
                         dbInsert('clientes_yeasy', { nombre: nuevoClienteNombre.trim(), telefono: nuevoClienteTel.trim() || null, origen: 'manual' })
                           .then(function(){ setShowAddCliente(false); setGuardandoCliente(false); setReloadClientesTick(function(t){ return t + 1; }); })
-                          .catch(function(){ setGuardandoCliente(false); alert('No se pudo guardar el cliente'); });
+                          .catch(function(){ setGuardandoCliente(false); toast('No se pudo guardar el cliente'); });
                       }}
                       style={{ width: '100%', background: (!nuevoClienteNombre.trim() || guardandoCliente) ? G.card2 : G.brand, border: (!nuevoClienteNombre.trim() || guardandoCliente) ? '1px solid ' + G.bdr : 'none', borderRadius: 14, padding: '13px', fontSize: 14, fontWeight: 700, color: (!nuevoClienteNombre.trim() || guardandoCliente) ? G.muted : '#fff', cursor: (!nuevoClienteNombre.trim() || guardandoCliente) ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
                       {guardandoCliente ? 'Guardando...' : 'Guardar cliente'}
@@ -2538,13 +3053,14 @@
                           var todosMarcados = clientes.every(function(cl){ return cl.telefono && seleccionados[cl.telefono]; });
                           if (!todosMarcados) { clientes.forEach(function(cl){ if (cl.telefono) todos[cl.telefono] = true; }); }
                           setSeleccionados(todos);
+                          setEnviadoIdx(0);
                         }}
                         style={{ background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 10, padding: '8px 12px', fontSize: 12, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit' }}>
                         {clientes.every(function(cl){ return cl.telefono && seleccionados[cl.telefono]; }) ? 'Ninguno' : 'Todos'}
                       </button>
                       <span style={{ fontSize: 12, color: G.muted }}>{Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length} seleccionados</span>
                     </div>
-                    <p style={{ fontSize: 11, color: G.muted, margin: '10px 0 0', lineHeight: 1.5 }}>WhatsApp no permite enviar a varios a la vez: pulsa "Enviar" en cada cliente y confirma el envío en WhatsApp.</p>
+                    <p style={{ fontSize: 11, color: G.muted, margin: '10px 0 0', lineHeight: 1.5 }}>WhatsApp no permite enviar a varios de golpe. El botón de abajo te los va pasando de uno en uno: se abre el chat, envías, vuelves y pulsas otra vez.</p>
                   </div>
                 )}
 
@@ -2552,27 +3068,45 @@
                   <div style={{ padding: '0 18px 12px', flexShrink: 0 }}>
                     <div style={{ position: 'relative' }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                      <input value={buscarCliente} onChange={function(e){ setBuscarCliente(e.target.value); }} placeholder="Buscar por nombre o teléfono"
+                      <input value={buscarCliente} onChange={function(e){ setBuscarCliente(e.target.value); }} placeholder="Buscar por nombre, teléfono o email"
                         style={{ width: '100%', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, padding: '11px 14px 11px 38px', fontSize: 16, color: G.text, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                    </div>
+                    <div style={{ display: 'flex', gap: 7, marginTop: 10 }}>
+                      {[{ id: 'todos', label: 'Todos' }, { id: 'registrados', label: 'En la app · ' + nRegistrados }, { id: 'sin', label: 'Sin registrar · ' + nSinRegistrar }].map(function(f) {
+                        var activo = filtroEstado === f.id;
+                        return (
+                          <button key={f.id} onClick={function(){ setFiltroEstado(f.id); }}
+                            style={{ background: activo ? G.brand : G.card, color: activo ? '#fff' : G.text, border: activo ? 'none' : '1px solid ' + G.bdr, borderRadius: 18, padding: '7px 12px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                            {f.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
                 {!showAddCliente && (
                 <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
-                  {loadingClientes && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
-                  {!loadingClientes && clientes.length === 0 && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Aún no hay clientes</p>}
-                  {!loadingClientes && clientes.filter(function(cl){
-                      var q = buscarCliente.trim().toLowerCase();
-                      if (!q) return true;
-                      return (cl.nombre || '').toLowerCase().indexOf(q) !== -1 || (cl.telefono || '').replace(/\s/g,'').indexOf(q.replace(/\s/g,'')) !== -1;
-                    }).length === 0 && (
-                    <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Sin resultados</p>
+                  {loadingClientes && <div style={{ marginTop: 6 }}><SkeletonFilas n={6} /></div>}
+                  {!loadingClientes && errorClientes && (
+                    <EstadoError texto="No se ha podido cargar la lista de clientes."
+                      onReintentar={function(){ setReloadClientesTick(function(x){ return x + 1; }); }} />
                   )}
-                  {!loadingClientes && clientes.filter(function(cl){
-                      var q = buscarCliente.trim().toLowerCase();
-                      if (!q) return true;
-                      return (cl.nombre || '').toLowerCase().indexOf(q) !== -1 || (cl.telefono || '').replace(/\s/g,'').indexOf(q.replace(/\s/g,'')) !== -1;
-                    }).map(function(cl, i) {
+                  {!loadingClientes && !errorClientes && clientes.length === 0 && (
+                    <EstadoVacio
+                      icono={<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 20v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/><circle cx="9.5" cy="7" r="3.5"/><path d="M18 8h4M20 6v4"/></svg>}
+                      titulo="Aún no hay clientes"
+                      texto="Añade el primero a mano o espera a que reserven desde la app."
+                      accion="Añadir cliente"
+                      onAccion={function(){ setShowAddCliente(true); setNuevoClienteNombre(''); setNuevoClienteTel(''); }} />
+                  )}
+                  {!loadingClientes && !errorClientes && clientes.length > 0 && clientesVisibles.length === 0 && (
+                    <EstadoVacio
+                      titulo="Sin resultados"
+                      texto={buscarCliente.trim() ? 'Nadie coincide con "' + buscarCliente.trim() + '".' : 'Ningún cliente en este filtro.'}
+                      accion={buscarCliente.trim() ? 'Borrar búsqueda' : 'Ver todos'}
+                      onAccion={function(){ if (buscarCliente.trim()) setBuscarCliente(''); else setFiltroEstado('todos'); }} />
+                  )}
+                  {!loadingClientes && clientesVisibles.map(function(cl, i) {
                     var inicial = (cl.nombre || '?').charAt(0).toUpperCase();
                     var marcado = !!(cl.telefono && seleccionados[cl.telefono]);
                     var bloqueadoCl = estaBloqueado(cl.email);
@@ -2589,11 +3123,22 @@
                           <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cl.nombre}</span>
                             {bloqueadoCl && <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: G.red, padding: '2px 6px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.03em', flexShrink: 0 }}>Bloqueado</span>}
-                            {!bloqueadoCl && cl.registradoDesdeImportado && <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: G.green, padding: '2px 6px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.03em', flexShrink: 0 }}>Ya registrado</span>}
+                            {!bloqueadoCl && cl.registrado && cl.eraImportado && <span style={{ fontSize: 9, fontWeight: 800, color: '#0F2A20', background: G.mint, padding: '2px 6px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.03em', flexShrink: 0 }}>{cl.vinculadoAMano ? 'Vinculado' : 'Ya en la app'}</span>}
                           </p>
-                          <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{cl.importado ? (cl.telefono || 'Importado de Yeasy') : (cl.visitas + ' ' + (cl.visitas === 1 ? 'visita' : 'visitas') + ' · ' + cl.gastado + '€ gastados')}</p>
+                          <p style={{ fontSize: 11, color: G.muted, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {cl.registrado
+                              ? (cl.visitas + ' ' + (cl.visitas === 1 ? 'visita' : 'visitas') + ' · ' + cl.gastado + '€' + (cl.telefono ? ' · ' + cl.telefono : '') + (cl.ultima ? ' · última ' + fechaCorta(cl.ultima) : ''))
+                              : ((cl.telefono || 'Sin teléfono') + ' · sin cuenta en la app')}
+                          </p>
                         </div>
                         {modoMensaje && !cl.telefono && <span style={{ fontSize: 10, color: G.muted }}>Sin tfno</span>}
+                        {!modoMensaje && !cl.registrado && cl.telefono && (
+                          <button onClick={function(e){ e.stopPropagation(); setVinculando(cl); }}
+                            title="Vincular con una cuenta de la app"
+                            style={{ background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 12, padding: '11px 14px', fontSize: 11.5, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                            Vincular
+                          </button>
+                        )}
                         {!modoMensaje && cl.email && (
                           <button onClick={function(e){ e.stopPropagation(); toggleBloqueo(cl); }}
                             disabled={bloqueando === cl.email}
@@ -2609,7 +3154,7 @@
                               setBorrandoTel(cl.telefono);
                               dbDelete('clientes_yeasy', '?id=eq.' + cl.id)
                                 .then(function(){ setBorrandoTel(null); setReloadClientesTick(function(t){ return t + 1; }); })
-                                .catch(function(){ setBorrandoTel(null); alert('No se pudo borrar el cliente'); });
+                                .catch(function(){ setBorrandoTel(null); toast('No se pudo borrar el cliente'); });
                             }}
                             disabled={borrandoTel === cl.telefono}
                             style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, color: G.muted, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
@@ -2622,20 +3167,53 @@
                 </div>
                 )}
 
+                {vinculando && (
+                  <div onClick={function(){ setVinculando(null); }}
+                    style={{ position: 'fixed', inset: 0, background: 'rgba(26,22,20,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                    <div onClick={function(e){ e.stopPropagation(); }}
+                      style={{ width: '100%', maxWidth: 460, background: G.cream, borderRadius: '24px 24px 0 0', padding: '20px 18px 28px', maxHeight: '76vh', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div>
+                        <p style={{ fontSize: 17, fontWeight: 800, color: G.text, margin: 0 }}>Vincular a {vinculando.nombre}</p>
+                        <p style={{ fontSize: 12, color: G.muted, margin: '4px 0 0', lineHeight: 1.5 }}>
+                          Elige su cuenta de la app. Se usa cuando el teléfono está guardado distinto ({vinculando.telefono || 'sin teléfono'}) o se registró con otro nombre.
+                        </p>
+                      </div>
+                      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+                        {candidatosVinculo.length === 0 && (
+                          <p style={{ fontSize: 12.5, color: G.muted, margin: '8px 0' }}>Todavía no hay cuentas registradas en la app.</p>
+                        )}
+                        {candidatosVinculo.map(function(u) {
+                          return (
+                            <button key={u.email} onClick={function(){ vincularCliente(vinculando, u.email); }}
+                              style={{ width: '100%', textAlign: 'left', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '12px 14px', marginBottom: 8, cursor: 'pointer', fontFamily: 'inherit' }}>
+                              <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: G.text }}>{u.nombre}</span>
+                              <span style={{ display: 'block', fontSize: 11, color: G.muted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}{u.telefono ? ' · ' + u.telefono : ''}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button onClick={function(){ setVinculando(null); }}
+                        style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '13px', fontSize: 13.5, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {modoMensaje && (
                   <div style={{ padding: '14px 18px 92px', flexShrink: 0, borderTop: '1px solid ' + G.bdr }}>
-                    <button disabled={!textoMensaje.trim() || Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length === 0}
+                    <button disabled={!textoMensaje.trim() || telsSeleccionados.length === 0 || enviosTerminados}
                       onClick={function(){
-                        var tels = Object.keys(seleccionados).filter(function(k){ return seleccionados[k]; });
-                        tels.forEach(function(tel, idx){
-                          setTimeout(function(){
-                            window.open('https://wa.me/' + tel.replace(/[^\d+]/g,'').replace('+','') + '?text=' + encodeURIComponent(textoMensaje), '_blank');
-                          }, idx * 350);
-                        });
+                        var tel = telsSeleccionados[enviadoIdx];
+                        if (!tel) return;
+                        window.open('https://wa.me/' + tel.replace(/[^\d+]/g,'').replace('+','') + '?text=' + encodeURIComponent(textoMensaje), '_blank');
+                        setEnviadoIdx(enviadoIdx + 1);
                       }}
                       style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: (!textoMensaje.trim() || Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length === 0) ? G.card2 : '#25D366', border: (!textoMensaje.trim() || Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length === 0) ? '1px solid ' + G.bdr : 'none', borderRadius: 14, padding: '14px', fontSize: 14, fontWeight: 700, color: (!textoMensaje.trim() || Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length === 0) ? G.muted : '#fff', cursor: (!textoMensaje.trim() || Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length === 0) ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.3A9 9 0 003.3 17.4L2 22l4.7-1.3a9 9 0 0010.9-14.4zM12 20a7.1 7.1 0 01-3.6-1l-.3-.1-2.7.7.7-2.6-.2-.3A7.1 7.1 0 1112 20z"/></svg>
-                      Enviar a {Object.keys(seleccionados).filter(function(k){return seleccionados[k];}).length} por WhatsApp
+                      {enviosTerminados
+                        ? 'Enviados los ' + telsSeleccionados.length
+                        : 'Enviar a ' + (telANombre[telsSeleccionados[enviadoIdx]] || telsSeleccionados[enviadoIdx] || '') + ' (' + (enviadoIdx + 1) + ' de ' + telsSeleccionados.length + ')'}
                     </button>
                   </div>
                 )}
@@ -2693,8 +3271,15 @@
                   {/* LISTA */}
                   {!editProd && (
                     <div>
-                      {loadingProd && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
-                      {!loadingProd && productos.length === 0 && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>No hay productos. Pulsa "Añadir".</p>}
+                      {loadingProd && <div style={{ marginTop: 6 }}><SkeletonFilas n={4} /></div>}
+                      {!loadingProd && productos.length === 0 && (
+                        <EstadoVacio
+                          icono={<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 01-8 0"/></svg>}
+                          titulo="Todavía no vendes nada"
+                          texto="Añade ceras, aceites o champús para que aparezcan en la tienda."
+                          accion="Añadir producto"
+                          onAccion={function(){ setEditProd({}); }} />
+                      )}
                       {!loadingProd && productos.map(function(p) {
                         return (
                           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, padding: '12px 14px', marginBottom: 10 }}>
@@ -2731,7 +3316,7 @@
 
                 <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0, padding: '0 18px 90px', boxSizing: 'border-box' }}>
                   <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '4px 0 10px' }}>Horario semanal</p>
-                  {loadingHorario && <p style={{ fontSize: 13, color: G.muted, textAlign: 'center', margin: '10px 0' }}>Cargando...</p>}
+                  {loadingHorario && <div><Skeleton h={52} r={14} /><Skeleton h={52} r={14} /><Skeleton h={52} r={14} /><Skeleton h={52} r={14} /></div>}
 
                   {!loadingHorario && [1,2,3,4,5,6,0].map(function(diaNum) {
                     var h = horarioSemana.find(function(x){ return x.dia === diaNum; }) || { dia: diaNum, abierto: true, franjas: [] };
@@ -2788,7 +3373,7 @@
                   <p style={{ fontSize: 11, fontWeight: 700, color: G.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '20px 0 10px' }}>Días cerrados puntuales</p>
                   <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '14px', marginBottom: 12 }}>
                     <div style={{ width: '100%', overflow: 'hidden', borderRadius: 10, marginBottom: 8 }}>
-                      <input type="date" value={nuevoCierreFecha} onChange={function(e){ setNuevoCierreFecha(e.target.value); }} min={new Date().toISOString().split('T')[0]}
+                      <input type="date" value={nuevoCierreFecha} onChange={function(e){ setNuevoCierreFecha(e.target.value); }} min={hoyISO()}
                         style={{ width: '100%', maxWidth: '100%', display: 'block', WebkitAppearance: 'none', appearance: 'none', background: G.card2, border: '1px solid ' + G.bdr, borderRadius: 10, padding: '10px 12px', fontSize: 16, textAlign: 'left', color: G.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
                     </div>
                     <input type="text" value={nuevoCierreMotivo} onChange={function(e){ setNuevoCierreMotivo(e.target.value); }} placeholder="Motivo (opcional): vacaciones, asunto propio..."
@@ -2822,12 +3407,36 @@
           }
 
           // ─── PANEL AGENDA (por defecto) ───
+          // Resumen del día y huecos libres del barbero filtrado
+          var citasFiltradas = filtroBarbero ? citas.filter(function(c){ return String(c.barbero_id) === String(filtroBarbero); }) : citas;
+          var confirmadasDia = citasFiltradas.filter(function(c){ return c.status === 'confirmed'; });
+          var previstoDia = confirmadasDia.reduce(function(s, c){ return s + ((c.servicios && c.servicios.price) || 0); }, 0);
+          var ocupadasDia = confirmadasDia.map(function(c){ return formatHora(c.time); });
+          var huecosLibres = slotsParaFecha(selectedDate, horarioSemana, diasCerrados).filter(function(s){ return ocupadasDia.indexOf(s) < 0; });
+
+          // Cita en curso y siguiente, para la franja fija de arriba
+          var esHoy = selectedDate === hoyISO();
+          var enCurso = null, siguienteCita = null;
+          if (esHoy) {
+            var ahoraMinAg = new Date().getHours() * 60 + new Date().getMinutes();
+            function minutosDe(t) {
+              var p = hhmm(t).split(':');
+              return (Number(p[0]) || 0) * 60 + (Number(p[1]) || 0);
+            }
+            confirmadasDia.slice().sort(function(a, b){ return minutosDe(a.time) - minutosDe(b.time); }).forEach(function(c) {
+              var ini = minutosDe(c.time);
+              var dur = (c.servicios && c.servicios.duration_min) || 30;
+              if (ahoraMinAg >= ini && ahoraMinAg < ini + dur) enCurso = c;
+              else if (ini > ahoraMinAg && !siguienteCita) siguienteCita = c;
+            });
+          }
+
           return (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
               {/* Header FIJO */}
               <div style={{ padding: '20px 18px 0', flexShrink: 0 }}>
                 {/* Fila botón volver */}
-                <button onClick={function(){ setPanel('menu'); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '0 0 8px', color: G.muted, fontSize: 13, fontWeight: 600, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}>‹ Panel de negocio</button>
+                <div style={{ paddingBottom: 12 }}>{tabsNegocio()}</div>
                 {/* Fila título + fecha navegable */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 2px' }}>
                   <button onClick={function(){ cambiarSemana(-1); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, color: G.text, fontSize: 20, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
@@ -2866,6 +3475,70 @@
 
               {/* ZONA SCROLLEABLE: panel nueva cita + stats + PDF + timeline */}
               <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 18px 90px' }}>
+
+                {/* Resumen del día */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+                  <div style={{ background: G.card, borderRadius: 14, padding: '10px 10px' }}>
+                    <p style={{ fontSize: 18, fontWeight: 800, color: G.text, margin: 0 }}>{confirmadasDia.length}</p>
+                    <p style={{ fontSize: 10, color: G.muted, margin: 0 }}>citas</p>
+                  </div>
+                  <div style={{ background: G.mint, borderRadius: 14, padding: '10px 10px' }}>
+                    <p style={{ fontSize: 18, fontWeight: 800, color: '#0F2A20', margin: 0 }}>{previstoDia}€</p>
+                    <p style={{ fontSize: 10, color: '#0F2A20', opacity: 0.7, margin: 0 }}>previsto</p>
+                  </div>
+                  <div style={{ background: G.card, borderRadius: 14, padding: '10px 10px' }}>
+                    <p style={{ fontSize: 18, fontWeight: 800, color: huecosLibres.length > 0 ? G.red : G.text, margin: 0 }}>{filtroBarbero ? huecosLibres.length : '—'}</p>
+                    <p style={{ fontSize: 10, color: G.muted, margin: 0 }}>huecos libres</p>
+                  </div>
+                </div>
+
+                {/* Lo que pasa ahora mismo, siempre en el mismo sitio */}
+                {esHoy && (enCurso || siguienteCita) && (
+                  <div style={{ background: '#1A1614', borderRadius: 18, padding: '13px 15px', marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 9 }}>
+                    {enCurso ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: 4, background: G.mint, flexShrink: 0 }} />
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(251,252,248,0.5)', textTransform: 'uppercase', flexShrink: 0 }}>Ahora</span>
+                        <span style={{ flex: 1, minWidth: 0, fontFamily: "'Bricolage Grotesque'", fontSize: 17, fontWeight: 700, color: '#FBFCF8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {nombreDeCita(enCurso)}
+                        </span>
+                        <span style={{ fontSize: 12.5, color: 'rgba(251,252,248,0.6)', flexShrink: 0 }}>{hhmm(enCurso.time)}</span>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: 4, background: 'rgba(251,252,248,0.25)', flexShrink: 0 }} />
+                        <span style={{ fontSize: 12.5, color: 'rgba(251,252,248,0.6)' }}>Ahora mismo no tienes a nadie</span>
+                      </div>
+                    )}
+                    {siguienteCita && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderTop: '1px solid rgba(251,252,248,0.12)', paddingTop: 9 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(251,252,248,0.58)', textTransform: 'uppercase', flexShrink: 0 }}>Luego</span>
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: 'rgba(251,252,248,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {nombreDeCita(siguienteCita)}{siguienteCita.servicios && siguienteCita.servicios.name ? ' · ' + siguienteCita.servicios.name : ''}
+                        </span>
+                        <span style={{ fontSize: 12.5, fontWeight: 700, color: G.mint, flexShrink: 0 }}>{hhmm(siguienteCita.time)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Filtro por barbero */}
+                <div style={{ display: 'flex', gap: 7, marginBottom: 14, overflowX: 'auto', scrollbarWidth: 'none' }}>
+                  <button onClick={function(){ setFiltroBarbero(''); }}
+                    style={{ flexShrink: 0, background: filtroBarbero ? G.card : G.brand, color: filtroBarbero ? G.text : '#FBFCF8', border: 'none', borderRadius: 18, padding: '7px 13px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Todos</button>
+                  {barberos.map(function(b) {
+                    var activo = String(filtroBarbero) === String(b.id);
+                    return (
+                      <button key={b.id} onClick={function(){ setFiltroBarbero(activo ? '' : b.id); }}
+                        style={{ flexShrink: 0, background: activo ? G.brand : G.card, color: activo ? '#FBFCF8' : G.text, border: 'none', borderRadius: 18, padding: '7px 13px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        {b.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                {!filtroBarbero && (
+                  <p style={{ fontSize: 11, color: G.muted, margin: '0 0 12px' }}>Elige un barbero para ver sus huecos libres.</p>
+                )}
 
                 {/* Panel nueva cita */}
                 {showNuevaCita && (
@@ -2939,7 +3612,18 @@
                 )}
 
                 {/* Timeline */}
-                {loading && <p style={{ color: G.muted, fontSize: 13, textAlign: 'center', marginTop: 20 }}>Cargando...</p>}
+                {loading && (
+                  <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {[62, 44, 62, 80, 44].map(function(h, i) {
+                      return (
+                        <div key={i} style={{ display: 'flex', gap: 12 }}>
+                          <Skeleton h={12} w={34} r={6} mb={0} />
+                          <div style={{ flex: 1 }}><Skeleton h={h} r={14} mb={0} /></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
                 {!loading && (
                   <div style={{ position: 'relative', marginTop: 4 }}>
                     {/* Filas de horas (fondo) */}
@@ -2963,8 +3647,20 @@
                       );
                     })}
 
+                    {/* Huecos libres del barbero filtrado */}
+                    {filtroBarbero && huecosLibres.map(function(s) {
+                      var p = s.split(':');
+                      var hs = Number(p[0]);
+                      if (hs < HORA_INI || hs >= HORA_FIN) return null;
+                      return (
+                        <div key={'libre-' + s} style={{ position: 'absolute', left: 52, right: 0, top: topDeHora(hs, Number(p[1])), height: 26, border: '1px dashed ' + G.bdr, borderRadius: 8, boxSizing: 'border-box', display: 'flex', alignItems: 'center', paddingLeft: 10 }}>
+                          <span style={{ fontSize: 10.5, color: G.muted }}>Libre · {s}</span>
+                        </div>
+                      );
+                    })}
+
                     {/* Bloques de citas */}
-                    {citas.map(function(c, i) {
+                    {citasFiltradas.map(function(c, i) {
                       if (!c.time) return null;
                       var parts = c.time.split(':');
                       var ch = Number(parts[0]), cm = Number(parts[1]);
@@ -2977,7 +3673,7 @@
                         var totalMin = ch * 60 + cm + dur;
                         return String(Math.floor(totalMin/60)).padStart(2,'0') + ':' + String(totalMin%60).padStart(2,'0');
                       })();
-                      var nombre = c._nombre || c.client_name || c.cliente || (c.client_email ? c.client_email.split('@')[0] : 'Cliente');
+                      var nombre = nombreDeCita(c);
                       var cancelada = c.status === 'cancelled';
                       var metodoPago = c.payment_method ? String(c.payment_method).toLowerCase() : null;
                       var iconoPago = '';
@@ -3001,8 +3697,13 @@
                     })}
                   </div>
                 )}
-                {!loading && citas.length === 0 && (
-                  <p style={{ fontSize: 13, color: G.muted, textAlign: 'center', marginTop: 16 }}>No hay citas para este día</p>
+                {!loading && citasFiltradas.length === 0 && (
+                  <EstadoVacio
+                    icono={<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={G.muted} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>}
+                    titulo={filtroBarbero ? 'Sin citas con este barbero' : 'Día libre'}
+                    texto={filtroBarbero ? 'Prueba a quitar el filtro para ver el resto del día.' : 'No hay ninguna cita el ' + fechaCorta(selectedDate) + '.'}
+                    accion={filtroBarbero ? 'Ver todos los barberos' : 'Crear una cita'}
+                    onAccion={function(){ if (filtroBarbero) setFiltroBarbero(''); else setShowNuevaCita(true); }} />
                 )}
               </div>
             </div>
@@ -3014,7 +3715,7 @@
           const nivel = getNivel(puntos);
           const progreso = getProgreso(puntos);
           const ptsSiguiente = getPtsParaSiguiente(puntos);
-          const premiosDisponibles = puntos >= 500 ? 1 : 0;
+          const premiosDisponibles = estadoPremio(puntos).ganados;
           var email = (user && user.email) || '';
           var googleAvatar = (user && user.user_metadata && user.user_metadata.avatar_url) || null;
           var googleName = (user && user.user_metadata && user.user_metadata.full_name) || email || 'Usuario';
@@ -3075,7 +3776,7 @@
                 <div style={{ background: G.card, borderRadius: 20, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={function(){
                   var shareData = { title: 'Gonnie', text: 'Reserva tu barbería favorita con Gonnie 💈', url: window.location.href };
                   if (navigator.share) { navigator.share(shareData).catch(function(){}); }
-                  else { navigator.clipboard.writeText(shareData.url); alert('Enlace copiado al portapapeles'); }
+                  else { navigator.clipboard.writeText(shareData.url); toast('Enlace copiado al portapapeles'); }
                 }}>
                   <div style={{ width: 38, height: 38, borderRadius: 12, background: G.rose, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3A0F1B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 3.9M15.4 6.6L8.6 10.5"/></svg>
@@ -3211,7 +3912,7 @@
           // Cargar puntos reales del usuario desde Supabase
           const cargarPuntos = async (email) => {
             try {
-              const data = await dbGet("appointments", `?client_email=eq.${encodeURIComponent(email)}&select=points_earned`);
+              const data = await dbGet("appointments", `?client_email=eq.${encodeURIComponent(email)}&status=neq.cancelled&select=points_earned`);
               if (Array.isArray(data)) {
                 const total = data.reduce((sum, a) => sum + (a.points_earned || 0), 0);
                 setPuntos(total);
@@ -3255,7 +3956,7 @@
 
           // Recuperación de contraseña → pedir contraseña nueva antes de entrar
           if (passwordRecovery) return (
-            <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
+            <div className="gonnie-min-full-height" style={{ background: "#1A1614", display: "flex", justifyContent: "center" }}>
               <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
                 <NewPasswordScreen onDone={() => setPasswordRecovery(false)} />
               </div>
@@ -3264,7 +3965,7 @@
 
           // Sin sesión → pantalla de login
           if (!user) return (
-            <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
+            <div className="gonnie-min-full-height" style={{ background: "#1A1614", display: "flex", justifyContent: "center" }}>
               <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
                 <LoginScreen />
               </div>
@@ -3273,7 +3974,7 @@
 
           // Con sesión → splash o app
           if (splash) return (
-            <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
+            <div className="gonnie-min-full-height" style={{ background: "#1A1614", display: "flex", justifyContent: "center" }}>
               <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
                 <SplashScreen onDone={() => setSplash(false)} />
               </div>
@@ -3282,7 +3983,7 @@
 
           // Antes de la fecha de apertura, solo entra la cuenta admin
           if (user.email !== ADMIN_EMAIL && new Date() < FECHA_APERTURA) return (
-            <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
+            <div className="gonnie-min-full-height" style={{ background: "#1A1614", display: "flex", justifyContent: "center" }}>
               <div style={{ width: "100%", maxWidth: 420, background: G.bg }}>
                 <ComingSoonScreen fechaApertura={FECHA_APERTURA} />
               </div>
@@ -3290,7 +3991,7 @@
           );
 
           return (
-            <div className="flex justify-center min-h-screen" style={{ background: "#1A1614" }}>
+            <div className="gonnie-min-full-height" style={{ background: "#1A1614", display: "flex", justifyContent: "center" }}>
               <InstallBanner />
               <div className="gonnie-full-height" style={{ width: "100%", maxWidth: 420, background: G.bg, position: "relative", display: "flex", flexDirection: "column" }}>
                 <div style={{ flex: 1, minHeight: 0, overflowY: mode === "business" ? "hidden" : "auto" }}>
@@ -3298,11 +3999,11 @@
                     <BusinessScreen />
                   ) : (
                     <>
-                      {view === "home" && <HomeScreen nav={setView} user={user} puntos={puntos} setGroupMode={setGroupMode} />}
+                      {view === "home" && <HomeScreen nav={setView} user={user} puntos={puntos} setGroupMode={setGroupMode} setBooking={setBooking} />}
                       {view === "shop" && <ShopScreen nav={setView} />}
                       {view === "explore" && <ExploreScreen nav={setView} setBarberia={setBarberia} />}
                       {view === "detail" && <DetailScreen barberia={barberia} nav={setView} setBooking={setBooking} />}
-                      {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} setPuntos={setPuntos} user={user} groupMode={groupMode} setGroupMode={setGroupMode} />}
+                      {view === "booking" && <BookingScreen booking={booking} nav={setView} setConfirmedAppt={setConfirmedAppt} setPuntos={setPuntos} puntos={puntos} user={user} groupMode={groupMode} setGroupMode={setGroupMode} />}
                       {view === "confirmed" && <ConfirmedScreen nav={setView} appt={confirmedAppt} />}
                       {view === "appointments" && <AppointmentsScreen user={user} />}
                       {view === "loyalty" && <LoyaltyScreen puntos={puntos} />}
@@ -3388,7 +4089,7 @@
                 ✏️ Escribir reseña
               </button>
 
-              {loading && <div style={{ textAlign: "center", padding: 20, color: G.muted }}>Cargando...</div>}
+              {loading && <div style={{ padding: '6px 0' }}><SkeletonFilas n={3} /></div>}
 
               {!loading && resenas.length === 0 && (
                 <div style={{ textAlign: "center", padding: "30px 0" }}>
@@ -3427,7 +4128,7 @@
           const [done, setDone] = useState(false);
 
           function submit() {
-            if (stars === 0) { alert("Selecciona una valoración"); return; }
+            if (stars === 0) { toast("Selecciona una valoración"); return; }
             setSaving(true);
             dbInsert("resenas", {
               barberia_id: barberiaId,
@@ -3440,7 +4141,7 @@
               setDone(true);
               setSaving(false);
             }).catch(function() {
-              alert("Error al guardar la reseña");
+              toast("Error al guardar la reseña");
               setSaving(false);
             });
           }
