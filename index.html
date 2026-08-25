@@ -187,7 +187,7 @@
         // ─── EMAIL DE CONFIRMACIÓN VÍA SUPABASE EDGE FUNCTION ──────────────────
         async function sendConfirmationEmail({ barberia, barbero, servicio, fecha, hora, precio, cliente, email_cliente }) {
           try {
-            await fetch(`${SUPABASE_URL}/functions/v1/rapid-processor`, {
+            var res = await fetch(`${SUPABASE_URL}/functions/v1/rapid-processor`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -195,8 +195,15 @@
               },
               body: JSON.stringify({ barberia, barbero, servicio, fecha, hora, precio, cliente, email_cliente }),
             });
+            var texto = await res.text();
+            if (!res.ok) {
+              console.warn("Email no enviado — status " + res.status + ": " + texto);
+              return { ok: false, status: res.status, detalle: texto };
+            }
+            return { ok: true, status: res.status, detalle: texto };
           } catch (e) {
-            console.warn("Email no enviado:", e.message);
+            console.warn("Email no enviado (fallo de red):", e.message);
+            return { ok: false, status: null, detalle: e.message };
           }
         }
 
@@ -3931,6 +3938,16 @@
                  <p style={{ fontSize: 16, fontWeight: 700, color: G.text, margin: '0 0 4px', textAlign: 'center' }}>{displayName}</p>
                  <p style={{ fontSize: 12, color: G.muted, margin: 0, textAlign: 'center' }}>{email}</p>
                </div>
+
+              {email === ADMIN_EMAIL && (
+                <button onClick={async function(){
+                    var r = await sendConfirmationEmail({ barberia: 'Gonnie (prueba)', barbero: 'Prueba', servicio: 'Prueba', fecha: '2026-01-01', hora: '10:00', precio: 0, cliente: 'Prueba', email_cliente: email });
+                    alert('ok: ' + r.ok + '\nstatus: ' + r.status + '\n\n' + r.detalle);
+                  }}
+                  style={{ width: '100%', background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 12, padding: '11px', fontSize: 12, color: G.muted, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16 }}>
+                  🧪 Probar envío de email (temporal)
+                </button>
+              )}
 
               <div style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 16, overflow: 'hidden' }}>
                 {opciones.map(function(op, i) {
