@@ -2235,6 +2235,7 @@
           const [totalUsuarios, setTotalUsuarios] = useState(null);
           const [resetPuntosCargando, setResetPuntosCargando] = useState(false);
           const [resetPuntosHecho, setResetPuntosHecho] = useState(false);
+          const [borrandoCita, setBorrandoCita] = useState(null);
           const [showNuevaCita, setShowNuevaCita] = useState(false);
           const [barberos, setBarberos] = useState([]);
           const [servicios, setServicios] = useState([]);
@@ -2339,6 +2340,26 @@
             }).catch(function(){
               setResetPuntosCargando(false);
               toast('No se pudo completar el reseteo. Comprueba tu conexión.');
+            });
+          }
+
+          function borrarCita(c) {
+            var nombre = nombreDeCita(c);
+            if (!window.confirm('¿Anular la cita de ' + nombre + ' (' + formatHora(c.time) + ')? La hora quedará libre de nuevo.')) return;
+            setBorrandoCita(c.id);
+            getDbHeaders().then(function(headers){
+              return fetch(SUPABASE_URL + '/rest/v1/appointments?id=eq.' + c.id, {
+                method: 'PATCH',
+                headers: Object.assign({}, headers, { Prefer: 'return=minimal' }),
+                body: JSON.stringify({ status: 'cancelled' })
+              });
+            }).then(function(res){
+              setBorrandoCita(null);
+              if (!res.ok) { toast('No se pudo anular la cita. Inténtalo de nuevo.'); return; }
+              setCitas(function(prev){ return prev.map(function(x){ return x.id === c.id ? Object.assign({}, x, { status: 'cancelled' }) : x; }); });
+            }).catch(function(){
+              setBorrandoCita(null);
+              toast('No se pudo anular la cita. Comprueba tu conexión.');
             });
           }
 
@@ -3408,7 +3429,8 @@
 
           // ─── PANEL AGENDA (por defecto) ───
           // Resumen del día y huecos libres del barbero filtrado
-          var citasFiltradas = filtroBarbero ? citas.filter(function(c){ return String(c.barbero_id) === String(filtroBarbero); }) : citas;
+          var citasFiltradas = (filtroBarbero ? citas.filter(function(c){ return String(c.barbero_id) === String(filtroBarbero); }) : citas)
+            .filter(function(c){ return c.status !== 'cancelled'; });
           var confirmadasDia = citasFiltradas.filter(function(c){ return c.status === 'confirmed'; });
           var previstoDia = confirmadasDia.reduce(function(s, c){ return s + ((c.servicios && c.servicios.price) || 0); }, 0);
           var ocupadasDia = confirmadasDia.map(function(c){ return formatHora(c.time); });
@@ -3684,9 +3706,17 @@
                       }
                       return (
                         <div key={c.id || i} style={{ position: 'absolute', left: 52, right: 0, top: top, height: alto, background: cancelada ? '#FFEBEA' : col + '20', borderLeft: '3px solid ' + col, borderRadius: 8, padding: '5px 10px', boxSizing: 'border-box', overflow: 'hidden', opacity: cancelada ? 0.7 : 1 }}>
-                          <p style={{ fontSize: 11, fontWeight: 700, color: G.text, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {iconoPago ? iconoPago + ' ' : ''}{formatHora(c.time)}–{horaFin} · {nombre}
-                          </p>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
+                            <p style={{ fontSize: 11, fontWeight: 700, color: G.text, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {iconoPago ? iconoPago + ' ' : ''}{formatHora(c.time)}–{horaFin} · {nombre}
+                            </p>
+                            {!cancelada && (
+                              <button onClick={function(e){ e.stopPropagation(); borrarCita(c); }} disabled={borrandoCita === c.id}
+                                style={{ background: 'transparent', border: 'none', cursor: borrandoCita === c.id ? 'not-allowed' : 'pointer', padding: 0, flexShrink: 0, color: G.red, opacity: borrandoCita === c.id ? 0.4 : 0.7, lineHeight: 0 }}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                              </button>
+                            )}
+                          </div>
                           {alto > 38 && (
                             <p style={{ fontSize: 11, color: G.muted, margin: '1px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {(c.servicios && c.servicios.name) || 'Servicio'}{cancelada ? ' · Cancelada' : ''}
