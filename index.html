@@ -2194,6 +2194,7 @@
           const [modoMensaje, setModoMensaje] = useState(false);
           const [filtroEstado, setFiltroEstado] = useState('todos'); // todos | registrados | sin
           const [vinculando, setVinculando] = useState(null);
+          const [accionesPara, setAccionesPara] = useState(null);
           const [enviadoIdx, setEnviadoIdx] = useState(0);
           const [vinculos, setVinculos] = useState(function() {
             try { return JSON.parse(localStorage.getItem('gonnie_vinculos_clientes') || '{}'); } catch (e) { return {}; }
@@ -3029,10 +3030,9 @@
                     <button onClick={function(){ if (modoMensaje) { setModoMensaje(false); setSeleccionados({}); setEnviadoIdx(0); } else { setShowAddCliente(false); } }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: G.text, fontSize: 24, lineHeight: 1, fontFamily: 'inherit' }}>‹</button>
                   )}
                   <h1 style={{ fontSize: 22, fontWeight: 800, color: G.text, margin: 0 }}>{modoMensaje ? 'Mensaje masivo' : (showAddCliente ? 'Nuevo cliente' : 'Clientes')}</h1>
-                  {!loadingClientes && !modoMensaje && !showAddCliente && <span style={{ fontSize: 12, color: G.muted, marginLeft: 'auto', textAlign: 'right', lineHeight: 1.3 }}>{nRegistrados} en la app<br/>{nSinRegistrar} sin registrar</span>}
                   {!loadingClientes && !modoMensaje && !showAddCliente && (
                     <button onClick={function(){ setShowAddCliente(true); setNuevoClienteNombre(''); setNuevoClienteTel(''); }}
-                      style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, width: 42, height: 42, fontSize: 20, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      style={{ background: G.card, border: '1px solid ' + G.bdr, borderRadius: 12, width: 42, height: 42, fontSize: 20, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 'auto' }}>
                       +
                     </button>
                   )}
@@ -3043,6 +3043,18 @@
                     </button>
                   )}
                   </div>
+                  {!loadingClientes && !modoMensaje && !showAddCliente && clientes.length > 0 && (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: G.mint + '30', borderRadius: 20, padding: '5px 12px', fontSize: 11.5, fontWeight: 700, color: '#0F2A20' }}>
+                        <span style={{ width: 7, height: 7, borderRadius: 4, background: G.mint }} />
+                        {nRegistrados} en la app
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: G.card2, borderRadius: 20, padding: '5px 12px', fontSize: 11.5, fontWeight: 700, color: G.muted }}>
+                        <span style={{ width: 7, height: 7, borderRadius: 4, background: G.bdr }} />
+                        {nSinRegistrar} sin registrar
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {showAddCliente && (
@@ -3131,6 +3143,13 @@
                     var inicial = (cl.nombre || '?').charAt(0).toUpperCase();
                     var marcado = !!(cl.telefono && seleccionados[cl.telefono]);
                     var bloqueadoCl = estaBloqueado(cl.email);
+                    var avatarBg = bloqueadoCl ? (G.red + '18') : (cl.registrado ? (G.mint + '35') : G.card2);
+                    var avatarColor = bloqueadoCl ? G.red : (cl.registrado ? '#0F2A20' : G.muted);
+                    var subtitulo = bloqueadoCl
+                      ? 'Bloqueado'
+                      : (cl.registrado
+                          ? (cl.visitas + ' ' + (cl.visitas === 1 ? 'visita' : 'visitas'))
+                          : 'Sin cuenta en la app');
                     return (
                       <div key={i} onClick={modoMensaje && cl.telefono ? function(){ setSeleccionados(Object.assign({}, seleccionados, { [cl.telefono]: !seleccionados[cl.telefono] })); } : undefined}
                         style={{ display: 'flex', alignItems: 'center', gap: 14, background: G.card, border: '1px solid ' + (marcado ? G.brand : G.bdr), borderRadius: 16, padding: '14px 16px', marginBottom: 10, cursor: modoMensaje && cl.telefono ? 'pointer' : 'default', opacity: modoMensaje && !cl.telefono ? 0.5 : 1 }}>
@@ -3139,47 +3158,19 @@
                             {marcado && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
                           </span>
                         )}
-                        <span style={{ display: 'inline-flex', width: 42, height: 42, borderRadius: 21, background: G.brand + '18', color: G.brand, alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 800, flexShrink: 0 }}>{inicial}</span>
+                        <span style={{ display: 'inline-flex', width: 42, height: 42, borderRadius: 21, background: avatarBg, color: avatarColor, alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 800, flexShrink: 0 }}>{inicial}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cl.nombre}</span>
-                            {bloqueadoCl && <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: G.red, padding: '2px 6px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.03em', flexShrink: 0 }}>Bloqueado</span>}
-                            {!bloqueadoCl && cl.registrado && cl.eraImportado && <span style={{ fontSize: 9, fontWeight: 800, color: '#0F2A20', background: G.mint, padding: '2px 6px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.03em', flexShrink: 0 }}>{cl.vinculadoAMano ? 'Vinculado' : 'Ya en la app'}</span>}
-                          </p>
-                          <p style={{ fontSize: 11, color: G.muted, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {cl.registrado
-                              ? (cl.visitas + ' ' + (cl.visitas === 1 ? 'visita' : 'visitas') + ' · ' + cl.gastado + '€' + (cl.telefono ? ' · ' + cl.telefono : '') + (cl.ultima ? ' · última ' + fechaCorta(cl.ultima) : ''))
-                              : ((cl.telefono || 'Sin teléfono') + ' · sin cuenta en la app')}
-                          </p>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: G.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cl.nombre}</p>
+                          <p style={{ fontSize: 11.5, color: bloqueadoCl ? G.red : G.muted, fontWeight: bloqueadoCl ? 700 : 400, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitulo}</p>
+                          {!bloqueadoCl && cl.registrado && cl.eraImportado && (
+                            <p style={{ fontSize: 10.5, fontWeight: 700, color: '#1a7a4a', margin: '2px 0 0' }}>✓ {cl.vinculadoAMano ? 'Vinculado a mano' : 'Ya en la app'}</p>
+                          )}
                         </div>
-                        {modoMensaje && !cl.telefono && <span style={{ fontSize: 10, color: G.muted }}>Sin tfno</span>}
-                        {!modoMensaje && !cl.registrado && cl.telefono && (
-                          <button onClick={function(e){ e.stopPropagation(); setVinculando(cl); }}
-                            title="Vincular con una cuenta de la app"
-                            style={{ background: 'transparent', border: '1px solid ' + G.bdr, borderRadius: 12, padding: '11px 14px', fontSize: 11.5, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                            Vincular
-                          </button>
-                        )}
-                        {!modoMensaje && cl.email && (
-                          <button onClick={function(e){ e.stopPropagation(); toggleBloqueo(cl); }}
-                            disabled={bloqueando === cl.email}
-                            title={bloqueadoCl ? 'Desbloquear cliente' : 'Bloquear cliente'}
-                            style={{ background: 'transparent', border: 'none', cursor: bloqueando === cl.email ? 'not-allowed' : 'pointer', padding: 6, color: bloqueadoCl ? G.red : G.muted, flexShrink: 0, display: 'flex', alignItems: 'center', opacity: bloqueando === cl.email ? 0.5 : 1 }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/></svg>
-                          </button>
-                        )}
-                        {!modoMensaje && cl.importado && cl.id && (
-                          <button onClick={function(e){
-                              e.stopPropagation();
-                              if (!window.confirm('¿Quitar a ' + cl.nombre + ' de la lista de clientes?')) return;
-                              setBorrandoTel(cl.telefono);
-                              dbDelete('clientes_yeasy', '?id=eq.' + cl.id)
-                                .then(function(){ setBorrandoTel(null); setReloadClientesTick(function(t){ return t + 1; }); })
-                                .catch(function(){ setBorrandoTel(null); toast('No se pudo borrar el cliente'); });
-                            }}
-                            disabled={borrandoTel === cl.telefono}
-                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 6, color: G.muted, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 012-2h2a2 2 0 012 2v2"/></svg>
+                        {modoMensaje && !cl.telefono && <span style={{ fontSize: 10, color: G.muted, flexShrink: 0 }}>Sin tfno</span>}
+                        {!modoMensaje && (
+                          <button onClick={function(e){ e.stopPropagation(); setAccionesPara(cl); }}
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 4px', color: G.muted, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                           </button>
                         )}
                       </div>
@@ -3220,6 +3211,61 @@
                     </div>
                   </div>
                 )}
+
+                {accionesPara && (function(){
+                  var cl = accionesPara;
+                  var bloqueadoCl = estaBloqueado(cl.email);
+                  var puedeVincular = !cl.registrado && cl.telefono;
+                  var puedeBloquear = !!cl.email;
+                  var puedeEliminar = cl.importado && cl.id;
+                  return (
+                    <div onClick={function(){ setAccionesPara(null); }}
+                      style={{ position: 'fixed', inset: 0, background: 'rgba(26,22,20,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                      <div onClick={function(e){ e.stopPropagation(); }}
+                        style={{ width: '100%', maxWidth: 460, background: G.cream, borderRadius: '24px 24px 0 0', padding: '20px 18px 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div style={{ paddingBottom: 6 }}>
+                          <p style={{ fontSize: 17, fontWeight: 800, color: G.text, margin: 0 }}>{cl.nombre}</p>
+                          <p style={{ fontSize: 12, color: G.muted, margin: '4px 0 0', lineHeight: 1.6 }}>
+                            {cl.telefono || 'Sin teléfono'}{cl.email ? ' · ' + cl.email : ''}
+                            {cl.registrado && <><br/>{cl.gastado}€ gastados{cl.ultima ? ' · última visita ' + fechaCorta(cl.ultima) : ''}</>}
+                          </p>
+                        </div>
+                        {puedeVincular && (
+                          <button onClick={function(){ setAccionesPara(null); setVinculando(cl); }}
+                            style={{ width: '100%', textAlign: 'left', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '13px 14px', fontSize: 14, fontWeight: 700, color: G.text, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            Vincular con una cuenta de la app
+                          </button>
+                        )}
+                        {puedeBloquear && (
+                          <button onClick={function(){ setAccionesPara(null); toggleBloqueo(cl); }}
+                            style={{ width: '100%', textAlign: 'left', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '13px 14px', fontSize: 14, fontWeight: 700, color: bloqueadoCl ? G.text : G.red, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            {bloqueadoCl ? 'Desbloquear cliente' : 'Bloquear cliente'}
+                          </button>
+                        )}
+                        {puedeEliminar && (
+                          <button onClick={function(){
+                              setAccionesPara(null);
+                              if (!window.confirm('¿Quitar a ' + cl.nombre + ' de la lista de clientes?')) return;
+                              setBorrandoTel(cl.telefono);
+                              dbDelete('clientes_yeasy', '?id=eq.' + cl.id)
+                                .then(function(){ setBorrandoTel(null); setReloadClientesTick(function(t){ return t + 1; }); })
+                                .catch(function(){ setBorrandoTel(null); toast('No se pudo borrar el cliente'); });
+                            }}
+                            style={{ width: '100%', textAlign: 'left', background: G.card, border: '1px solid ' + G.bdr, borderRadius: 14, padding: '13px 14px', fontSize: 14, fontWeight: 700, color: G.red, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            Eliminar de la lista
+                          </button>
+                        )}
+                        {!puedeVincular && !puedeBloquear && !puedeEliminar && (
+                          <p style={{ fontSize: 12.5, color: G.muted, margin: '4px 0' }}>No hay acciones disponibles para este cliente.</p>
+                        )}
+                        <button onClick={function(){ setAccionesPara(null); }}
+                          style={{ background: 'transparent', border: 'none', borderRadius: 16, padding: '11px', fontSize: 13.5, fontWeight: 700, color: G.muted, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {modoMensaje && (
                   <div style={{ padding: '14px 18px 92px', flexShrink: 0, borderTop: '1px solid ' + G.bdr }}>
